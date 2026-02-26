@@ -10,8 +10,8 @@ const PAGES = [
   { id: "tokenizer", num: 1, label: "Tokenisation" },
   { id: "embeddings", num: 2, label: "Plongements (wte/wpe)" },
   { id: "forward", num: 3, label: "Propagation avant" },
-  { id: "training", num: 4, label: "Entrainement" },
-  { id: "inference", num: 5, label: "Inference" },
+  { id: "training", num: 4, label: "Entraînement" },
+  { id: "inference", num: 5, label: "Inférence" },
 ];
 
 function useTheme() {
@@ -104,7 +104,7 @@ export default function App() {
           </button>
         </div>
         <div className="community-note">
-          Construit avec l'aide de l'IA. Peut contenir des erreurs. Base sur{" "}
+          Construit avec l'aide de l'IA. Peut contenir des erreurs. Basé sur{" "}
           <a href="https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95" target="_blank" rel="noopener noreferrer">
             microgpt.py de Karpathy
           </a>.

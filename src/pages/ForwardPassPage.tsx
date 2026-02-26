@@ -28,13 +28,13 @@ export default function ForwardPassPage({ model }: Props) {
     <>
       <h1 className="page-title">3. Propagation avant</h1>
       <p className="page-desc">
-        Observe un token traverser tout le modele. Chaque etape transforme le vecteur de 16 nombres
-        jusqu'a obtenir 27 scores de probabilite — un pour chaque caractere suivant possible.
+        Observe un token traverser tout le modèle. Chaque étape transforme le vecteur de 16 nombres
+        jusqu'à obtenir 27 scores de probabilité — un pour chaque caractère suivant possible.
       </p>
 
-      {/* Controles */}
+      {/* Contrôles */}
       <div className="panel">
-        <div className="panel-title">Choisis l'entree</div>
+        <div className="panel-title">Choisis l'entrée</div>
         <div className="controls">
           <span style={{ fontSize: 12, color: "var(--text-dim)" }}>Token :</span>
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
@@ -65,12 +65,12 @@ export default function ForwardPassPage({ model }: Props) {
         </div>
       </div>
 
-      {/* Flux etape par etape */}
+      {/* Flux étape par étape */}
       <div className="panel">
-        <div className="panel-title">Les donnees traversent le modele</div>
+        <div className="panel-title">Les données traversent le modèle</div>
         <div className="explain">
-          Chaque boite montre les donnees a cette etape. Les 16 nombres sont transformes a chaque etape.
-          Les couleurs montrent les valeurs : <span style={{ color: "var(--red)" }}>negatif</span> a{" "}
+          Chaque boîte montre les données à cette étape. Les 16 nombres sont transformés à chaque étape.
+          Les couleurs montrent les valeurs : <span style={{ color: "var(--red)" }}>négatif</span> à{" "}
           <span style={{ color: "var(--green)" }}>positif</span>.
         </div>
 
@@ -79,7 +79,7 @@ export default function ForwardPassPage({ model }: Props) {
             <div className="label">Token '{char}'</div>
             <div className="values">
               wte[{tokenId}]<br />
-              Chercher le plongement<br />de ce caractere dans la table
+              Chercher le plongement<br />de ce caractère dans la table
             </div>
           </div>
           <div className="flow-arrow">→</div>
@@ -94,8 +94,8 @@ export default function ForwardPassPage({ model }: Props) {
           <div className="flow-step">
             <div className="label">tok + pos</div>
             <div className="values">
-              Addition element par element<br />
-              Encode maintenant<br />le "quoi" et le "ou"
+              Addition élément par élément<br />
+              Encode maintenant<br />le « quoi » et le « où »
             </div>
           </div>
           <div className="flow-arrow">→</div>
@@ -112,16 +112,16 @@ export default function ForwardPassPage({ model }: Props) {
             <div className="values">
               Q = "que cherche-je ?"<br />
               K = "que contiens-je ?"<br />
-              V = "qu'ai-je a offrir ?"<br />
-              {N_HEAD} tetes, chacune dim {16 / N_HEAD}
+              V = "qu'ai-je à offrir ?"<br />
+              {N_HEAD} têtes, chacune dim {16 / N_HEAD}
             </div>
           </div>
           <div className="flow-arrow">→</div>
           <div className="flow-step">
             <div className="label">MLP</div>
             <div className="values">
-              Lineaire → ReLU → Lineaire<br />
-              Expanse a 64 dims,<br />puis retour a 16<br />
+              Linéaire → ReLU → Linéaire<br />
+              Expansé à 64 dims,<br />puis retour à 16<br />
               <span className="highlight">{trace.mlpActiveMask?.filter(Boolean).length}/64 neurones actifs</span>
             </div>
           </div>
@@ -130,29 +130,29 @@ export default function ForwardPassPage({ model }: Props) {
             <div className="label">Sortie</div>
             <div className="values">
               lm_head : 16 → 27 logits<br />
-              softmax → probabilites<br />
+              softmax → probabilités<br />
               <span className="highlight">Top : '{top5[0]?.char}' {(top5[0]?.prob * 100).toFixed(0)}%</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Vecteurs detailles */}
+      {/* Vecteurs détaillés */}
       <div className="panel-row">
         <div className="panel">
-          <div className="panel-title">Vecteurs intermediaires (16 dims)</div>
+          <div className="panel-title">Vecteurs intermédiaires (16 dims)</div>
           <VectorBar values={trace.tokEmb} label={`Plongement de token : wte['${char}']`} />
           <VectorBar values={trace.posEmb} label={`Plongement de position : wpe[${pos}]`} />
-          <VectorBar values={trace.combined} label="Combine (tok + pos)" />
-          <VectorBar values={trace.afterNorm} label="Apres RMSNorm" />
-          <VectorBar values={trace.afterAttn || []} label="Apres Attention + Residuel" />
-          <VectorBar values={trace.afterMlp || []} label="Apres MLP + Residuel" />
+          <VectorBar values={trace.combined} label="Combiné (tok + pos)" />
+          <VectorBar values={trace.afterNorm} label="Après RMSNorm" />
+          <VectorBar values={trace.afterAttn || []} label="Après Attention + Résiduel" />
+          <VectorBar values={trace.afterMlp || []} label="Après MLP + Résiduel" />
         </div>
 
         <div className="panel">
-          <div className="panel-title">Sortie : probabilites du token suivant</div>
+          <div className="panel-title">Sortie : probabilités du token suivant</div>
           <div className="explain">
-            La prediction du modele pour le caractere qui vient apres <b>'{char}'</b> a la position {pos}.
+            La prédiction du modèle pour le caractère qui vient après <b>'{char}'</b> à la position {pos}.
             Plus la barre est grande = plus probable.
           </div>
           {top5.map((t) => (
@@ -178,16 +178,16 @@ export default function ForwardPassPage({ model }: Props) {
       {/* Poids d'attention */}
       {trace.attnWeights && (
         <div className="panel">
-          <div className="panel-title">Poids d'attention ({N_HEAD} tetes)</div>
+          <div className="panel-title">Poids d'attention ({N_HEAD} têtes)</div>
           <div className="explain">
-            Chaque tete apprend a se concentrer sur des aspects differents. Puisque c'est le premier
-            token, toutes les tetes ont un poids de <b>1.0</b> sur elles-memes (rien d'autre a observer).
-            Avec plus de tokens dans la sequence, l'attention serait repartie sur les tokens precedents.
+            Chaque tête apprend à se concentrer sur des aspects différents. Puisque c'est le premier
+            token, toutes les têtes ont un poids de <b>1.0</b> sur elles-mêmes (rien d'autre à observer).
+            Avec plus de tokens dans la séquence, l'attention serait répartie sur les tokens précédents.
           </div>
           <div style={{ display: "flex", gap: 24 }}>
             {trace.attnWeights.map((hw, h) => (
               <div key={h}>
-                <div style={{ fontSize: 11, color: "var(--purple)", marginBottom: 4 }}>Tete {h}</div>
+                <div style={{ fontSize: 11, color: "var(--purple)", marginBottom: 4 }}>Tête {h}</div>
                 <div style={{ display: "flex", gap: 2 }}>
                   {hw.map((w, t) => (
                     <div
@@ -212,11 +212,11 @@ export default function ForwardPassPage({ model }: Props) {
       {/* Activation MLP */}
       {trace.mlpHidden && (
         <div className="panel">
-          <div className="panel-title">Couche cachee MLP (64 neurones)</div>
+          <div className="panel-title">Couche cachée MLP (64 neurones)</div>
           <div className="explain">
-            Apres la couche lineaire qui expanse de 16 → 64 dimensions, l'activation <b>ReLU</b> met
-            toutes les valeurs negatives a zero. Seuls les neurones "actifs" (verts) laissent passer
-            l'information. C'est ainsi que le modele cree des representations non lineaires.
+            Après la couche linéaire qui expanse de 16 → 64 dimensions, l'activation <b>ReLU</b> met
+            toutes les valeurs négatives à zéro. Seuls les neurones « actifs » (verts) laissent passer
+            l'information. C'est ainsi que le modèle crée des représentations non linéaires.
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
             {trace.mlpHidden.map((v, i) => (
@@ -235,7 +235,7 @@ export default function ForwardPassPage({ model }: Props) {
             ))}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 4 }}>
-            {trace.mlpActiveMask.filter(Boolean).length} / 64 neurones actifs apres ReLU
+            {trace.mlpActiveMask.filter(Boolean).length} / 64 neurones actifs après ReLU
           </div>
         </div>
       )}

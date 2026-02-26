@@ -11,17 +11,17 @@ export default function TokenizerPage() {
     <>
       <h1 className="page-title">1. Tokenisation</h1>
       <p className="page-desc">
-        Le modele ne sait pas lire les lettres. Il ne comprend que les nombres. Le tokeniseur
-        convertit chaque caractere en un identifiant numerique, et ajoute un token special BOS
-        (debut/fin de sequence) pour marquer les limites de chaque nom.
+        Le modèle ne sait pas lire les lettres. Il ne comprend que les nombres. Le tokeniseur
+        convertit chaque caractère en un identifiant numérique, et ajoute un token spécial BOS
+        (début/fin de séquence) pour marquer les limites de chaque nom.
       </p>
 
-      {/* Correspondance caractere → ID */}
+      {/* Correspondance caractère → ID */}
       <div className="panel">
-        <div className="panel-title">Correspondance caractere → ID</div>
+        <div className="panel-title">Correspondance caractère → ID</div>
         <div className="explain">
-          Chaque caractere unique du dataset recoit un <b>identifiant numerique</b>.
-          Il y a <b>{uchars.length}</b> caracteres (a-z) plus un token special <b>BOS</b> (id={BOS}).
+          Chaque caractère unique du dataset reçoit un <b>identifiant numérique</b>.
+          Il y a <b>{uchars.length}</b> caractères (a-z) plus un token spécial <b>BOS</b> (id={BOS}).
           Taille totale du vocabulaire : <b>{vocabSize}</b>.
         </div>
         <div className="char-mapping-scroll">
@@ -46,9 +46,9 @@ export default function TokenizerPage() {
       <div className="panel">
         <div className="panel-title">Essaie : tape un nom</div>
         <div className="explain">
-          Tape un nom ci-dessous. Observe comment il devient une sequence d'identifiants de tokens.
-          Le modele apprend a partir de sequences comme celle-ci — en predisant chaque token suivant
-          a partir des precedents.
+          Tape un nom ci-dessous. Observe comment il devient une séquence d'identifiants de tokens.
+          Le modèle apprend à partir de séquences comme celle-ci — en prédisant chaque token suivant
+          à partir des précédents.
         </div>
         <input
           type="text"
@@ -76,13 +76,13 @@ export default function TokenizerPage() {
               })}
             </div>
 
-            {/* Ce que le modele doit apprendre */}
+            {/* Ce que le modèle doit apprendre */}
             <div style={{ marginTop: 16 }}>
-              <div className="panel-title">Ce que le modele doit apprendre :</div>
+              <div className="panel-title">Ce que le modèle doit apprendre :</div>
               <div className="explain">
-                A chaque position, le modele voit le <b>token actuel</b> et doit predire
-                le <b>token suivant</b>. C'est ce qu'on appelle la <b>prediction du token suivant</b> —
-                le coeur du fonctionnement de GPT.
+                À chaque position, le modèle voit le <b>token actuel</b> et doit prédire
+                le <b>token suivant</b>. C'est ce qu'on appelle la <b>prédiction du token suivant</b> —
+                le cœur du fonctionnement de GPT.
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
                 {tokens.slice(0, -1).map((t, i) => {
@@ -111,14 +111,14 @@ export default function TokenizerPage() {
         )}
       </div>
 
-      {/* Details du vocabulaire */}
+      {/* Détails du vocabulaire */}
       <div className="panel">
         <div className="panel-title">Comment fonctionne la tokenisation dans les vrais GPT</div>
         <div className="explain">
-          Ce micro GPT utilise une tokenisation <b>caractere par caractere</b> — chaque lettre est un token.<br /><br />
-          Les vrais GPT (comme GPT-4) utilisent une tokenisation <b>par sous-mots</b> (BPE) ou des parties de mots
+          Ce micro GPT utilise une tokenisation <b>caractère par caractère</b> — chaque lettre est un token.<br /><br />
+          Les vrais GPT (comme GPT-4) utilisent une tokenisation <b>par sous-mots</b> (BPE) où des parties de mots
           courantes comme "ing", "tion", "le" deviennent des tokens uniques. Cela donne un vocabulaire
-          beaucoup plus grand (~50K-100K tokens) mais permet au modele de traiter le texte bien plus efficacement.<br /><br />
+          beaucoup plus grand (~50K-100K tokens) mais permet au modèle de traiter le texte bien plus efficacement.<br /><br />
           Notre petit vocabulaire de <b>{vocabSize}</b> tokens suffit pour apprendre des motifs dans les noms !
         </div>
       </div>

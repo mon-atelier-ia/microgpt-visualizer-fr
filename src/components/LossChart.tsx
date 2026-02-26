@@ -37,7 +37,7 @@ export default function LossChart({ lossHistory }: Props) {
       ctx.fillStyle = colTextDim;
       ctx.font = "14px monospace";
       ctx.textAlign = "center";
-      ctx.fillText('Clique sur "Entrainer" pour commencer', W / 2, H / 2);
+      ctx.fillText('Clique sur « Entraîner » pour commencer', W / 2, H / 2);
       return;
     }
 
@@ -108,14 +108,14 @@ export default function LossChart({ lossHistory }: Props) {
       ctx.fillStyle = colRed;
       ctx.textAlign = "left";
       ctx.font = "10px monospace";
-      ctx.fillText("aleatoire (3.30)", pad.left + 4, y - 4);
+      ctx.fillText("aléatoire (3.30)", pad.left + 4, y - 4);
     }
 
     // Labels
     ctx.fillStyle = colTextDim;
     ctx.font = "10px monospace";
     ctx.textAlign = "center";
-    ctx.fillText(`Etape ${lossHistory.length}`, W / 2, H - 6);
+    ctx.fillText(`Étape ${lossHistory.length}`, W / 2, H - 6);
     ctx.textAlign = "right";
     ctx.fillStyle = colBlue;
     ctx.fillText("raw", W - pad.right, pad.top - 6);
