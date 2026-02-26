@@ -39,31 +39,33 @@ export default function InferencePage({ model }: { model: ModelState }) {
     <>
       <h1 className="page-title">5. Inference</h1>
       <p className="page-desc">
-        After training, the model generates new names it has never seen. Starting from BOS, it
-        predicts the next character, samples one, feeds it back in, and repeats until BOS appears again.
+        Apres l'entrainement, le modele genere de nouveaux noms qu'il n'a jamais vus. En partant de BOS,
+        il predit le caractere suivant, en echantillonne un, le renvoie en entree, et repete jusqu'a
+        ce que BOS apparaisse a nouveau.
       </p>
 
-      {/* Controls */}
+      {/* Controles */}
       <div className="panel">
-        <div className="panel-title">Generate</div>
+        <div className="panel-title">Generer</div>
         {model.totalStep === 0 && (
           <div className="explain" style={{ borderLeftColor: "var(--orange)" }}>
-            The model hasn't been trained yet! Go to the <b>Training</b> tab first and train for at least 200 steps.
-            You can still generate, but results will be random gibberish.
+            Le modele n'a pas encore ete entraine ! Va d'abord dans l'onglet <b>Entrainement</b>
+            et entraine-le pendant au moins 200 etapes. Tu peux quand meme generer, mais les resultats
+            seront du charabia aleatoire.
           </div>
         )}
         <div className="controls">
           <button className="btn" onClick={() => generate(1)}>
-            Generate 1
+            Generer 1
           </button>
           <button className="btn btn-secondary" onClick={() => generate(10)}>
-            Generate 10
+            Generer 10
           </button>
           <button className="btn btn-secondary" onClick={() => setResults([])}>
-            Clear
+            Effacer
           </button>
           <span style={{ fontSize: 12, color: "var(--text-dim)", marginLeft: 8 }}>
-            Temperature:
+            Temperature :
           </span>
           <input
             type="range"
@@ -78,14 +80,15 @@ export default function InferencePage({ model }: { model: ModelState }) {
           </span>
         </div>
         <div className="explain">
-          <b>Temperature</b> controls randomness. Low (0.1) = always picks the most likely character (boring but safe).
-          High (2.0) = more random picks (creative but chaotic). Try different values!
+          La <b>temperature</b> controle l'aleatoire. Basse (0.1) = choisit toujours le caractere
+          le plus probable (ennuyeux mais sur). Haute (2.0) = choix plus aleatoires (creatif mais chaotique).
+          Essaie differentes valeurs !
         </div>
       </div>
 
-      {/* Generated names */}
+      {/* Noms generes */}
       <div className="panel">
-        <div className="panel-title">Generated Names ({results.length})</div>
+        <div className="panel-title">Noms generes ({results.length})</div>
         <div className="gen-names">
           {results.map((r, i) => (
             <span
@@ -100,27 +103,27 @@ export default function InferencePage({ model }: { model: ModelState }) {
                 setActiveStep(0);
               }}
             >
-              {r.name || "(empty)"}
+              {r.name || "(vide)"}
             </span>
           ))}
           {results.length === 0 && (
             <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
-              Click "Generate" to create names...
+              Clique sur "Generer" pour creer des noms...
             </span>
           )}
         </div>
       </div>
 
-      {/* Step-by-step trace */}
+      {/* Trace etape par etape */}
       {activeTrace && (
         <div className="panel-row">
           <div className="panel">
             <div className="panel-title">
-              Generation Trace: "{activeTrace.name}"
+              Trace de generation : "{activeTrace.name}"
             </div>
             <div className="explain">
-              Click each step to see what the model was "thinking" at that position.
-              The model picks from the probability distribution at each step.
+              Clique sur chaque etape pour voir ce que le modele "pensait" a cette position.
+              Le modele pioche dans la distribution de probabilites a chaque etape.
             </div>
 
             <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 12 }}>
@@ -131,7 +134,7 @@ export default function InferencePage({ model }: { model: ModelState }) {
                   style={{ padding: "4px 10px", fontSize: 12 }}
                   onClick={() => setActiveStep(i)}
                 >
-                  pos {s.pos}:{" "}
+                  pos {s.pos} :{" "}
                   <span style={{ fontWeight: "bold" }}>{s.chosenChar}</span>
                 </button>
               ))}
@@ -141,14 +144,14 @@ export default function InferencePage({ model }: { model: ModelState }) {
               <div className="trace">
                 {activeTrace.steps.map((s, i) => (
                   <div key={i} style={{ opacity: i === activeStep ? 1 : 0.5 }}>
-                    <span style={{ color: "var(--text-dim)" }}>pos {s.pos}: </span>
+                    <span style={{ color: "var(--text-dim)" }}>pos {s.pos} : </span>
                     <span className="candidates">
                       [{s.top5.map((t) => `${t.char}:${(t.prob * 100).toFixed(0)}%`).join(", ")}]
                     </span>
                     <span style={{ color: "var(--text-dim)" }}> → </span>
                     <span className="picked">'{s.chosenChar}'</span>
                     {s.chosenChar === "BOS" && (
-                      <span style={{ color: "var(--red)" }}> END</span>
+                      <span style={{ color: "var(--red)" }}> FIN</span>
                     )}
                   </div>
                 ))}
@@ -158,11 +161,11 @@ export default function InferencePage({ model }: { model: ModelState }) {
 
           <div className="panel">
             <div className="panel-title">
-              Probabilities at position {step?.pos ?? 0}
+              Probabilites a la position {step?.pos ?? 0}
             </div>
             <div className="explain">
-              The model outputs these probabilities for the next character.
-              The <span style={{ color: "var(--green)" }}>highlighted</span> one was sampled.
+              Le modele produit ces probabilites pour le caractere suivant.
+              Celui en <span style={{ color: "var(--green)" }}>vert</span> a ete echantillonne.
             </div>
             {top10.map((t) => (
               <div className="prob-row" key={t.id}>
@@ -203,17 +206,18 @@ export default function InferencePage({ model }: { model: ModelState }) {
         </div>
       )}
 
-      {/* How inference works */}
+      {/* Comment fonctionne l'inference */}
       <div className="panel">
-        <div className="panel-title">How generation works</div>
+        <div className="panel-title">Comment fonctionne la generation</div>
         <div className="explain">
-          <b>1.</b> Start with the BOS token (signals "beginning of a name").<br />
-          <b>2.</b> Feed it through the model → get probabilities for all 27 possible next tokens.<br />
-          <b>3.</b> <b>Sample</b> one token from this distribution (temperature affects the randomness).<br />
-          <b>4.</b> If the sampled token is BOS → stop (end of name).<br />
-          <b>5.</b> Otherwise, feed the sampled token back as input and repeat from step 2.<br /><br />
-          This is called <b>autoregressive generation</b> — the model generates one token at a time,
-          each depending on all previous tokens. This is exactly how ChatGPT works, just at a much larger scale.
+          <b>1.</b> Commencer avec le token BOS (signale "debut d'un nom").<br />
+          <b>2.</b> L'envoyer dans le modele → obtenir les probabilites pour les 27 tokens suivants possibles.<br />
+          <b>3.</b> <b>Echantillonner</b> un token de cette distribution (la temperature affecte l'aleatoire).<br />
+          <b>4.</b> Si le token echantillonne est BOS → arreter (fin du nom).<br />
+          <b>5.</b> Sinon, renvoyer le token echantillonne en entree et reprendre a l'etape 2.<br /><br />
+          C'est ce qu'on appelle la <b>generation autoregressive</b> — le modele genere un token a la fois,
+          chacun dependant de tous les tokens precedents. C'est exactement ainsi que fonctionne ChatGPT,
+          juste a une echelle bien plus grande.
         </div>
       </div>
     </>

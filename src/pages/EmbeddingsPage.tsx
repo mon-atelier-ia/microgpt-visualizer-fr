@@ -22,24 +22,27 @@ export default function EmbeddingsPage({ model }: Props) {
 
   return (
     <>
-      <h1 className="page-title">2. Embeddings (wte & wpe)</h1>
+      <h1 className="page-title">2. Plongements (Embeddings)</h1>
       <p className="page-desc">
-        The model represents each token and each position as a list of 16 numbers (a "vector").
-        These numbers are the model's learnable parameters — they start random and get adjusted during training.
+        Le modele represente chaque token et chaque position comme une liste de 16 nombres (un "vecteur").
+        Ces nombres sont les parametres apprenables du modele — ils commencent aleatoires et sont ajustes
+        pendant l'entrainement.
       </p>
 
       {/* WTE */}
       <div className="panel">
-        <div className="panel-title">wte — Token Embeddings</div>
+        <div className="panel-title">wte — Plongements de tokens</div>
         <div className="explain">
-          <b>wte</b> stands for "Word Token Embeddings". It's a table with <b>{wte.length} rows</b> (one per token)
-          and <b>{N_EMBD} columns</b> (the embedding dimension).<br /><br />
-          Each row is how the model "sees" that character. Think of it as the model's internal representation
-          of each letter. <b>Hover over a row</b> to highlight it.<br /><br />
-          Colors: <span style={{ color: "var(--red)" }}>red = negative</span>,{" "}
-          <span style={{ color: "var(--text-dim)" }}>dark = near zero</span>,{" "}
-          <span style={{ color: "var(--green)" }}>green = positive</span>.
-          Right now these are <b>random</b> — after training, similar letters will have similar patterns.
+          <b>wte</b> signifie "Word Token Embeddings" (plongements de tokens). C'est un tableau
+          avec <b>{wte.length} lignes</b> (une par token) et <b>{N_EMBD} colonnes</b> (la dimension
+          du plongement).<br /><br />
+          Chaque ligne represente comment le modele "voit" ce caractere. C'est la representation interne
+          de chaque lettre pour le modele. <b>Survole une ligne</b> pour la mettre en evidence.<br /><br />
+          Couleurs : <span style={{ color: "var(--red)" }}>rouge = negatif</span>,{" "}
+          <span style={{ color: "var(--text-dim)" }}>sombre = proche de zero</span>,{" "}
+          <span style={{ color: "var(--green)" }}>vert = positif</span>.
+          Pour l'instant ces valeurs sont <b>aleatoires</b> — apres l'entrainement, les lettres similaires
+          auront des motifs similaires.
         </div>
         <Heatmap
           matrix={wte}
@@ -52,23 +55,24 @@ export default function EmbeddingsPage({ model }: Props) {
 
       {/* WPE */}
       <div className="panel">
-        <div className="panel-title">wpe — Position Embeddings</div>
+        <div className="panel-title">wpe — Plongements de positions</div>
         <div className="explain">
-          <b>wpe</b> stands for "Word Position Embeddings". It tells the model <b>where</b> a token is
-          in the sequence. Position 0 = first character, position 1 = second, etc.<br /><br />
-          Without this, the model couldn't distinguish "ab" from "ba" — both have the same characters!
-          The position embedding is <b>added</b> to the token embedding.
+          <b>wpe</b> signifie "Word Position Embeddings" (plongements de positions). Il indique
+          au modele <b>ou</b> se trouve un token dans la sequence. Position 0 = premier caractere,
+          position 1 = deuxieme, etc.<br /><br />
+          Sans cela, le modele ne pourrait pas distinguer "ab" de "ba" — les deux ont les memes
+          caracteres ! Le plongement de position est <b>additionne</b> au plongement de token.
         </div>
         <Heatmap matrix={wpe} rowLabels={wpeLabels} colCount={N_EMBD} />
       </div>
 
-      {/* Interactive: how they combine */}
+      {/* Interactif : comment ils se combinent */}
       <div className="panel">
-        <div className="panel-title">How wte + wpe combine</div>
+        <div className="panel-title">Comment wte + wpe se combinent</div>
         <div className="explain">
-          When the model processes a token, it looks up <code>wte[token_id]</code> and <code>wpe[position]</code>,
-          then <b>adds them together</b> element-by-element. The result is a single vector that encodes
-          both <b>which</b> character and <b>where</b> it is.
+          Quand le modele traite un token, il cherche <code>wte[id_token]</code> et <code>wpe[position]</code>,
+          puis les <b>additionne element par element</b>. Le resultat est un vecteur unique qui encode
+          a la fois <b>quel</b> caractere et <b>ou</b> il se trouve.
         </div>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
@@ -85,14 +89,14 @@ export default function EmbeddingsPage({ model }: Props) {
         </div>
 
         <div style={{ fontSize: 13, color: "var(--purple)", marginBottom: 8 }}>
-          '{selectedChar}' at position 0:
+          '{selectedChar}' a la position 0 :
         </div>
 
-        <VectorBar values={tokEmb} label={`wte['${selectedChar}'] (token embedding)`} />
+        <VectorBar values={tokEmb} label={`wte['${selectedChar}'] (plongement de token)`} />
         <div style={{ fontSize: 14, color: "var(--text-dim)", textAlign: "center", margin: "4px 0" }}>+</div>
-        <VectorBar values={posEmb} label="wpe[0] (position embedding)" />
+        <VectorBar values={posEmb} label="wpe[0] (plongement de position)" />
         <div style={{ fontSize: 14, color: "var(--text-dim)", textAlign: "center", margin: "4px 0" }}>=</div>
-        <VectorBar values={combined} label="combined (input to the model)" />
+        <VectorBar values={combined} label="combine (entree du modele)" />
       </div>
     </>
   );

@@ -9,20 +9,20 @@ export default function TokenizerPage() {
 
   return (
     <>
-      <h1 className="page-title">1. Tokenizer</h1>
+      <h1 className="page-title">1. Tokenisation</h1>
       <p className="page-desc">
-        The model cannot read letters. It only understands numbers. The tokenizer
-        converts each character to a numeric ID, and adds a special BOS (Begin/End of Sequence)
-        token to mark the boundaries of each name.
+        Le modele ne sait pas lire les lettres. Il ne comprend que les nombres. Le tokeniseur
+        convertit chaque caractere en un identifiant numerique, et ajoute un token special BOS
+        (debut/fin de sequence) pour marquer les limites de chaque nom.
       </p>
 
-      {/* Character → ID mapping */}
+      {/* Correspondance caractere → ID */}
       <div className="panel">
-        <div className="panel-title">Character → ID Mapping</div>
+        <div className="panel-title">Correspondance caractere → ID</div>
         <div className="explain">
-          Every unique character in the dataset gets a <b>numeric ID</b>.
-          There are <b>{uchars.length}</b> characters (a-z) plus one special <b>BOS</b> token (id={BOS}).
-          Total vocabulary size: <b>{vocabSize}</b>.
+          Chaque caractere unique du dataset recoit un <b>identifiant numerique</b>.
+          Il y a <b>{uchars.length}</b> caracteres (a-z) plus un token special <b>BOS</b> (id={BOS}).
+          Taille totale du vocabulaire : <b>{vocabSize}</b>.
         </div>
         <div className="char-mapping-scroll">
           {uchars.map((ch, i) => (
@@ -42,18 +42,19 @@ export default function TokenizerPage() {
         </div>
       </div>
 
-      {/* Interactive tokenizer */}
+      {/* Tokeniseur interactif */}
       <div className="panel">
-        <div className="panel-title">Try It: Type a Name</div>
+        <div className="panel-title">Essaie : tape un nom</div>
         <div className="explain">
-          Type any name below. Watch how it becomes a sequence of token IDs.
-          The model will learn from sequences like this — predicting each next token from the previous ones.
+          Tape un nom ci-dessous. Observe comment il devient une sequence d'identifiants de tokens.
+          Le modele apprend a partir de sequences comme celle-ci — en predisant chaque token suivant
+          a partir des precedents.
         </div>
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type a name..."
+          placeholder="Tape un nom..."
           maxLength={16}
         />
 
@@ -75,13 +76,13 @@ export default function TokenizerPage() {
               })}
             </div>
 
-            {/* What the model must learn */}
+            {/* Ce que le modele doit apprendre */}
             <div style={{ marginTop: 16 }}>
-              <div className="panel-title">What the model must learn:</div>
+              <div className="panel-title">Ce que le modele doit apprendre :</div>
               <div className="explain">
-                For each position, the model sees the <b>current token</b> and must predict
-                the <b>next token</b>. This is called <b>next-token prediction</b> — the core
-                of how GPT works.
+                A chaque position, le modele voit le <b>token actuel</b> et doit predire
+                le <b>token suivant</b>. C'est ce qu'on appelle la <b>prediction du token suivant</b> —
+                le coeur du fonctionnement de GPT.
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
                 {tokens.slice(0, -1).map((t, i) => {
@@ -110,15 +111,15 @@ export default function TokenizerPage() {
         )}
       </div>
 
-      {/* Vocab details */}
+      {/* Details du vocabulaire */}
       <div className="panel">
-        <div className="panel-title">How tokenization works in real GPTs</div>
+        <div className="panel-title">Comment fonctionne la tokenisation dans les vrais GPT</div>
         <div className="explain">
-          This micro GPT uses <b>character-level</b> tokenization — each letter is one token.<br /><br />
-          Real GPTs (like GPT-4) use <b>subword tokenization</b> (BPE) where common word parts
-          like "ing", "tion", "the" become single tokens. This makes the vocabulary much larger (~50K-100K tokens)
-          but lets the model process text much more efficiently.<br /><br />
-          Our tiny vocab of <b>{vocabSize}</b> tokens is enough to learn patterns in names!
+          Ce micro GPT utilise une tokenisation <b>caractere par caractere</b> — chaque lettre est un token.<br /><br />
+          Les vrais GPT (comme GPT-4) utilisent une tokenisation <b>par sous-mots</b> (BPE) ou des parties de mots
+          courantes comme "ing", "tion", "le" deviennent des tokens uniques. Cela donne un vocabulaire
+          beaucoup plus grand (~50K-100K tokens) mais permet au modele de traiter le texte bien plus efficacement.<br /><br />
+          Notre petit vocabulaire de <b>{vocabSize}</b> tokens suffit pour apprendre des motifs dans les noms !
         </div>
       </div>
     </>

@@ -48,72 +48,73 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
 
   return (
     <>
-      <h1 className="page-title">4. Training</h1>
+      <h1 className="page-title">4. Entrainement</h1>
       <p className="page-desc">
-        Each step: pick a name, feed its characters one by one, measure how wrong the predictions are
-        (loss), then adjust all parameters to reduce the error. Watch the loss drop from ~3.3 (random guessing)
-        as the model learns character patterns.
+        A chaque etape : choisir un nom, envoyer ses caracteres un par un, mesurer a quel point les
+        predictions sont fausses (loss), puis ajuster tous les parametres pour reduire l'erreur.
+        Observe la loss descendre depuis ~3.3 (devinette aleatoire) a mesure que le modele apprend
+        les motifs des caracteres.
       </p>
 
-      {/* Controls */}
+      {/* Controles */}
       <div className="panel">
-        <div className="panel-title">Controls</div>
+        <div className="panel-title">Controles</div>
         <div className="controls">
           <button className="btn" onClick={() => runTraining(200)} disabled={training}>
-            Train 200 Steps
+            Entrainer 200 etapes
           </button>
           <button className="btn btn-secondary" onClick={() => runTraining(500)} disabled={training}>
-            Train 500
+            Entrainer 500
           </button>
           <button className="btn btn-secondary" onClick={() => runTraining(1000)} disabled={training}>
-            Train 1000
+            Entrainer 1000
           </button>
           {training && (
             <button className="btn" style={{ background: "var(--red)" }} onClick={stop}>
-              Stop
+              Arreter
             </button>
           )}
           <button className="btn btn-secondary" onClick={onReset} disabled={training}>
-            Reset Model
+            Reinitialiser
           </button>
         </div>
         <div className="controls">
           <span className="stat">
-            Step: <b>{model.totalStep}</b>
+            Etape : <b>{model.totalStep}</b>
           </span>
           <span className="stat">
-            Loss: <b>{lastResult ? lastResult.loss.toFixed(4) : "—"}</b>
+            Loss : <b>{lastResult ? lastResult.loss.toFixed(4) : "—"}</b>
           </span>
           <span className="stat">
-            LR: <b>{lastResult ? lastResult.lr.toFixed(6) : "0.010000"}</b>
+            LR : <b>{lastResult ? lastResult.lr.toFixed(6) : "0.010000"}</b>
           </span>
           <span className="stat">
-            Name: <b>{lastResult?.doc ?? "—"}</b>
+            Nom : <b>{lastResult?.doc ?? "—"}</b>
           </span>
         </div>
       </div>
 
-      {/* Loss chart */}
+      {/* Courbe de loss */}
       <div className="panel">
-        <div className="panel-title">Loss Over Time</div>
+        <div className="panel-title">Loss au fil du temps</div>
         <div className="explain">
-          <b>Loss</b> measures how wrong the model's predictions are. Lower = better.<br />
-          <span style={{ color: "var(--red)" }}>Red dashed line</span> = random guessing (~3.30 for 27 tokens).<br />
-          <span style={{ color: "var(--green)" }}>Green line</span> = moving average (smoothed trend).
+          La <b>loss</b> mesure a quel point les predictions du modele sont fausses. Plus c'est bas = mieux c'est.<br />
+          <span style={{ color: "var(--red)" }}>Ligne rouge pointillee</span> = devinette aleatoire (~3.30 pour 27 tokens).<br />
+          <span style={{ color: "var(--green)" }}>Ligne verte</span> = moyenne mobile (tendance lissee).
         </div>
         <LossChart lossHistory={model.lossHistory} />
       </div>
 
-      {/* Last training step details */}
+      {/* Detail de la derniere etape */}
       {lastResult && (
         <div className="panel">
-          <div className="panel-title">Last Training Step Detail</div>
+          <div className="panel-title">Detail de la derniere etape</div>
           <div className="explain">
-            The model saw the name <b>"{lastResult.doc}"</b> and tried to predict each next character.
-            Below is the loss at each position — higher loss means the model was more surprised.
+            Le modele a vu le nom <b>"{lastResult.doc}"</b> et a essaye de predire chaque caractere suivant.
+            Ci-dessous la loss a chaque position — plus la loss est elevee, plus le modele a ete surpris.
           </div>
 
-          {/* Token sequence */}
+          {/* Sequence de tokens */}
           <div className="token-flow" style={{ marginTop: 0, marginBottom: 12 }}>
             {lastResult.tokens.map((t, i) => (
               <span key={i} style={{ display: "contents" }}>
@@ -126,7 +127,7 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
             ))}
           </div>
 
-          {/* Per-position loss */}
+          {/* Loss par position */}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {lastResult.perPositionLoss.map((loss, i) => {
               const from = tokenLabel(lastResult.tokens[i]);
@@ -150,29 +151,30 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
                     <span style={{ color: "var(--green)" }}>{to}</span>
                   </div>
                   <div style={{ color: "var(--red)", fontWeight: "bold", fontSize: 10 }}>
-                    loss: {loss.toFixed(3)}
+                    loss : {loss.toFixed(3)}
                   </div>
                 </div>
               );
             })}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 8 }}>
-            Average loss: {lastResult.loss.toFixed(4)} | The redder the box, the more surprised the model was
+            Loss moyenne : {lastResult.loss.toFixed(4)} | Plus la boite est rouge, plus le modele a ete surpris
           </div>
         </div>
       )}
 
-      {/* What's happening */}
+      {/* Ce qui se passe */}
       <div className="panel">
-        <div className="panel-title">What happens in each training step</div>
+        <div className="panel-title">Que se passe-t-il a chaque etape d'entrainement</div>
         <div className="explain">
-          <b>1. Forward pass:</b> Feed each token through the model, get predictions for the next token.<br />
-          <b>2. Compute loss:</b> Measure how wrong each prediction was using <code>-log(P(correct))</code>.<br />
-          <b>3. Backward pass:</b> Calculate gradients — which direction should each of the {model.params.length} parameters
-          move to reduce the loss?<br />
-          <b>4. Adam update:</b> Adjust each parameter by a small amount in the right direction. The learning rate
-          starts at 0.01 and linearly decays to 0.<br /><br />
-          After enough steps, the model learns patterns like: after 'e', 'm' is likely; names often end with 'a', 'n', 'y'; etc.
+          <b>1. Propagation avant :</b> envoyer chaque token dans le modele, obtenir les predictions du token suivant.<br />
+          <b>2. Calcul de la loss :</b> mesurer a quel point chaque prediction etait fausse avec <code>-log(P(correct))</code>.<br />
+          <b>3. Retropropagation :</b> calculer les gradients — dans quelle direction chacun des {model.params.length} parametres
+          doit bouger pour reduire la loss ?<br />
+          <b>4. Mise a jour Adam :</b> ajuster chaque parametre d'une petite quantite dans la bonne direction. Le taux
+          d'apprentissage commence a 0.01 et decroit lineairement jusqu'a 0.<br /><br />
+          Apres suffisamment d'etapes, le modele apprend des motifs comme : apres 'e', 'm' est probable ;
+          les noms se terminent souvent par 'a', 'n', 'y' ; etc.
         </div>
       </div>
     </>
