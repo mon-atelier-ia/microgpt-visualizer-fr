@@ -56,9 +56,9 @@ function makeMatrix(
   );
 }
 
-export function createModel(): ModelState {
+export function createModel(inputDocs?: string[]): ModelState {
   const rng = createRng(42);
-  const docs = [...allDocs];
+  const docs = [...(inputDocs ?? allDocs)];
   shuffle(docs, rng);
 
   const stateDict: Record<string, Value[][]> = {

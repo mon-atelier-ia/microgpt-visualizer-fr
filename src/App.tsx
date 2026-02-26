@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { createModel, type ModelState } from "./engine/model";
+import { DATASETS, DEFAULT_DATASET_ID, getDataset } from "./datasets";
 import TokenizerPage from "./pages/TokenizerPage";
 import EmbeddingsPage from "./pages/EmbeddingsPage";
 import ForwardPassPage from "./pages/ForwardPassPage";
@@ -32,14 +33,21 @@ function useTheme() {
 export default function App() {
   const [page, setPage] = useState("tokenizer");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const modelRef = useRef<ModelState>(createModel());
+  const [datasetId, setDatasetId] = useState(DEFAULT_DATASET_ID);
+  const modelRef = useRef<ModelState>(createModel(getDataset(DEFAULT_DATASET_ID).words));
   const [, forceUpdate] = useState(0);
   const { theme, toggle: toggleTheme } = useTheme();
 
   const rerender = () => forceUpdate((n) => n + 1);
-  const resetModel = () => {
-    modelRef.current = createModel();
+  const resetModel = (id?: string) => {
+    const ds = getDataset(id ?? datasetId);
+    modelRef.current = createModel(ds.words);
     rerender();
+  };
+
+  const handleDatasetChange = (id: string) => {
+    setDatasetId(id);
+    resetModel(id);
   };
 
   const handlePageChange = (pageId: string) => {
@@ -75,6 +83,19 @@ export default function App() {
             </button>
           ))}
         </nav>
+        <div className="dataset-picker">
+          <div className="dataset-picker-label">Jeu de données</div>
+          {DATASETS.map((d) => (
+            <button
+              key={d.id}
+              className={`dataset-btn ${datasetId === d.id ? "active" : ""}`}
+              onClick={() => handleDatasetChange(d.id)}
+              title={d.description}
+            >
+              {d.label}
+            </button>
+          ))}
+        </div>
         <a
           href="https://karpathy.github.io/2026/02/12/microgpt/"
           target="_blank"
