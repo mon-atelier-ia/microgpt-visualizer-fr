@@ -3,8 +3,8 @@ import { DATASETS, DEFAULT_DATASET_ID, getDataset } from "./index";
 import { createModel } from "../engine/model";
 
 describe("DATASETS", () => {
-  it("contains exactly 5 datasets", () => {
-    expect(DATASETS).toHaveLength(5);
+  it("contains exactly 6 datasets", () => {
+    expect(DATASETS).toHaveLength(6);
   });
 
   it("has unique ids", () => {
@@ -46,6 +46,7 @@ describe("DATASETS", () => {
   it.each([
     ["prenoms-simple", 50],
     ["prenoms", 1000],
+    ["prenoms-insee", 33235],
     ["pokemon-fr", 1022],
     ["dinosaures", 1530],
   ] as const)("dataset %s has %d words", (id, count) => {

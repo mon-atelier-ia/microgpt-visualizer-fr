@@ -1,6 +1,7 @@
 import { NAMES_RAW } from "../engine/data";
 import { prenomsSimple } from "./prenoms-simple";
 import { prenoms } from "./prenoms";
+import { prenomsInsee } from "./prenoms-insee";
 import { pokemonFr } from "./pokemon-fr";
 import { dinosaures } from "./dinosaures";
 
@@ -23,6 +24,12 @@ export const DATASETS: Dataset[] = [
     label: "Prénoms FR (1000)",
     description: "1000 prénoms français (INSEE 2024)",
     words: prenoms,
+  },
+  {
+    id: "prenoms-insee",
+    label: "Prénoms FR (33k)",
+    description: "33 235 prénoms français (INSEE, data.gouv.fr)",
+    words: prenomsInsee,
   },
   {
     id: "pokemon-fr",
