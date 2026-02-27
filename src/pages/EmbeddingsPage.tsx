@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   type ModelState,
   uchars,
@@ -24,12 +24,9 @@ export default function EmbeddingsPage({ model }: Props) {
   const wpeLabels = Array.from({ length: BLOCK_SIZE }, (_, i) => `p${i}`);
 
   const charId = charToId[selectedChar] ?? 0;
-  const { tokEmb, posEmb, combined } = useMemo(() => {
-    const tokEmb = wte[charId].map((v) => v.data);
-    const posEmb = wpe[0].map((v) => v.data);
-    const combined = tokEmb.map((t, i) => t + posEmb[i]);
-    return { tokEmb, posEmb, combined };
-  }, [selectedChar, model.totalStep]);
+  const tokEmb = wte[charId].map((v) => v.data);
+  const posEmb = wpe[0].map((v) => v.data);
+  const combined = tokEmb.map((t, i) => t + posEmb[i]);
 
   return (
     <PageSection id="embeddings" title="2. Plongements (Embeddings)">

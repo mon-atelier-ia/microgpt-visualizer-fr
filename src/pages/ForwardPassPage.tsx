@@ -8,6 +8,7 @@ import {
   N_LAYER,
   N_HEAD,
 } from "../engine/model";
+import type { Value } from "../engine/autograd";
 import { VectorBar } from "../components/Heatmap";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
@@ -23,11 +24,12 @@ export default function ForwardPassPage({ model }: Props) {
 
   const tokenId = charToId[char] ?? 0;
   const trace = useMemo(() => {
-    const keys = Array.from({ length: N_LAYER }, () => [] as any[]);
-    const vals = Array.from({ length: N_LAYER }, () => [] as any[]);
+    const keys = Array.from({ length: N_LAYER }, () => [] as Value[][]);
+    const vals = Array.from({ length: N_LAYER }, () => [] as Value[][]);
     const result = gptForward(tokenId, pos, keys, vals, model, true);
     return result.trace!;
-  }, [char, pos, model.totalStep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- model is mutable (A-1): identity detects reset, totalStep detects training
+  }, [tokenId, pos, model, model.totalStep]);
 
   const top5 = useMemo(
     () =>
