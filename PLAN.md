@@ -31,64 +31,76 @@
 
 ## Comparaison des deux forks
 
-|            | microgpt-ts-fr (fait)              | microgpt-visualizer-fr (a faire)   |
-|------------|------------------------------------|------------------------------------|
-| **Upstream** | dubzdubz/microgpt-ts             | enescang/microgpt-visualizer       |
-| **Stack**    | Next.js 16 + shadcn/ui + Tailwind v4 | React 19 + Vite + CSS custom  |
-| **Nature**   | Playground (training + inference) | Visualisation pedagogique (5 panels) |
-| **Focus**    | Entrainer et generer             | Comprendre chaque etape            |
-| **Deploy**   | Vercel (Next.js natif)           | Vercel (Vite static build)         |
+|              | microgpt-ts-fr (fait)                | microgpt-visualizer-fr (a faire)     |
+| ------------ | ------------------------------------ | ------------------------------------ |
+| **Upstream** | dubzdubz/microgpt-ts                 | enescang/microgpt-visualizer         |
+| **Stack**    | Next.js 16 + shadcn/ui + Tailwind v4 | React 19 + Vite + CSS custom         |
+| **Nature**   | Playground (training + inference)    | Visualisation pedagogique (5 panels) |
+| **Focus**    | Entrainer et generer                 | Comprendre chaque etape              |
+| **Deploy**   | Vercel (Next.js natif)               | Vercel (Vite static build)           |
 
 ---
 
 ## Ce que le fork ajoute
 
-### 1. UI en francais
+### 1. UI en francais — FAIT
 
-Traduire les 5 pages :
+Commits : `19a3d1e`, `fd323e8`
 
-| Page originale   | Traduction          |
-|------------------|---------------------|
-| Tokenizer        | Tokenisation        |
-| Embeddings       | Plongements (Embeddings) |
-| Forward Pass     | Propagation avant   |
-| Training         | Entrainement        |
-| Inference        | Inference           |
+| Page originale | Traduction               |
+| -------------- | ------------------------ |
+| Tokenizer      | Tokenisation             |
+| Embeddings     | Plongements (Embeddings) |
+| Forward Pass   | Propagation avant        |
+| Training       | Entraînement             |
+| Inference      | Inférence                |
 
-### 2. Datasets FR
+### 2. Datasets FR — FAIT
 
-Reutiliser les datasets deja prepares dans microgpt-ts-fr :
+Commits : `efc9b85`, `135b53e`
 
-| Dataset          | Entrees | Source                    |
-|------------------|---------|---------------------------|
-| prenoms-simple   | 50      | INSEE 2024, top 50        |
-| prenoms          | 1 000   | INSEE 2024, top 1000      |
-| pokemon-fr       | 1 022   | PokeAPI FR via tuto-llm   |
-| dinosaures       | 1 522   | Dvelezs94 via tuto-llm    |
+| Dataset        | Entrées | Source                  |
+| -------------- | ------- | ----------------------- |
+| prénoms-simple | 50      | INSEE 2024, top 50      |
+| prénoms        | 1 000   | INSEE 2024, top 1000    |
+| pokémon-fr     | 1 022   | PokeAPI FR via tuto-llm |
+| dinosaures     | 1 522   | Dvelezs94 via tuto-llm  |
 
-### 3. Vocabulaire pedagogique
+Sélecteur de dataset dans la sidebar. Modification minimale de l'engine (`createModel(docs?)`, 2 lignes).
 
-Adapter les explications au public tuto-llm (10-14 ans) :
-- Termes techniques traduits ou expliques
-- Analogies coherentes avec les notebooks (lancer au panier, filtre Instagram, salle de classe)
-- Annotations contextuelles reliant chaque panel au notebook correspondant
+### 3. Vocabulaire pédagogique — FAIT
 
-### 4. Deploy Vercel
+Commits : `bdca1f2`, `a433337`, `d89a5e2`, `8e81c27`
 
-- Auto-deploy sur `microgpt-visualizer-fr.vercel.app`
-- Build Vite statique (plus simple que Next.js)
+- **28 termes** définis dans `src/data/glossary.ts` (15 Tier 1 tooltip seul + 13 Tier 2 tooltip + modal)
+- Composant `<Term id="…" />` avec tooltip WAI-ARIA (`role="tooltip"`, `aria-describedby`, WCAG 1.4.13)
+- `TermProvider` : singleton `<dialog>` natif à la racine (focus trap, Escape, `::backdrop`)
+- `useId()` pour IDs uniques par instance, flip viewport, bridge `::before` hoverable
+- ~50 remplacements inline dans les 5 pages
+- 20 tests (8 glossaire + 12 composant Term) avec jsdom + @testing-library/react
+- Définitions adaptées au public 10-14 ans, analogies pédagogiques dans les modals
 
-### 5. AGENTS.md
+### 4. Hooks git — FAIT
 
-Conventions de fork (meme pattern que microgpt-ts-fr) :
-- Fichiers upstream `src/engine/` en lecture seule
-- Modifications uniquement sur l'UI et les datasets
-- Git rules strictes (pas de push sans demande, pas de PR auto)
+Commit : `6fad5e0`
 
-### 6. Hooks git
+- Husky + lint-staged (ESLint au commit)
+- Vitest + pipeline `pnpm check` (commit `4fe9edd`)
 
-- Husky + Biome (lint au commit, build au push)
-- Meme setup que microgpt-ts-fr
+### 5. Deploy Vercel — FAIT
+
+- **URL production** : https://microgpt-visualizer-fr.vercel.app
+- Auto-deploy depuis `main`, build Vite statique, Node 24.x
+- Projet Vercel : `microgpt-visualizer-fr` (org `pierrealexandreguillemin-4999`)
+
+### 6. Audit qualité frontend — FAIT
+
+Voir [`docs/audit-frontend.md`](docs/audit-frontend.md) — 37 problèmes répertoriés :
+
+- ~~3 critiques~~ → **corrigés** (rAF cleanup, roving tabindex Heatmap, `<label>` range input) + 15 tests
+- 8 hauts (pas de memo/lazy, 64 inline styles, keys index, HTML non sémantique)
+- 7 modérés (useCallback absent, contraste à vérifier, focus visible)
+- 4 faibles (types inline, CSS monolithique)
 
 ---
 
@@ -113,49 +125,62 @@ Les deux outils couvrent le meme algorithme (microgpt de Karpathy) sous deux ang
 **visualisation passive** vs **experimentation active**.
 
 Ensemble, ils forment une paire pedagogique complete pour tuto-llm :
+
 - L'eleve **comprend** avec le visualiseur (chaque etape decomposee)
 - L'eleve **experimente** avec le playground (entrainement et generation en temps reel)
 
 ---
 
-## Structure du projet upstream (audit complet)
+## Structure du projet (état actuel)
 
 ```
 src/
-├── App.tsx              # 137 lignes — shell, routing useState, theme dark/light
-├── main.tsx             #   5 lignes — point d'entree React
-├── styles.css           # 391 lignes — TOUT le design (CSS vars, pas de Tailwind)
-├── index.css            #  69 lignes — scaffold Vite inutilise
-├── App.css              #  43 lignes — scaffold Vite inutilise
+├── App.tsx                    # 161 lignes — shell, routing, theme, TermProvider wrapper
+├── main.tsx                   #   5 lignes — point d'entrée React
+├── styles.css                 # 599 lignes — CSS vars, composants, tooltips, modals, responsive
+├── data/
+│   ├── glossary.ts            # 298 lignes — 28 définitions (Tier 1 + Tier 2)
+│   └── glossary.test.ts       #  82 lignes — 8 tests intégrité données
+├── datasets/
+│   ├── index.ts               # sélecteur de datasets
+│   ├── prenoms-simple.ts      # 50 prénoms FR
+│   ├── prenoms.ts             # 1 000 prénoms FR
+│   ├── pokemon-fr.ts          # 1 022 pokémon FR
+│   └── dinosaures.ts          # 1 530 dinosaures
 ├── components/
-│   ├── Heatmap.tsx      #  92 lignes — composant Heatmap (table) + VectorBar
-│   └── LossChart.tsx    # 127 lignes — courbe de loss en Canvas 2D pur
+│   ├── Term.tsx               #  88 lignes — tooltip WAI-ARIA + lien modal
+│   ├── Term.test.tsx          # 129 lignes — 12 tests composant
+│   ├── TermProvider.tsx       #  88 lignes — contexte + singleton <dialog>
+│   ├── Heatmap.tsx            #  92 lignes — table heatmap + VectorBar
+│   └── LossChart.tsx          # 127 lignes — courbe de loss en Canvas 2D
 ├── pages/
-│   ├── TokenizerPage    # 126 lignes — mapping char→id, tokenisation live
-│   ├── EmbeddingsPage   #  99 lignes — heatmaps wte/wpe, combinaison vecteurs
-│   ├── ForwardPassPage  # 244 lignes — pipeline 7 etapes, attention, MLP neurons
-│   ├── TrainingPage     # 180 lignes — boucle rAF (pas de Worker), loss chart
-│   └── InferencePage    # 221 lignes — generation, trace token par token, probas
-├── engine/              # ~467 lignes — LECTURE SEULE, zero migration
-│   ├── autograd.ts      #  99 lignes — classe Value, backward topologique
-│   ├── model.ts         # 339 lignes — GPT complet, tokenizer, train, inference
-│   ├── random.ts        #  27 lignes — PRNG mulberry32
-│   └── data.ts          #   2 lignes — blob ~8000 noms anglais
-└── assets/react.svg     # favicon Vite (a remplacer)
+│   ├── TokenizerPage.tsx      # ~130 lignes — mapping char→id, tokenisation
+│   ├── EmbeddingsPage.tsx     # ~105 lignes — heatmaps wte/wpe
+│   ├── ForwardPassPage.tsx    # ~246 lignes — pipeline 7 étapes, attention, MLP
+│   ├── TrainingPage.tsx       # ~183 lignes — boucle rAF, loss chart
+│   └── InferencePage.tsx      # ~226 lignes — génération, trace, probas
+├── engine/                    # ~467 lignes — LECTURE SEULE (upstream)
+│   ├── autograd.ts            #  99 lignes — classe Value, backward
+│   ├── model.ts               # 339 lignes — GPT complet (+1 param optionnel docs)
+│   ├── random.ts              #  27 lignes — PRNG mulberry32
+│   └── data.ts                #   2 lignes — blob noms anglais (upstream)
+└── assets/react.svg           # favicon Vite
 ```
 
-**Total : ~2 300 lignes, 16 fichiers source.**
+**Total : ~3 100+ lignes, 22 fichiers source.**
 
-### Constats cles de l'audit
+### Constats clés
 
-- **Zero Tailwind** : le styling est 100% CSS custom (`styles.css`, 391 lignes, CSS vars)
-- **Zero librairie UI** : pas de shadcn, Radix, MUI — tout est `<div>` + classes CSS
+- **Zero Tailwind** : styling 100% CSS custom (`styles.css`, 599 lignes, CSS vars dark/light)
+- **Zero librairie UI** : pas de shadcn, Radix, MUI — `<div>` + classes CSS + `<dialog>` natif
 - **Zero librairie chart** : LossChart = Canvas 2D pur, Heatmap = `<table>` HTML
 - **Zero routeur** : `useState("tokenizer")` + rendu conditionnel dans App.tsx
-- **Zero feature Vite-specifique** : pas de `import.meta.env`, pas de `?raw`, pas de glob
-- **Theme** : hook custom `useTheme()` avec `data-theme` sur `<html>` + `localStorage`
+- **Zero feature Vite-spécifique** : pas de `import.meta.env`, pas de `?raw`, pas de glob
+- **Thème** : hook custom `useTheme()` avec `data-theme` sur `<html>` + `localStorage`
 - **Training** : boucle `requestAnimationFrame` (5 steps/frame), pas de Web Worker
-- **Model sharing** : `useRef<ModelState>` dans App, passe en prop aux pages
+- **Model sharing** : `useRef<ModelState>` dans App, passé en prop aux pages
+- **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
+- **Tests** : Vitest + jsdom + @testing-library/react (20 assertions glossaire + Term)
 
 ---
 
@@ -171,35 +196,44 @@ src/
 
 ### Effort detaille
 
-| Tache | Effort | Detail |
-|-------|--------|--------|
-| Setup Next.js 16 + Tailwind v4 + shadcn/ui + Biome | Moyen | Scaffolding, config identique a microgpt-ts-fr |
-| `"use client"` sur pages et composants | Faible | Tout utilise useState/useRef/useEffect — 100% client |
-| Migrer `styles.css` (391 lignes) → Tailwind v4 | Moyen-eleve | ~50 classes custom → utilitaires Tailwind + CSS vars |
-| Remplacer composants custom par shadcn/ui | Moyen | `.btn` → Button, `.panel` → Card, sliders → Slider |
-| Heatmap + LossChart (canvas) | Faible | Pas d'equivalent shadcn, restent custom |
-| Theme dark/light | Faible | `next-themes` remplace le hook custom |
-| `localStorage` SSR guard | Faible | Proteger l'init theme dans useEffect |
-| Google Analytics | Trivial | Inline HTML → `next/script` |
-| Traduction FR des 5 pages | Moyen | ~870 lignes de texte UI |
-| Datasets FR | Faible | Deja prets dans microgpt-ts-fr |
-| AGENTS.md + Husky + Biome | Faible | Copier pattern microgpt-ts-fr |
+| Tache                                              | Effort      | Detail                                               |
+| -------------------------------------------------- | ----------- | ---------------------------------------------------- |
+| Setup Next.js 16 + Tailwind v4 + shadcn/ui + Biome | Moyen       | Scaffolding, config identique a microgpt-ts-fr       |
+| `"use client"` sur pages et composants             | Faible      | Tout utilise useState/useRef/useEffect — 100% client |
+| Migrer `styles.css` (391 lignes) → Tailwind v4     | Moyen-eleve | ~50 classes custom → utilitaires Tailwind + CSS vars |
+| Remplacer composants custom par shadcn/ui          | Moyen       | `.btn` → Button, `.panel` → Card, sliders → Slider   |
+| Heatmap + LossChart (canvas)                       | Faible      | Pas d'equivalent shadcn, restent custom              |
+| Theme dark/light                                   | Faible      | `next-themes` remplace le hook custom                |
+| `localStorage` SSR guard                           | Faible      | Proteger l'init theme dans useEffect                 |
+| Google Analytics                                   | Trivial     | Inline HTML → `next/script`                          |
+| Traduction FR des 5 pages                          | Moyen       | ~870 lignes de texte UI                              |
+| Datasets FR                                        | Faible      | Deja prets dans microgpt-ts-fr                       |
+| AGENTS.md + Husky + Biome                          | Faible      | Copier pattern microgpt-ts-fr                        |
 
 ### Verdict
 
 **Migration recommandee.** Effort ~2-3 jours, gain en coherence stack significatif.
 Le projet est petit (2 300 lignes), le CSS est le gros du travail, l'engine ne bouge pas.
 
-### Strategie : traduction FR d'abord (sur stack Vite), migration stack ensuite
+### Stratégie : traduction FR d'abord (sur stack Vite), migration stack ensuite
 
-Phase 1 — Fork FR sur stack Vite existante :
-- Cloner, creer repo mon-atelier-ia/microgpt-visualizer-fr
-- Traduire UI + integrer datasets FR
-- Deployer une v1 fonctionnelle rapidement
+Phase 1 — Fork FR sur stack Vite existante — **FAIT** :
+
+- ✅ Cloner, créer repo mon-atelier-ia/microgpt-visualizer-fr
+- ✅ Traduire UI + intégrer datasets FR
+- ✅ Vocabulaire pédagogique (tooltips + modals, 28 termes)
+- ✅ Tests (20 assertions)
+- ✅ Déployer sur Vercel (https://microgpt-visualizer-fr.vercel.app)
 
 Phase 2 (optionnelle) — Migration stack :
+
 - Migrer vers Next.js 16 + shadcn/ui + Tailwind v4
 - Aligner sur la stack microgpt-ts-fr
+
+Phase 3 — Corrections audit ([`docs/audit-frontend.md`](docs/audit-frontend.md)) :
+
+- ✅ 3 critiques corrigés + 15 tests (C-6 rAF leak, W-1 Heatmap clavier, W-2 range label)
+- ⬜ 8 hauts, 7 modérés, 4 faibles à traiter
 
 ---
 
