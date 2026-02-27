@@ -40,19 +40,12 @@ export default function TokenizerPage() {
         </div>
         <div className="char-mapping-scroll">
           {uchars.map((ch, i) => (
-            <div
-              key={ch}
-              className="token-box"
-              style={{ minWidth: 34, cursor: "default" }}
-            >
+            <div key={ch} className="token-box" style={{ cursor: "default" }}>
               <span className="char">{ch}</span>
               <span className="id">{i}</span>
             </div>
           ))}
-          <div
-            className="token-box bos"
-            style={{ minWidth: 34, cursor: "default" }}
-          >
+          <div className="token-box bos" style={{ cursor: "default" }}>
             <span className="char">BOS</span>
             <span className="id">{BOS}</span>
           </div>
@@ -112,27 +105,14 @@ export default function TokenizerPage() {
                 — le cœur du fonctionnement de GPT.
               </div>
               <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 8,
-                  marginTop: 8,
-                }}
+                className="controls"
+                style={{ marginTop: 8, marginBottom: 0 }}
               >
                 {tokens.slice(0, -1).map((t, i) => {
                   const from = tokenLabel(t);
                   const to = tokenLabel(tokens[i + 1]);
                   return (
-                    <div
-                      key={i}
-                      style={{
-                        padding: "4px 10px",
-                        background: "var(--surface2)",
-                        borderRadius: 6,
-                        fontSize: 12,
-                        border: "1px solid var(--border-hover)",
-                      }}
-                    >
+                    <div key={i} className="token-pair">
                       <span style={{ color: "var(--cyan)" }}>{from}</span>
                       <span
                         style={{ color: "var(--text-dim)", margin: "0 4px" }}

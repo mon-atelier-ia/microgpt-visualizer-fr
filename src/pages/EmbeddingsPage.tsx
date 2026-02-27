@@ -105,19 +105,12 @@ export default function EmbeddingsPage({ model }: Props) {
           caractère et <b>où</b> il se trouve.
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            flexWrap: "wrap",
-            marginBottom: 12,
-          }}
-        >
+        <div className="controls">
           {uchars.map((ch) => (
             <button
               key={ch}
-              className={`btn ${ch === selectedChar ? "" : "btn-secondary"}`}
-              style={{ padding: "4px 10px", fontSize: 14, minWidth: 32 }}
+              className={`btn btn-toggle ${ch === selectedChar ? "" : "btn-secondary"}`}
+              style={{ fontSize: 14, minWidth: 32 }}
               onClick={() => setSelectedChar(ch)}
             >
               {ch}
@@ -125,7 +118,10 @@ export default function EmbeddingsPage({ model }: Props) {
           ))}
         </div>
 
-        <div style={{ fontSize: 13, color: "var(--purple)", marginBottom: 8 }}>
+        <div
+          className="label-dim"
+          style={{ fontSize: 13, color: "var(--purple)", marginBottom: 8 }}
+        >
           '{selectedChar}' à la position 0 :
         </div>
 
@@ -133,27 +129,9 @@ export default function EmbeddingsPage({ model }: Props) {
           values={tokEmb}
           label={`wte['${selectedChar}'] (plongement de token)`}
         />
-        <div
-          style={{
-            fontSize: 14,
-            color: "var(--text-dim)",
-            textAlign: "center",
-            margin: "4px 0",
-          }}
-        >
-          +
-        </div>
+        <div className="vector-divider">+</div>
         <VectorBar values={posEmb} label="wpe[0] (plongement de position)" />
-        <div
-          style={{
-            fontSize: 14,
-            color: "var(--text-dim)",
-            textAlign: "center",
-            margin: "4px 0",
-          }}
-        >
-          =
-        </div>
+        <div className="vector-divider">=</div>
         <VectorBar values={combined} label="combiné (entrée du modèle)" />
       </div>
     </PageSection>

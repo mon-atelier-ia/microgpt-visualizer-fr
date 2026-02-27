@@ -47,37 +47,25 @@ export default function ForwardPassPage({ model }: Props) {
       <div className="panel">
         <div className="panel-title">Choisis l'entrée</div>
         <div className="controls">
-          <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
-            Token :
-          </span>
-          <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+          <span className="label-dim">Token :</span>
+          <div className="controls" style={{ gap: 4, marginBottom: 0 }}>
             {uchars.slice(0, 10).map((ch) => (
               <button
                 key={ch}
-                className={`btn ${ch === char ? "" : "btn-secondary"}`}
-                style={{ padding: "3px 8px", minWidth: 28 }}
+                className={`btn btn-toggle--sm ${ch === char ? "" : "btn-secondary"}`}
                 onClick={() => setChar(ch)}
               >
                 {ch}
               </button>
             ))}
           </div>
-          <span
-            style={{ fontSize: 12, color: "var(--text-dim)", marginLeft: 12 }}
-          >
+          <span className="label-dim" style={{ marginLeft: 12 }}>
             Position :
           </span>
           <select
+            className="select-native"
             value={pos}
             onChange={(e) => setPos(Number(e.target.value))}
-            style={{
-              background: "var(--surface2)",
-              border: "1px solid var(--border-hover)",
-              color: "var(--text)",
-              padding: "4px 8px",
-              borderRadius: 4,
-              fontFamily: "inherit",
-            }}
           >
             {Array.from({ length: 8 }, (_, i) => (
               <option key={i} value={i}>
@@ -264,6 +252,7 @@ export default function ForwardPassPage({ model }: Props) {
             {trace.attnWeights.map((hw, h) => (
               <div key={h}>
                 <div
+                  className="label-dim"
                   style={{
                     fontSize: 11,
                     color: "var(--purple)",
@@ -341,7 +330,7 @@ export default function ForwardPassPage({ model }: Props) {
               </div>
             ))}
           </div>
-          <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 4 }}>
+          <div className="label-dim" style={{ fontSize: 11, marginTop: 4 }}>
             {trace.mlpActiveMask.filter(Boolean).length} / 64{" "}
             <Term id="neurone" />s actifs après <Term id="relu" />
           </div>

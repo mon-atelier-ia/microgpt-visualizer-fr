@@ -99,11 +99,7 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
             Entraîner 1000
           </button>
           {training && (
-            <button
-              className="btn"
-              style={{ background: "var(--red)" }}
-              onClick={stop}
-            >
+            <button className="btn btn--danger" onClick={stop}>
               Arrêter
             </button>
           )}
@@ -185,7 +181,7 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
           </div>
 
           {/* Loss par position */}
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <div className="controls" style={{ gap: 6, marginBottom: 0 }}>
             {lastResult.perPositionLoss.map((loss, i) => {
               const from = tokenLabel(lastResult.tokens[i]);
               const to = tokenLabel(lastResult.tokens[i + 1]);
@@ -220,7 +216,7 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
               );
             })}
           </div>
-          <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 8 }}>
+          <div className="label-dim" style={{ fontSize: 11, marginTop: 8 }}>
             Loss moyenne : {lastResult.loss.toFixed(4)} | Plus la boîte est
             rouge, plus le modèle a été surpris
           </div>

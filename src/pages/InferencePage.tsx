@@ -121,7 +121,7 @@ export default function InferencePage({ model }: { model: ModelState }) {
             </button>
           ))}
           {results.length === 0 && (
-            <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
+            <span className="label-dim">
               Clique sur « Générer » pour créer des noms...
             </span>
           )}
@@ -141,19 +141,11 @@ export default function InferencePage({ model }: { model: ModelState }) {
               <Term id="distribution" /> de probabilités à chaque étape.
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: 4,
-                flexWrap: "wrap",
-                marginBottom: 12,
-              }}
-            >
+            <div className="controls" style={{ gap: 4 }}>
               {activeTrace.steps.map((s, i) => (
                 <button
                   key={i}
-                  className={`btn ${i === activeStep ? "" : "btn-secondary"}`}
-                  style={{ padding: "4px 10px", fontSize: 12 }}
+                  className={`btn btn-toggle ${i === activeStep ? "" : "btn-secondary"}`}
                   onClick={() => setActiveStep(i)}
                 >
                   pos {s.pos} :{" "}

@@ -137,9 +137,7 @@ export function VectorBar({
   return (
     <div>
       {label && (
-        <div
-          style={{ fontSize: 10, color: "var(--text-dim)", marginBottom: 2 }}
-        >
+        <div className="label-dim" style={{ fontSize: 10, marginBottom: 2 }}>
           {label}
         </div>
       )}
