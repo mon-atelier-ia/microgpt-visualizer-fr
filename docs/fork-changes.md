@@ -43,6 +43,19 @@
 | `<label htmlFor>` on temperature range input                                              | `InferencePage.tsx`                                                   | W-2 : WCAG 1.3.1 Info & Relationships — `<input type="range">` sans label programmatique                               |
 | 15 tests pour les 3 fixes critiques                                                       | `Heatmap.test.tsx`, `TrainingPage.test.tsx`, `InferencePage.test.tsx` | Couverture : rAF cleanup, navigation clavier, label accessible                                                         |
 
+## Corrections audit Phase 3 — haute
+
+| Change                                                                  | Fichier(s)                                                                 | Justification                                                                                                             |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Semantic HTML: `PageSection` component, `<aside>`, `<header>`, `<main>` | `PageSection.tsx`, `App.tsx`, 5 pages                                      | W-3 : WCAG 1.3.1 — landmarks sémantiques pour navigation assistive                                                        |
+| Convert `<span onClick>` to `<button>` for gen-names                    | `InferencePage.tsx`, `styles.css`                                          | W-4 : WCAG 2.1.1 Keyboard — éléments cliquables non activables au clavier                                                 |
+| ErrorBoundary with French fallback                                      | `ErrorBoundary.tsx`, `App.tsx`                                             | A-2 : crash dans une page faisait tomber toute l'app. Sidebar reste fonctionnelle                                         |
+| Extract 30 inline styles → 7 BEM CSS classes                            | `styles.css`, 5 pages, `Heatmap.tsx`                                       | D-1/S-1/D-3 : 47% réduction inline styles. Classes : `.btn-toggle`, `.btn--danger`, `.label-dim`, `.vector-divider`, etc. |
+| Stable React keys instead of array index                                | `InferencePage.tsx`, `TrainingPage.tsx`                                    | R-3 : `key={i}` instable → `r.id`, `s.pos`, compound keys                                                                 |
+| React.lazy code splitting + Suspense                                    | `App.tsx`                                                                  | R-2 : 5 pages chargées au démarrage → lazy loading, 5+ chunks JS séparés                                                  |
+| React.memo on TokenizerPage (only safe candidate)                       | `TokenizerPage.tsx`                                                        | R-1 : seule page sans props. 4 autres bloquées par A-1 (useRef + forceUpdate)                                             |
+| 9 tests for haute fixes                                                 | `PageSection.test.tsx`, `ErrorBoundary.test.tsx`, `InferencePage.test.tsx` | Couverture : landmarks, error boundary, buttons accessibles, stable keys                                                  |
+
 ## Deployment
 
 | Change                                                                     | Justification                                  |
