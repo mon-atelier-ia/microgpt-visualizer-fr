@@ -116,13 +116,11 @@ const TokenizerPage = memo(function TokenizerPage() {
                   const to = tokenLabel(tokens[i + 1]);
                   return (
                     <div key={i} className="token-pair">
-                      <span style={{ color: "var(--cyan)" }}>{from}</span>
-                      <span
-                        style={{ color: "var(--text-dim)", margin: "0 4px" }}
-                      >
+                      <span className="text-cyan">{from}</span>
+                      <span className="text-dim" style={{ margin: "0 4px" }}>
                         →
                       </span>
-                      <span style={{ color: "var(--green)" }}>{to}</span>
+                      <span className="text-green">{to}</span>
                     </div>
                   );
                 })}

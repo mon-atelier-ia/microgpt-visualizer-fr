@@ -169,9 +169,7 @@ export default function InferencePage({ model }: { model: ModelState }) {
                     key={s.pos}
                     style={{ opacity: i === activeStep ? 1 : 0.5 }}
                   >
-                    <span style={{ color: "var(--text-dim)" }}>
-                      pos {s.pos} :{" "}
-                    </span>
+                    <span className="text-dim">pos {s.pos} : </span>
                     <span className="candidates">
                       [
                       {s.top5
@@ -179,10 +177,10 @@ export default function InferencePage({ model }: { model: ModelState }) {
                         .join(", ")}
                       ]
                     </span>
-                    <span style={{ color: "var(--text-dim)" }}> → </span>
+                    <span className="text-dim"> → </span>
                     <span className="picked">'{s.chosenChar}'</span>
                     {s.chosenChar === "BOS" && (
-                      <span style={{ color: "var(--red)" }}> FIN</span>
+                      <span className="text-red"> FIN</span>
                     )}
                   </div>
                 ))}
@@ -196,7 +194,7 @@ export default function InferencePage({ model }: { model: ModelState }) {
             </div>
             <div className="explain">
               Le modèle produit ces probabilités pour le caractère suivant.
-              Celui en <span style={{ color: "var(--green)" }}>vert</span> a été
+              Celui en <span className="text-green">vert</span> a été
               sélectionné par <Term id="echantillonnage" />.
             </div>
             <ProbabilityBar

@@ -91,8 +91,8 @@ export default function ForwardPassPage({ model }: Props) {
         <div className="explain">
           Chaque boîte montre les données à cette étape. Les 16 nombres sont
           transformés à chaque étape. Les couleurs montrent les valeurs :{" "}
-          <span style={{ color: "var(--red)" }}>négatif</span> à{" "}
-          <span style={{ color: "var(--green)" }}>positif</span>.
+          <span className="text-red">négatif</span> à{" "}
+          <span className="text-green">positif</span>.
         </div>
 
         <div className="flow">

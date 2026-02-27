@@ -300,6 +300,20 @@ input[type="range"]:focus-visible {
   font-size: 12px;
   color: var(--text-dim);
 }
+
+/* Semantic text color utilities */
+.text-red {
+  color: var(--red);
+}
+.text-green {
+  color: var(--green);
+}
+.text-cyan {
+  color: var(--cyan);
+}
+.text-dim {
+  color: var(--text-dim);
+}
 .vector-divider {
   font-size: 14px;
   color: var(--text-dim);

@@ -8,6 +8,7 @@ import {
 import LossChart from "../components/LossChart";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
+import LossCell from "../components/LossCell";
 
 interface Props {
   model: ModelState;
@@ -138,11 +139,11 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
           mesure à quel point les prédictions du modèle sont fausses. Plus c'est
           bas = mieux c'est.
           <br />
-          <span style={{ color: "var(--red)" }}>Ligne rouge pointillée</span> =
-          devinette aléatoire (~3,30 pour 27 <Term id="token" />
+          <span className="text-red">Ligne rouge pointillée</span> = devinette
+          aléatoire (~3,30 pour 27 <Term id="token" />
           s).
           <br />
-          <span style={{ color: "var(--green)" }}>Ligne verte</span> ={" "}
+          <span className="text-green">Ligne verte</span> ={" "}
           <Term id="moyenne-mobile" /> (tendance lissée).
         </div>
         <LossChart lossHistory={model.lossHistory} />
@@ -182,39 +183,14 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
 
           {/* Loss par position */}
           <div className="controls" style={{ gap: 6, marginBottom: 0 }}>
-            {lastResult.perPositionLoss.map((loss, i) => {
-              const from = tokenLabel(lastResult.tokens[i]);
-              const to = tokenLabel(lastResult.tokens[i + 1]);
-              const intensity = Math.min(1, loss / 4);
-              return (
-                <div
-                  key={`${i}-${from}-${to}`}
-                  style={{
-                    padding: "6px 10px",
-                    background: `rgba(247, 118, 142, ${intensity * 0.3})`,
-                    border: `1px solid rgba(247, 118, 142, ${intensity * 0.5})`,
-                    borderRadius: 6,
-                    fontSize: 11,
-                    textAlign: "center",
-                  }}
-                >
-                  <div>
-                    <span style={{ color: "var(--cyan)" }}>{from}</span>
-                    <span style={{ color: "var(--text-dim)" }}> → </span>
-                    <span style={{ color: "var(--green)" }}>{to}</span>
-                  </div>
-                  <div
-                    style={{
-                      color: "var(--red)",
-                      fontWeight: "bold",
-                      fontSize: 10,
-                    }}
-                  >
-                    loss : {loss.toFixed(3)}
-                  </div>
-                </div>
-              );
-            })}
+            {lastResult.perPositionLoss.map((loss, i) => (
+              <LossCell
+                key={`${i}-${lastResult.tokens[i]}-${lastResult.tokens[i + 1]}`}
+                loss={loss}
+                from={tokenLabel(lastResult.tokens[i])}
+                to={tokenLabel(lastResult.tokens[i + 1])}
+              />
+            ))}
           </div>
           <div className="label-dim" style={{ fontSize: 11, marginTop: 8 }}>
             Loss moyenne : {lastResult.loss.toFixed(4)} | Plus la boîte est

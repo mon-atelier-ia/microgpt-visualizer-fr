@@ -56,14 +56,11 @@ export default function EmbeddingsPage({ model }: Props) {
           <b>Survole une ligne</b> pour la mettre en évidence.
           <br />
           <br />
-          Couleurs :{" "}
-          <span style={{ color: "var(--red)" }}>rouge = négatif</span>,{" "}
-          <span style={{ color: "var(--text-dim)" }}>
-            sombre = proche de zéro
-          </span>
-          , <span style={{ color: "var(--green)" }}>vert = positif</span>. Pour
-          l'instant ces valeurs sont <b>aléatoires</b> — après l'entraînement,
-          les lettres similaires auront des motifs similaires.
+          Couleurs : <span className="text-red">rouge = négatif</span>,{" "}
+          <span className="text-dim">sombre = proche de zéro</span>,{" "}
+          <span className="text-green">vert = positif</span>. Pour l'instant ces
+          valeurs sont <b>aléatoires</b> — après l'entraînement, les lettres
+          similaires auront des motifs similaires.
         </div>
         <Heatmap
           matrix={wte}
