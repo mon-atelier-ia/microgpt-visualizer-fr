@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { createModel, type ModelState } from "./engine/model";
 import { DATASETS, DEFAULT_DATASET_ID, getDataset } from "./datasets";
 import TermProvider from "./components/TermProvider";
+import ErrorBoundary from "./components/ErrorBoundary";
 import TokenizerPage from "./pages/TokenizerPage";
 import EmbeddingsPage from "./pages/EmbeddingsPage";
 import ForwardPassPage from "./pages/ForwardPassPage";
@@ -179,17 +180,21 @@ export default function App() {
         )}
 
         <main className="main">
-          {page === "tokenizer" && <TokenizerPage />}
-          {page === "embeddings" && <EmbeddingsPage model={modelRef.current} />}
-          {page === "forward" && <ForwardPassPage model={modelRef.current} />}
-          {page === "training" && (
-            <TrainingPage
-              model={modelRef.current}
-              onUpdate={rerender}
-              onReset={resetModel}
-            />
-          )}
-          {page === "inference" && <InferencePage model={modelRef.current} />}
+          <ErrorBoundary>
+            {page === "tokenizer" && <TokenizerPage />}
+            {page === "embeddings" && (
+              <EmbeddingsPage model={modelRef.current} />
+            )}
+            {page === "forward" && <ForwardPassPage model={modelRef.current} />}
+            {page === "training" && (
+              <TrainingPage
+                model={modelRef.current}
+                onUpdate={rerender}
+                onReset={resetModel}
+              />
+            )}
+            {page === "inference" && <InferencePage model={modelRef.current} />}
+          </ErrorBoundary>
         </main>
       </div>
     </TermProvider>
