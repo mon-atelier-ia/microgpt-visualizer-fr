@@ -1,7 +1,16 @@
 import { useState, useMemo } from "react";
-import { type ModelState, gptForward, uchars, charToId, tokenLabel, N_LAYER, N_HEAD } from "../engine/model";
+import {
+  type ModelState,
+  gptForward,
+  uchars,
+  charToId,
+  tokenLabel,
+  N_LAYER,
+  N_HEAD,
+} from "../engine/model";
 import { VectorBar } from "../components/Heatmap";
 import Term from "../components/Term";
+import PageSection from "../components/PageSection";
 
 interface Props {
   model: ModelState;
@@ -26,19 +35,21 @@ export default function ForwardPassPage({ model }: Props) {
   const maxProb = Math.max(...top5.map((t) => t.prob), 0.01);
 
   return (
-    <>
-      <h1 className="page-title">3. Propagation avant</h1>
+    <PageSection id="forward" title="3. Propagation avant">
       <p className="page-desc">
-        Observe un <Term id="token" /> traverser tout le modèle. Chaque étape transforme le{" "}
-        <Term id="vecteur" /> de 16 nombres jusqu'à obtenir 27 <Term id="logits" /> convertis en
-        probabilités — un score pour chaque caractère suivant possible.
+        Observe un <Term id="token" /> traverser tout le modèle. Chaque étape
+        transforme le <Term id="vecteur" /> de 16 nombres jusqu'à obtenir 27{" "}
+        <Term id="logits" /> convertis en probabilités — un score pour chaque
+        caractère suivant possible.
       </p>
 
       {/* Contrôles */}
       <div className="panel">
         <div className="panel-title">Choisis l'entrée</div>
         <div className="controls">
-          <span style={{ fontSize: 12, color: "var(--text-dim)" }}>Token :</span>
+          <span style={{ fontSize: 12, color: "var(--text-dim)" }}>
+            Token :
+          </span>
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
             {uchars.slice(0, 10).map((ch) => (
               <button
@@ -51,17 +62,27 @@ export default function ForwardPassPage({ model }: Props) {
               </button>
             ))}
           </div>
-          <span style={{ fontSize: 12, color: "var(--text-dim)", marginLeft: 12 }}>Position :</span>
+          <span
+            style={{ fontSize: 12, color: "var(--text-dim)", marginLeft: 12 }}
+          >
+            Position :
+          </span>
           <select
             value={pos}
             onChange={(e) => setPos(Number(e.target.value))}
             style={{
-              background: "var(--surface2)", border: "1px solid var(--border-hover)",
-              color: "var(--text)", padding: "4px 8px", borderRadius: 4, fontFamily: "inherit",
+              background: "var(--surface2)",
+              border: "1px solid var(--border-hover)",
+              color: "var(--text)",
+              padding: "4px 8px",
+              borderRadius: 4,
+              fontFamily: "inherit",
             }}
           >
             {Array.from({ length: 8 }, (_, i) => (
-              <option key={i} value={i}>pos {i}</option>
+              <option key={i} value={i}>
+                pos {i}
+              </option>
             ))}
           </select>
         </div>
@@ -71,8 +92,9 @@ export default function ForwardPassPage({ model }: Props) {
       <div className="panel">
         <div className="panel-title">Les données traversent le modèle</div>
         <div className="explain">
-          Chaque boîte montre les données à cette étape. Les 16 nombres sont transformés à chaque étape.
-          Les couleurs montrent les valeurs : <span style={{ color: "var(--red)" }}>négatif</span> à{" "}
+          Chaque boîte montre les données à cette étape. Les 16 nombres sont
+          transformés à chaque étape. Les couleurs montrent les valeurs :{" "}
+          <span style={{ color: "var(--red)" }}>négatif</span> à{" "}
           <span style={{ color: "var(--green)" }}>positif</span>.
         </div>
 
@@ -81,7 +103,9 @@ export default function ForwardPassPage({ model }: Props) {
             <div className="label">Token '{char}'</div>
             <div className="values">
               wte[{tokenId}]<br />
-              Chercher le plongement<br />de ce caractère dans la table
+              Chercher le plongement
+              <br />
+              de ce caractère dans la table
             </div>
           </div>
           <div className="flow-arrow">→</div>
@@ -89,51 +113,79 @@ export default function ForwardPassPage({ model }: Props) {
             <div className="label">Position {pos}</div>
             <div className="values">
               wpe[{pos}]<br />
-              Chercher le plongement<br />de cette position dans la table
+              Chercher le plongement
+              <br />
+              de cette position dans la table
             </div>
           </div>
           <div className="flow-arrow">→</div>
           <div className="flow-step">
             <div className="label">tok + pos</div>
             <div className="values">
-              Addition élément par élément<br />
-              Encode maintenant<br />le « quoi » et le « où »
+              Addition élément par élément
+              <br />
+              Encode maintenant
+              <br />
+              le « quoi » et le « où »
             </div>
           </div>
           <div className="flow-arrow">→</div>
           <div className="flow-step">
-            <div className="label"><Term id="rmsnorm" /></div>
+            <div className="label">
+              <Term id="rmsnorm" />
+            </div>
             <div className="values">
-              Normaliser le vecteur<br />
-              Maintient les valeurs<br />dans une plage stable
+              Normaliser le vecteur
+              <br />
+              Maintient les valeurs
+              <br />
+              dans une plage stable
             </div>
           </div>
           <div className="flow-arrow">→</div>
           <div className="flow-step">
-            <div className="label"><Term id="attention" /></div>
+            <div className="label">
+              <Term id="attention" />
+            </div>
             <div className="values">
-              Q = "que cherche-je ?"<br />
-              K = "que contiens-je ?"<br />
-              V = "qu'ai-je à offrir ?"<br />
+              Q = "que cherche-je ?"
+              <br />
+              K = "que contiens-je ?"
+              <br />
+              V = "qu'ai-je à offrir ?"
+              <br />
               {N_HEAD} têtes, chacune dim {16 / N_HEAD}
             </div>
           </div>
           <div className="flow-arrow">→</div>
           <div className="flow-step">
-            <div className="label"><Term id="mlp" /></div>
+            <div className="label">
+              <Term id="mlp" />
+            </div>
             <div className="values">
-              Linéaire → <Term id="relu" /> → Linéaire<br />
-              Expansé à 64 dims,<br />puis retour à 16<br />
-              <span className="highlight">{trace.mlpActiveMask?.filter(Boolean).length}/64 <Term id="neurone" />s actifs</span>
+              Linéaire → <Term id="relu" /> → Linéaire
+              <br />
+              Expansé à 64 dims,
+              <br />
+              puis retour à 16
+              <br />
+              <span className="highlight">
+                {trace.mlpActiveMask?.filter(Boolean).length}/64{" "}
+                <Term id="neurone" />s actifs
+              </span>
             </div>
           </div>
           <div className="flow-arrow">→</div>
           <div className="flow-step">
             <div className="label">Sortie</div>
             <div className="values">
-              lm_head : 16 → 27 <Term id="logits" /><br />
-              <Term id="softmax" /> → probabilités<br />
-              <span className="highlight">Top : '{top5[0]?.char}' {(top5[0]?.prob * 100).toFixed(0)}%</span>
+              lm_head : 16 → 27 <Term id="logits" />
+              <br />
+              <Term id="softmax" /> → probabilités
+              <br />
+              <span className="highlight">
+                Top : '{top5[0]?.char}' {(top5[0]?.prob * 100).toFixed(0)}%
+              </span>
             </div>
           </div>
         </div>
@@ -143,23 +195,43 @@ export default function ForwardPassPage({ model }: Props) {
       <div className="panel-row">
         <div className="panel">
           <div className="panel-title">Vecteurs intermédiaires (16 dims)</div>
-          <VectorBar values={trace.tokEmb} label={`Plongement de token : wte['${char}']`} />
-          <VectorBar values={trace.posEmb} label={`Plongement de position : wpe[${pos}]`} />
+          <VectorBar
+            values={trace.tokEmb}
+            label={`Plongement de token : wte['${char}']`}
+          />
+          <VectorBar
+            values={trace.posEmb}
+            label={`Plongement de position : wpe[${pos}]`}
+          />
           <VectorBar values={trace.combined} label="Combiné (tok + pos)" />
           <VectorBar values={trace.afterNorm} label="Après RMSNorm" />
-          <VectorBar values={trace.afterAttn || []} label="Après Attention + Résiduel" />
-          <VectorBar values={trace.afterMlp || []} label="Après MLP + Résiduel" />
+          <VectorBar
+            values={trace.afterAttn || []}
+            label="Après Attention + Résiduel"
+          />
+          <VectorBar
+            values={trace.afterMlp || []}
+            label="Après MLP + Résiduel"
+          />
         </div>
 
         <div className="panel">
-          <div className="panel-title">Sortie : probabilités du <Term id="token" /> suivant</div>
+          <div className="panel-title">
+            Sortie : probabilités du <Term id="token" /> suivant
+          </div>
           <div className="explain">
-            La prédiction du modèle pour le caractère qui vient après <b>'{char}'</b> à la position {pos}.
-            Plus la barre est grande = plus probable.
+            La prédiction du modèle pour le caractère qui vient après{" "}
+            <b>'{char}'</b> à la position {pos}. Plus la barre est grande = plus
+            probable.
           </div>
           {top5.map((t) => (
             <div className="prob-row" key={t.id}>
-              <span className="prob-label" style={t.char === "BOS" ? { color: "var(--red)", fontSize: 10 } : {}}>
+              <span
+                className="prob-label"
+                style={
+                  t.char === "BOS" ? { color: "var(--red)", fontSize: 10 } : {}
+                }
+              >
                 {t.char}
               </span>
               <div className="prob-bar-bg">
@@ -182,23 +254,38 @@ export default function ForwardPassPage({ model }: Props) {
         <div className="panel">
           <div className="panel-title">Poids d'attention ({N_HEAD} têtes)</div>
           <div className="explain">
-            Chaque tête apprend à se concentrer sur des aspects différents. Puisque c'est le premier
-            token, toutes les têtes ont un poids de <b>1.0</b> sur elles-mêmes (rien d'autre à observer).
-            Avec plus de tokens dans la séquence, l'attention serait répartie sur les tokens précédents.
+            Chaque tête apprend à se concentrer sur des aspects différents.
+            Puisque c'est le premier token, toutes les têtes ont un poids de{" "}
+            <b>1.0</b> sur elles-mêmes (rien d'autre à observer). Avec plus de
+            tokens dans la séquence, l'attention serait répartie sur les tokens
+            précédents.
           </div>
           <div style={{ display: "flex", gap: 24 }}>
             {trace.attnWeights.map((hw, h) => (
               <div key={h}>
-                <div style={{ fontSize: 11, color: "var(--purple)", marginBottom: 4 }}>Tête {h}</div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: "var(--purple)",
+                    marginBottom: 4,
+                  }}
+                >
+                  Tête {h}
+                </div>
                 <div style={{ display: "flex", gap: 2 }}>
                   {hw.map((w, t) => (
                     <div
                       key={t}
                       style={{
-                        width: 28, height: 28, borderRadius: 4,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 4,
                         background: `rgba(122, 162, 247, ${w})`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 8, color: w > 0.3 ? "#fff" : "var(--text-dim)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 8,
+                        color: w > 0.3 ? "#fff" : "var(--text-dim)",
                       }}
                     >
                       {w.toFixed(2)}
@@ -214,20 +301,38 @@ export default function ForwardPassPage({ model }: Props) {
       {/* Activation MLP */}
       {trace.mlpHidden && (
         <div className="panel">
-          <div className="panel-title">Couche cachée <Term id="mlp" /> (64 <Term id="neurone" />s)</div>
+          <div className="panel-title">
+            Couche cachée <Term id="mlp" /> (64 <Term id="neurone" />
+            s)
+          </div>
           <div className="explain">
-            Après la couche linéaire qui expanse de 16 → 64 <Term id="dimension" />s, l'activation <b><Term id="relu" /></b> met
-            toutes les valeurs négatives à zéro. Seuls les <Term id="neurone" />s « actifs » (verts) laissent passer
-            l'information. C'est ainsi que le modèle crée des représentations non linéaires.
+            Après la couche linéaire qui expanse de 16 → 64{" "}
+            <Term id="dimension" />
+            s, l'activation{" "}
+            <b>
+              <Term id="relu" />
+            </b>{" "}
+            met toutes les valeurs négatives à zéro. Seuls les{" "}
+            <Term id="neurone" />s « actifs » (verts) laissent passer
+            l'information. C'est ainsi que le modèle crée des représentations
+            non linéaires.
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
             {trace.mlpHidden.map((v, i) => (
               <div
                 key={i}
                 style={{
-                  width: 20, height: 20, borderRadius: 3, fontSize: 6,
-                  background: v > 0 ? `rgba(158, 206, 106, ${Math.min(1, v * 2)})` : "var(--surface2)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: 20,
+                  height: 20,
+                  borderRadius: 3,
+                  fontSize: 6,
+                  background:
+                    v > 0
+                      ? `rgba(158, 206, 106, ${Math.min(1, v * 2)})`
+                      : "var(--surface2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   color: v > 0 ? "#fff" : "var(--text-dim)",
                 }}
                 title={`neurone ${i} : ${v.toFixed(4)} ${v > 0 ? "(actif)" : "(inactif)"}`}
@@ -237,10 +342,11 @@ export default function ForwardPassPage({ model }: Props) {
             ))}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 4 }}>
-            {trace.mlpActiveMask.filter(Boolean).length} / 64 <Term id="neurone" />s actifs après <Term id="relu" />
+            {trace.mlpActiveMask.filter(Boolean).length} / 64{" "}
+            <Term id="neurone" />s actifs après <Term id="relu" />
           </div>
         </div>
       )}
-    </>
+    </PageSection>
   );
 }

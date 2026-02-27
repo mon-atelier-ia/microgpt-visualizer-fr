@@ -7,6 +7,7 @@ import {
 } from "../engine/model";
 import LossChart from "../components/LossChart";
 import Term from "../components/Term";
+import PageSection from "../components/PageSection";
 
 interface Props {
   model: ModelState;
@@ -63,8 +64,7 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
   };
 
   return (
-    <>
-      <h1 className="page-title">4. Entraînement</h1>
+    <PageSection id="training" title="4. Entraînement">
       <p className="page-desc">
         À chaque étape : choisir un nom, envoyer ses caractères un par un,
         mesurer à quel point les prédictions sont fausses (<Term id="loss" />
@@ -260,6 +260,6 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
           'n', 'y' ; etc.
         </div>
       </div>
-    </>
+    </PageSection>
   );
 }

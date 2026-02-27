@@ -1,7 +1,14 @@
 import { useState } from "react";
-import { type ModelState, uchars, N_EMBD, BLOCK_SIZE, charToId } from "../engine/model";
+import {
+  type ModelState,
+  uchars,
+  N_EMBD,
+  BLOCK_SIZE,
+  charToId,
+} from "../engine/model";
 import Heatmap, { VectorBar } from "../components/Heatmap";
 import Term from "../components/Term";
+import PageSection from "../components/PageSection";
 
 interface Props {
   model: ModelState;
@@ -22,29 +29,41 @@ export default function EmbeddingsPage({ model }: Props) {
   const combined = tokEmb.map((t, i) => t + posEmb[i]);
 
   return (
-    <>
-      <h1 className="page-title">2. Plongements (Embeddings)</h1>
+    <PageSection id="embeddings" title="2. Plongements (Embeddings)">
       <p className="page-desc">
-        Le modèle représente chaque <Term id="token" /> et chaque position comme un{" "}
-        <Term id="vecteur" /> de {N_EMBD} nombres — un <Term id="plongement" />.
-        Ces nombres sont les <Term id="parametre" />s apprenables du modèle — ils commencent aléatoires
-        et sont ajustés pendant l'entraînement.
+        Le modèle représente chaque <Term id="token" /> et chaque position comme
+        un <Term id="vecteur" /> de {N_EMBD} nombres — un{" "}
+        <Term id="plongement" />. Ces nombres sont les <Term id="parametre" />s
+        apprenables du modèle — ils commencent aléatoires et sont ajustés
+        pendant l'entraînement.
       </p>
 
       {/* WTE */}
       <div className="panel">
         <div className="panel-title">wte — Plongements de tokens</div>
         <div className="explain">
-          <b><Term id="wte" /></b> signifie "Word Token Embeddings" (<Term id="plongement" />s de tokens). C'est un tableau
-          avec <b>{wte.length} lignes</b> (une par <Term id="token" />) et <b>{N_EMBD} colonnes</b> (la{" "}
-          <Term id="dimension" /> du plongement).<br /><br />
-          Chaque ligne représente comment le modèle « voit » ce caractère. C'est la représentation interne
-          de chaque lettre pour le modèle. <b>Survole une ligne</b> pour la mettre en évidence.<br /><br />
-          Couleurs : <span style={{ color: "var(--red)" }}>rouge = négatif</span>,{" "}
-          <span style={{ color: "var(--text-dim)" }}>sombre = proche de zéro</span>,{" "}
-          <span style={{ color: "var(--green)" }}>vert = positif</span>.
-          Pour l'instant ces valeurs sont <b>aléatoires</b> — après l'entraînement, les lettres similaires
-          auront des motifs similaires.
+          <b>
+            <Term id="wte" />
+          </b>{" "}
+          signifie "Word Token Embeddings" (<Term id="plongement" />s de
+          tokens). C'est un tableau avec <b>{wte.length} lignes</b> (une par{" "}
+          <Term id="token" />) et <b>{N_EMBD} colonnes</b> (la{" "}
+          <Term id="dimension" /> du plongement).
+          <br />
+          <br />
+          Chaque ligne représente comment le modèle « voit » ce caractère. C'est
+          la représentation interne de chaque lettre pour le modèle.{" "}
+          <b>Survole une ligne</b> pour la mettre en évidence.
+          <br />
+          <br />
+          Couleurs :{" "}
+          <span style={{ color: "var(--red)" }}>rouge = négatif</span>,{" "}
+          <span style={{ color: "var(--text-dim)" }}>
+            sombre = proche de zéro
+          </span>
+          , <span style={{ color: "var(--green)" }}>vert = positif</span>. Pour
+          l'instant ces valeurs sont <b>aléatoires</b> — après l'entraînement,
+          les lettres similaires auront des motifs similaires.
         </div>
         <Heatmap
           matrix={wte}
@@ -59,11 +78,18 @@ export default function EmbeddingsPage({ model }: Props) {
       <div className="panel">
         <div className="panel-title">wpe — Plongements de positions</div>
         <div className="explain">
-          <b><Term id="wpe" /></b> signifie "Word Position Embeddings" (<Term id="plongement" />s de positions). Il indique
-          au modèle <b>où</b> se trouve un <Term id="token" /> dans la séquence. Position 0 = premier caractère,
-          position 1 = deuxième, etc.<br /><br />
-          Sans cela, le modèle ne pourrait pas distinguer « ab » de « ba » — les deux ont les mêmes
-          caractères ! Le <Term id="plongement" /> de position est <b>additionné</b> au <Term id="plongement" /> de token.
+          <b>
+            <Term id="wpe" />
+          </b>{" "}
+          signifie "Word Position Embeddings" (<Term id="plongement" />s de
+          positions). Il indique au modèle <b>où</b> se trouve un{" "}
+          <Term id="token" /> dans la séquence. Position 0 = premier caractère,
+          position 1 = deuxième, etc.
+          <br />
+          <br />
+          Sans cela, le modèle ne pourrait pas distinguer « ab » de « ba » — les
+          deux ont les mêmes caractères ! Le <Term id="plongement" /> de
+          position est <b>additionné</b> au <Term id="plongement" /> de token.
         </div>
         <Heatmap matrix={wpe} rowLabels={wpeLabels} colCount={N_EMBD} />
       </div>
@@ -72,12 +98,21 @@ export default function EmbeddingsPage({ model }: Props) {
       <div className="panel">
         <div className="panel-title">Comment wte + wpe se combinent</div>
         <div className="explain">
-          Quand le modèle traite un <Term id="token" />, il cherche <code>wte[id_token]</code> et <code>wpe[position]</code>,
-          puis les <b>additionne élément par élément</b>. Le résultat est un <Term id="vecteur" /> unique qui encode
-          à la fois <b>quel</b> caractère et <b>où</b> il se trouve.
+          Quand le modèle traite un <Term id="token" />, il cherche{" "}
+          <code>wte[id_token]</code> et <code>wpe[position]</code>, puis les{" "}
+          <b>additionne élément par élément</b>. Le résultat est un{" "}
+          <Term id="vecteur" /> unique qui encode à la fois <b>quel</b>{" "}
+          caractère et <b>où</b> il se trouve.
         </div>
 
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            flexWrap: "wrap",
+            marginBottom: 12,
+          }}
+        >
           {uchars.map((ch) => (
             <button
               key={ch}
@@ -94,12 +129,33 @@ export default function EmbeddingsPage({ model }: Props) {
           '{selectedChar}' à la position 0 :
         </div>
 
-        <VectorBar values={tokEmb} label={`wte['${selectedChar}'] (plongement de token)`} />
-        <div style={{ fontSize: 14, color: "var(--text-dim)", textAlign: "center", margin: "4px 0" }}>+</div>
+        <VectorBar
+          values={tokEmb}
+          label={`wte['${selectedChar}'] (plongement de token)`}
+        />
+        <div
+          style={{
+            fontSize: 14,
+            color: "var(--text-dim)",
+            textAlign: "center",
+            margin: "4px 0",
+          }}
+        >
+          +
+        </div>
         <VectorBar values={posEmb} label="wpe[0] (plongement de position)" />
-        <div style={{ fontSize: 14, color: "var(--text-dim)", textAlign: "center", margin: "4px 0" }}>=</div>
+        <div
+          style={{
+            fontSize: 14,
+            color: "var(--text-dim)",
+            textAlign: "center",
+            margin: "4px 0",
+          }}
+        >
+          =
+        </div>
         <VectorBar values={combined} label="combiné (entrée du modèle)" />
       </div>
-    </>
+    </PageSection>
   );
 }

@@ -6,6 +6,7 @@ import {
   tokenLabel,
 } from "../engine/model";
 import Term from "../components/Term";
+import PageSection from "../components/PageSection";
 
 interface GeneratedResult {
   name: string;
@@ -42,8 +43,7 @@ export default function InferencePage({ model }: { model: ModelState }) {
   const maxProb = Math.max(...top10.map((t) => t.prob), 0.01);
 
   return (
-    <>
-      <h1 className="page-title">5. Inférence</h1>
+    <PageSection id="inference" title="5. Inférence">
       <p className="page-desc">
         Après l'entraînement, le modèle génère de nouveaux noms qu'il n'a jamais
         vus. En partant de <Term id="bos" />, il prédit le caractère suivant, en
@@ -269,6 +269,6 @@ export default function InferencePage({ model }: { model: ModelState }) {
           juste à une échelle bien plus grande.
         </div>
       </div>
-    </>
+    </PageSection>
   );
 }
