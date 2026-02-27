@@ -11,6 +11,7 @@ import {
 import { VectorBar } from "../components/Heatmap";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
+import ProbabilityBar from "../components/ProbabilityBar";
 
 interface Props {
   model: ModelState;
@@ -216,28 +217,13 @@ export default function ForwardPassPage({ model }: Props) {
             <b>'{char}'</b> à la position {pos}. Plus la barre est grande = plus
             probable.
           </div>
-          {top5.map((t) => (
-            <div className="prob-row" key={t.id}>
-              <span
-                className="prob-label"
-                style={
-                  t.char === "BOS" ? { color: "var(--red)", fontSize: 10 } : {}
-                }
-              >
-                {t.char}
-              </span>
-              <div className="prob-bar-bg">
-                <div
-                  className="prob-bar"
-                  style={{
-                    width: `${(t.prob / maxProb) * 100}%`,
-                    background: t.char === "BOS" ? "var(--red)" : "var(--blue)",
-                  }}
-                />
-              </div>
-              <span className="prob-val">{(t.prob * 100).toFixed(1)}%</span>
-            </div>
-          ))}
+          <ProbabilityBar
+            items={top5}
+            maxProb={maxProb}
+            labelStyle={(t) =>
+              t.char === "BOS" ? { color: "var(--red)", fontSize: 10 } : {}
+            }
+          />
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import {
 } from "../engine/model";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
+import ProbabilityBar from "../components/ProbabilityBar";
 
 let nextResultId = 0;
 
@@ -198,39 +199,26 @@ export default function InferencePage({ model }: { model: ModelState }) {
               Celui en <span style={{ color: "var(--green)" }}>vert</span> a été
               sélectionné par <Term id="echantillonnage" />.
             </div>
-            {top10.map((t) => (
-              <div className="prob-row" key={t.id}>
-                <span
-                  className="prob-label"
-                  style={{
-                    color:
-                      t.id === step?.chosenId
-                        ? "var(--green)"
-                        : t.char === "BOS"
-                          ? "var(--red)"
-                          : "var(--cyan)",
-                    fontSize: t.char === "BOS" ? 9 : 13,
-                  }}
-                >
-                  {t.char}
-                </span>
-                <div className="prob-bar-bg">
-                  <div
-                    className="prob-bar"
-                    style={{
-                      width: `${(t.prob / maxProb) * 100}%`,
-                      background:
-                        t.id === step?.chosenId
-                          ? "var(--green)"
-                          : t.char === "BOS"
-                            ? "var(--red)"
-                            : "var(--blue)",
-                    }}
-                  />
-                </div>
-                <span className="prob-val">{(t.prob * 100).toFixed(1)}%</span>
-              </div>
-            ))}
+            <ProbabilityBar
+              items={top10}
+              maxProb={maxProb}
+              labelStyle={(t) => ({
+                color:
+                  t.id === step?.chosenId
+                    ? "var(--green)"
+                    : t.char === "BOS"
+                      ? "var(--red)"
+                      : "var(--cyan)",
+                fontSize: t.char === "BOS" ? 9 : 13,
+              })}
+              barColor={(t) =>
+                t.id === step?.chosenId
+                  ? "var(--green)"
+                  : t.char === "BOS"
+                    ? "var(--red)"
+                    : "var(--blue)"
+              }
+            />
           </div>
         </div>
       )}
