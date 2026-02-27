@@ -70,6 +70,7 @@ export default function App() {
           aria-label="Ouvrir le menu"
         >
           <svg
+            aria-hidden="true"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -123,6 +124,7 @@ export default function App() {
               onClick={() => theme !== "dark" && toggleTheme()}
             >
               <svg
+                aria-hidden="true"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -139,6 +141,7 @@ export default function App() {
               onClick={() => theme !== "light" && toggleTheme()}
             >
               <svg
+                aria-hidden="true"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
