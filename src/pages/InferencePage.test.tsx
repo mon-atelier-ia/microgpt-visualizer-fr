@@ -83,12 +83,12 @@ describe("InferencePage — gen-name buttons (W-4)", () => {
 describe("InferencePage — stable keys (R-3)", () => {
   it("les résultats générés ont des ids numériques uniques", () => {
     render(<InferencePage model={makeModel()} />);
+    // Générer 10 une première fois
+    fireEvent.click(screen.getByRole("button", { name: "Générer 10" }));
+    expect(document.querySelectorAll("button.gen-name").length).toBe(10);
+    // Générer 10 de plus — aucun doublon de key (React avertirait)
     fireEvent.click(screen.getByRole("button", { name: "Générer 10" }));
     const buttons = document.querySelectorAll("button.gen-name");
-    // Each button should exist (10 generated)
-    expect(buttons.length).toBe(10);
-    // No duplicate keys — React would warn, but we also verify the buttons rendered correctly
-    const texts = Array.from(buttons).map((b) => b.textContent);
-    expect(texts.length).toBe(10);
+    expect(buttons.length).toBe(20);
   });
 });

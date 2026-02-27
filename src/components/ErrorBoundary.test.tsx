@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it, afterEach, vi } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import ErrorBoundary from "./ErrorBoundary";
 
 afterEach(() => cleanup());
 
-function ThrowingChild() {
+function ThrowingChild(): React.ReactNode {
   throw new Error("test crash");
 }
 
@@ -31,14 +31,22 @@ describe("ErrorBoundary (A-2)", () => {
     vi.restoreAllMocks();
   });
 
-  it("affiche un bouton Recharger qui réinitialise l'état", () => {
+  it("affiche un bouton Recharger qui recharge la page", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
+    const reloadMock = vi.fn();
+    Object.defineProperty(window, "location", {
+      value: { ...window.location, reload: reloadMock },
+      writable: true,
+    });
     render(
       <ErrorBoundary>
         <ThrowingChild />
       </ErrorBoundary>,
     );
-    expect(screen.getByRole("button", { name: "Recharger" })).toBeTruthy();
+    const btn = screen.getByRole("button", { name: "Recharger" });
+    expect(btn).toBeTruthy();
+    fireEvent.click(btn);
+    expect(reloadMock).toHaveBeenCalledTimes(1);
     vi.restoreAllMocks();
   });
 });

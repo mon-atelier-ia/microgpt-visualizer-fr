@@ -298,6 +298,28 @@ input[type="text"]:focus {
   font-family: inherit;
 }
 
+/* ErrorBoundary fallback */
+.error-fallback {
+  margin: 32px;
+  text-align: center;
+  padding: 32px;
+}
+.error-fallback__title {
+  color: var(--red);
+  margin-bottom: 12px;
+}
+.error-fallback__desc {
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+/* Suspense loading fallback */
+.loading-fallback {
+  margin: 32px;
+  text-align: center;
+  color: var(--text-dim);
+}
+
 .token-flow {
   display: flex;
   flex-wrap: nowrap;
@@ -469,6 +491,10 @@ button.gen-name {
   font-family: inherit;
   cursor: pointer;
   text-align: left;
+  transition: border-color 0.15s;
+}
+button.gen-name:hover {
+  border-color: var(--blue);
 }
 button.gen-name:focus-visible {
   outline: 2px solid var(--blue);

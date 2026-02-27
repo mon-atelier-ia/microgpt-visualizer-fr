@@ -184,14 +184,7 @@ export default function App() {
           <ErrorBoundary>
             <Suspense
               fallback={
-                <div
-                  className="panel"
-                  style={{
-                    margin: 32,
-                    textAlign: "center",
-                    color: "var(--text-dim)",
-                  }}
-                >
+                <div className="panel loading-fallback" role="status">
                   Chargement…
                 </div>
               }

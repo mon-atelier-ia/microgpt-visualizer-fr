@@ -22,20 +22,14 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div
-          className="panel"
-          style={{ margin: 32, textAlign: "center", padding: 32 }}
-        >
-          <h2 style={{ color: "var(--red)", marginBottom: 12 }}>
+        <div className="panel error-fallback">
+          <h2 className="error-fallback__title">
             Oups, quelque chose s'est mal passé.
           </h2>
-          <p style={{ color: "var(--text-dim)", marginBottom: 16 }}>
+          <p className="error-fallback__desc">
             Une erreur inattendue est survenue dans cette page.
           </p>
-          <button
-            className="btn"
-            onClick={() => this.setState({ hasError: false })}
-          >
+          <button className="btn" onClick={() => window.location.reload()}>
             Recharger
           </button>
         </div>

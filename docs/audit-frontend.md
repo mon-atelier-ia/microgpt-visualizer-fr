@@ -161,16 +161,16 @@
 
 ### Haute (qualité production) — ✅ TOUS CORRIGÉS
 
-| #       | Problème                                       | Fichier(s)                                 | Correction                                                                                                                   | Tests               |
-| ------- | ---------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| W-3     | HTML non sémantique (`<main>`, `<section>`)    | App.tsx, pages                             | `PageSection` composant partagé (`<section aria-labelledby>`), `<aside>`, `<header>`, `<main>`                               | 3 tests PageSection |
-| W-4     | `<span onClick>` sans accès clavier            | InferencePage:94-109                       | `<button type="button">` natif + `.gen-name--active` CSS + `:focus-visible`                                                  | 2 tests             |
-| A-2     | Pas d'error boundary                           | App.tsx                                    | `ErrorBoundary` class component, French fallback, sidebar hors boundary                                                      | 3 tests             |
-| D-1/S-1 | 64 inline styles → extraire en classes CSS     | 5 pages + Heatmap                          | 7 classes BEM (`.btn-toggle`, `.btn--danger`, `.label-dim`, `.vector-divider`, `.token-pair`, `.select-native`), ~47% réduit | —                   |
-| D-3     | 3 boutons toggle dupliqués → composant partagé | EmbeddingsPage, InferencePage, ForwardPass | `.btn-toggle` / `.btn-toggle--sm` CSS classes (pas de composant générique — KISS)                                            | —                   |
-| R-3     | `key={i}` (index instable) dans les listes     | InferencePage, TrainingPage                | `r.id` (compteur module-level), `s.pos`, compound keys                                                                       | 1 test              |
-| R-2     | Pas de code splitting (`React.lazy`)           | App.tsx                                    | `React.lazy()` + `Suspense` fallback FR, 5+ chunks JS                                                                        | Build vérifié       |
-| R-1     | Pas de `React.memo()` sur les pages            | TokenizerPage (seul faisable)              | `memo()` sur TokenizerPage (zéro prop). 4 autres bloqués par A-1                                                             | —                   |
+| #       | Problème                                       | Fichier(s)                                 | Correction                                                                                                                               | Tests               |
+| ------- | ---------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| W-3     | HTML non sémantique (`<main>`, `<section>`)    | App.tsx, pages                             | `PageSection` composant partagé (`<section aria-labelledby>`), `<aside>`, `<header>`, `<main>`                                           | 3 tests PageSection |
+| W-4     | `<span onClick>` sans accès clavier            | InferencePage:94-109                       | `<button type="button">` natif + `.gen-name--active` CSS + `:focus-visible`                                                              | 2 tests             |
+| A-2     | Pas d'error boundary                           | App.tsx                                    | `ErrorBoundary` class component, French fallback, sidebar hors boundary                                                                  | 3 tests             |
+| D-1/S-1 | 64 inline styles → extraire en classes CSS     | 5 pages + Heatmap                          | 7 classes BEM (`.btn-toggle`, `.btn--danger`, `.label-dim`, `.vector-divider`, `.token-pair`, `.select-native`), ~15% réduit (10 sur 65) | —                   |
+| D-3     | 3 boutons toggle dupliqués → composant partagé | EmbeddingsPage, InferencePage, ForwardPass | `.btn-toggle` / `.btn-toggle--sm` CSS classes (pas de composant générique — KISS)                                                        | —                   |
+| R-3     | `key={i}` (index instable) dans les listes     | InferencePage, TrainingPage                | `r.id` (compteur module-level), `s.pos`, compound keys                                                                                   | 1 test              |
+| R-2     | Pas de code splitting (`React.lazy`)           | App.tsx                                    | `React.lazy()` + `Suspense` fallback FR, 5+ chunks JS                                                                                    | Build vérifié       |
+| R-1     | Pas de `React.memo()` sur les pages            | TokenizerPage (seul faisable)              | `memo()` sur TokenizerPage (zéro prop). 4 autres bloqués par A-1                                                                         | —                   |
 
 ### Modérée (bonnes pratiques)
 
