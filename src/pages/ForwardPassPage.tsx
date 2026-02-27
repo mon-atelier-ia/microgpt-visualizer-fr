@@ -14,6 +14,7 @@ import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 import ProbabilityBar from "../components/ProbabilityBar";
 import HeatCell from "../components/HeatCell";
+import NeuronCell from "../components/NeuronCell";
 
 interface Props {
   model: ModelState;
@@ -275,28 +276,9 @@ export default function ForwardPassPage({ model }: Props) {
             l'information. C'est ainsi que le modèle crée des représentations
             non linéaires.
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+          <div className="neuron-grid">
             {trace.mlpHidden.map((v, i) => (
-              <div
-                key={i}
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 3,
-                  fontSize: 6,
-                  background:
-                    v > 0
-                      ? `rgba(158, 206, 106, ${Math.min(1, v * 2)})`
-                      : "var(--surface2)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: v > 0 ? "#fff" : "var(--text-dim)",
-                }}
-                title={`neurone ${i} : ${v.toFixed(4)} ${v > 0 ? "(actif)" : "(inactif)"}`}
-              >
-                {v > 0 ? "+" : "·"}
-              </div>
+              <NeuronCell key={i} value={v} index={i} />
             ))}
           </div>
           <div className="label-dim" style={{ fontSize: 11, marginTop: 4 }}>
