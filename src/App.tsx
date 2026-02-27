@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createModel, type ModelState } from "./engine/model";
 import { DATASETS, DEFAULT_DATASET_ID, getDataset } from "./datasets";
+import TermProvider from "./components/TermProvider";
 import TokenizerPage from "./pages/TokenizerPage";
 import EmbeddingsPage from "./pages/EmbeddingsPage";
 import ForwardPassPage from "./pages/ForwardPassPage";
@@ -56,6 +57,7 @@ export default function App() {
   };
 
   return (
+    <TermProvider>
     <div className={`app ${mobileMenuOpen ? "menu-open" : ""}`}>
       {/* Bouton menu mobile */}
       <button
@@ -154,5 +156,6 @@ export default function App() {
         {page === "inference" && <InferencePage model={modelRef.current} />}
       </div>
     </div>
+    </TermProvider>
   );
 }

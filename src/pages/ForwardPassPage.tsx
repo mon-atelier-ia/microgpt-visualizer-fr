@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { type ModelState, gptForward, uchars, charToId, tokenLabel, N_LAYER, N_HEAD } from "../engine/model";
 import { VectorBar } from "../components/Heatmap";
+import Term from "../components/Term";
 
 interface Props {
   model: ModelState;
@@ -28,8 +29,9 @@ export default function ForwardPassPage({ model }: Props) {
     <>
       <h1 className="page-title">3. Propagation avant</h1>
       <p className="page-desc">
-        Observe un token traverser tout le modèle. Chaque étape transforme le vecteur de 16 nombres
-        jusqu'à obtenir 27 scores de probabilité — un pour chaque caractère suivant possible.
+        Observe un <Term id="token" /> traverser tout le modèle. Chaque étape transforme le{" "}
+        <Term id="vecteur" /> de 16 nombres jusqu'à obtenir 27 <Term id="logits" /> convertis en
+        probabilités — un score pour chaque caractère suivant possible.
       </p>
 
       {/* Contrôles */}
@@ -100,7 +102,7 @@ export default function ForwardPassPage({ model }: Props) {
           </div>
           <div className="flow-arrow">→</div>
           <div className="flow-step">
-            <div className="label">RMSNorm</div>
+            <div className="label"><Term id="rmsnorm" /></div>
             <div className="values">
               Normaliser le vecteur<br />
               Maintient les valeurs<br />dans une plage stable
@@ -108,7 +110,7 @@ export default function ForwardPassPage({ model }: Props) {
           </div>
           <div className="flow-arrow">→</div>
           <div className="flow-step">
-            <div className="label">Attention</div>
+            <div className="label"><Term id="attention" /></div>
             <div className="values">
               Q = "que cherche-je ?"<br />
               K = "que contiens-je ?"<br />
@@ -118,19 +120,19 @@ export default function ForwardPassPage({ model }: Props) {
           </div>
           <div className="flow-arrow">→</div>
           <div className="flow-step">
-            <div className="label">MLP</div>
+            <div className="label"><Term id="mlp" /></div>
             <div className="values">
-              Linéaire → ReLU → Linéaire<br />
+              Linéaire → <Term id="relu" /> → Linéaire<br />
               Expansé à 64 dims,<br />puis retour à 16<br />
-              <span className="highlight">{trace.mlpActiveMask?.filter(Boolean).length}/64 neurones actifs</span>
+              <span className="highlight">{trace.mlpActiveMask?.filter(Boolean).length}/64 <Term id="neurone" />s actifs</span>
             </div>
           </div>
           <div className="flow-arrow">→</div>
           <div className="flow-step">
             <div className="label">Sortie</div>
             <div className="values">
-              lm_head : 16 → 27 logits<br />
-              softmax → probabilités<br />
+              lm_head : 16 → 27 <Term id="logits" /><br />
+              <Term id="softmax" /> → probabilités<br />
               <span className="highlight">Top : '{top5[0]?.char}' {(top5[0]?.prob * 100).toFixed(0)}%</span>
             </div>
           </div>
@@ -150,7 +152,7 @@ export default function ForwardPassPage({ model }: Props) {
         </div>
 
         <div className="panel">
-          <div className="panel-title">Sortie : probabilités du token suivant</div>
+          <div className="panel-title">Sortie : probabilités du <Term id="token" /> suivant</div>
           <div className="explain">
             La prédiction du modèle pour le caractère qui vient après <b>'{char}'</b> à la position {pos}.
             Plus la barre est grande = plus probable.
@@ -212,10 +214,10 @@ export default function ForwardPassPage({ model }: Props) {
       {/* Activation MLP */}
       {trace.mlpHidden && (
         <div className="panel">
-          <div className="panel-title">Couche cachée MLP (64 neurones)</div>
+          <div className="panel-title">Couche cachée <Term id="mlp" /> (64 <Term id="neurone" />s)</div>
           <div className="explain">
-            Après la couche linéaire qui expanse de 16 → 64 dimensions, l'activation <b>ReLU</b> met
-            toutes les valeurs négatives à zéro. Seuls les neurones « actifs » (verts) laissent passer
+            Après la couche linéaire qui expanse de 16 → 64 <Term id="dimension" />s, l'activation <b><Term id="relu" /></b> met
+            toutes les valeurs négatives à zéro. Seuls les <Term id="neurone" />s « actifs » (verts) laissent passer
             l'information. C'est ainsi que le modèle crée des représentations non linéaires.
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
@@ -235,7 +237,7 @@ export default function ForwardPassPage({ model }: Props) {
             ))}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-dim)", marginTop: 4 }}>
-            {trace.mlpActiveMask.filter(Boolean).length} / 64 neurones actifs après ReLU
+            {trace.mlpActiveMask.filter(Boolean).length} / 64 <Term id="neurone" />s actifs après <Term id="relu" />
           </div>
         </div>
       )}

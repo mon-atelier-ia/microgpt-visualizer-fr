@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { type ModelState, trainStep, type TrainStepResult, tokenLabel } from "../engine/model";
 import LossChart from "../components/LossChart";
+import Term from "../components/Term";
 
 interface Props {
   model: ModelState;
@@ -51,9 +52,9 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
       <h1 className="page-title">4. Entraînement</h1>
       <p className="page-desc">
         À chaque étape : choisir un nom, envoyer ses caractères un par un, mesurer à quel point les
-        prédictions sont fausses (loss), puis ajuster tous les paramètres pour réduire l'erreur.
-        Observe la loss descendre depuis ~3.3 (devinette aléatoire) à mesure que le modèle apprend
-        les motifs des caractères.
+        prédictions sont fausses (<Term id="loss" />), puis ajuster tous les <Term id="parametre" />s pour
+        réduire l'erreur. Observe la <Term id="loss" /> descendre depuis ~3,3 (devinette aléatoire) à
+        mesure que le modèle apprend les motifs des caractères.
       </p>
 
       {/* Contrôles */}
@@ -98,9 +99,9 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
       <div className="panel">
         <div className="panel-title">Loss au fil du temps</div>
         <div className="explain">
-          La <b>loss</b> mesure à quel point les prédictions du modèle sont fausses. Plus c'est bas = mieux c'est.<br />
-          <span style={{ color: "var(--red)" }}>Ligne rouge pointillée</span> = devinette aléatoire (~3.30 pour 27 tokens).<br />
-          <span style={{ color: "var(--green)" }}>Ligne verte</span> = moyenne mobile (tendance lissée).
+          La <b><Term id="loss" /></b> mesure à quel point les prédictions du modèle sont fausses. Plus c'est bas = mieux c'est.<br />
+          <span style={{ color: "var(--red)" }}>Ligne rouge pointillée</span> = devinette aléatoire (~3,30 pour 27 <Term id="token" />s).<br />
+          <span style={{ color: "var(--green)" }}>Ligne verte</span> = <Term id="moyenne-mobile" /> (tendance lissée).
         </div>
         <LossChart lossHistory={model.lossHistory} />
       </div>
@@ -111,7 +112,7 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
           <div className="panel-title">Détail de la dernière étape</div>
           <div className="explain">
             Le modèle a vu le nom <b>"{lastResult.doc}"</b> et a essayé de prédire chaque caractère suivant.
-            Ci-dessous la loss à chaque position — plus la loss est élevée, plus le modèle a été surpris.
+            Ci-dessous la <Term id="loss" /> à chaque position — plus elle est élevée, plus le modèle a été surpris.
           </div>
 
           {/* Séquence de tokens */}
@@ -167,12 +168,12 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
       <div className="panel">
         <div className="panel-title">Que se passe-t-il à chaque étape d'entraînement</div>
         <div className="explain">
-          <b>1. Propagation avant :</b> envoyer chaque token dans le modèle, obtenir les prédictions du token suivant.<br />
-          <b>2. Calcul de la loss :</b> mesurer à quel point chaque prédiction était fausse avec <code>-log(P(correct))</code>.<br />
-          <b>3. Rétropropagation :</b> calculer les gradients — dans quelle direction chacun des {model.params.length} paramètres
-          doit bouger pour réduire la loss ?<br />
-          <b>4. Mise à jour Adam :</b> ajuster chaque paramètre d'une petite quantité dans la bonne direction. Le taux
-          d'apprentissage commence à 0.01 et décroît linéairement jusqu'à 0.<br /><br />
+          <b>1. Propagation avant :</b> envoyer chaque <Term id="token" /> dans le modèle, obtenir les prédictions du token suivant.<br />
+          <b>2. Calcul de la <Term id="loss" /> :</b> mesurer à quel point chaque prédiction était fausse avec <code>-log(P(correct))</code>.<br />
+          <b>3. <Term id="retropropagation" /> :</b> calculer les <Term id="gradient" />s — dans quelle direction chacun des {model.params.length}{" "}
+          <Term id="parametre" />s doit bouger pour réduire la loss ?<br />
+          <b>4. Mise à jour <Term id="adam" /> :</b> ajuster chaque paramètre d'une petite quantité dans la bonne direction. Le{" "}
+          <Term id="taux-apprentissage" /> commence à 0,01 et décroît linéairement jusqu'à 0.<br /><br />
           Après suffisamment d'étapes, le modèle apprend des motifs comme : après 'e', 'm' est probable ;
           les noms se terminent souvent par 'a', 'n', 'y' ; etc.
         </div>

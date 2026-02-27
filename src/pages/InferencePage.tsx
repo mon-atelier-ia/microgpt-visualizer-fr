@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { type ModelState, generateName, type InferenceStep, tokenLabel } from "../engine/model";
+import Term from "../components/Term";
 
 interface GeneratedResult {
   name: string;
@@ -39,9 +40,9 @@ export default function InferencePage({ model }: { model: ModelState }) {
     <>
       <h1 className="page-title">5. Inférence</h1>
       <p className="page-desc">
-        Après l'entraînement, le modèle génère de nouveaux noms qu'il n'a jamais vus. En partant de BOS,
-        il prédit le caractère suivant, en échantillonne un, le renvoie en entrée, et répète jusqu'à
-        ce que BOS apparaisse à nouveau.
+        Après l'entraînement, le modèle génère de nouveaux noms qu'il n'a jamais vus. En partant de{" "}
+        <Term id="bos" />, il prédit le caractère suivant, en échantillonne un (<Term id="echantillonnage" />),
+        le renvoie en entrée, et répète jusqu'à ce que <Term id="bos" /> apparaisse à nouveau.
       </p>
 
       {/* Contrôles */}
@@ -80,8 +81,8 @@ export default function InferencePage({ model }: { model: ModelState }) {
           </span>
         </div>
         <div className="explain">
-          La <b>température</b> contrôle l'aléatoire. Basse (0.1) = choisit toujours le caractère
-          le plus probable (ennuyeux mais sûr). Haute (2.0) = choix plus aléatoires (créatif mais chaotique).
+          La <b><Term id="temperature" /></b> contrôle l'aléatoire. Basse (0,1) = choisit toujours le caractère
+          le plus probable (ennuyeux mais sûr). Haute (2,0) = choix plus aléatoires (créatif mais chaotique).
           Essaie différentes valeurs !
         </div>
       </div>
@@ -123,7 +124,7 @@ export default function InferencePage({ model }: { model: ModelState }) {
             </div>
             <div className="explain">
               Clique sur chaque étape pour voir ce que le modèle « pensait » à cette position.
-              Le modèle pioche dans la distribution de probabilités à chaque étape.
+              Le modèle pioche dans la <Term id="distribution" /> de probabilités à chaque étape.
             </div>
 
             <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 12 }}>
@@ -165,7 +166,7 @@ export default function InferencePage({ model }: { model: ModelState }) {
             </div>
             <div className="explain">
               Le modèle produit ces probabilités pour le caractère suivant.
-              Celui en <span style={{ color: "var(--green)" }}>vert</span> a été échantillonné.
+              Celui en <span style={{ color: "var(--green)" }}>vert</span> a été sélectionné par <Term id="echantillonnage" />.
             </div>
             {top10.map((t) => (
               <div className="prob-row" key={t.id}>
@@ -210,12 +211,12 @@ export default function InferencePage({ model }: { model: ModelState }) {
       <div className="panel">
         <div className="panel-title">Comment fonctionne la génération</div>
         <div className="explain">
-          <b>1.</b> Commencer avec le token BOS (signale « début d'un nom »).<br />
-          <b>2.</b> L'envoyer dans le modèle → obtenir les probabilités pour les 27 tokens suivants possibles.<br />
-          <b>3.</b> <b>Échantillonner</b> un token de cette distribution (la température affecte l'aléatoire).<br />
-          <b>4.</b> Si le token échantillonné est BOS → arrêter (fin du nom).<br />
+          <b>1.</b> Commencer avec le <Term id="token" /> <Term id="bos" /> (signale « début d'un nom »).<br />
+          <b>2.</b> L'envoyer dans le modèle → obtenir les probabilités pour les 27 <Term id="token" />s suivants possibles.<br />
+          <b>3.</b> <b><Term id="echantillonnage" /></b> : tirer un token de cette <Term id="distribution" /> (la <Term id="temperature" /> affecte l'aléatoire).<br />
+          <b>4.</b> Si le token échantillonné est <Term id="bos" /> → arrêter (fin du nom).<br />
           <b>5.</b> Sinon, renvoyer le token échantillonné en entrée et reprendre à l'étape 2.<br /><br />
-          C'est ce qu'on appelle la <b>génération autorégressive</b> — le modèle génère un token à la fois,
+          C'est ce qu'on appelle la <b><Term id="generation-autoregressive" /></b> — le modèle génère un token à la fois,
           chacun dépendant de tous les tokens précédents. C'est exactement ainsi que fonctionne ChatGPT,
           juste à une échelle bien plus grande.
         </div>
