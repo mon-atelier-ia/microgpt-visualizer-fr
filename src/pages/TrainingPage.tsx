@@ -165,7 +165,7 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
             style={{ marginTop: 0, marginBottom: 12 }}
           >
             {lastResult.tokens.map((t, i) => (
-              <span key={i} style={{ display: "contents" }}>
+              <span key={`${i}-${t}`} style={{ display: "contents" }}>
                 {i > 0 && <span className="arrow-sym">→</span>}
                 <div
                   className={`token-box ${t === 26 ? "bos" : ""}`}
@@ -188,7 +188,7 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
               const intensity = Math.min(1, loss / 4);
               return (
                 <div
-                  key={i}
+                  key={`${i}-${from}-${to}`}
                   style={{
                     padding: "6px 10px",
                     background: `rgba(247, 118, 142, ${intensity * 0.3})`,

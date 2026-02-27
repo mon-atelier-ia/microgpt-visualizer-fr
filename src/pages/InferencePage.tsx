@@ -8,7 +8,10 @@ import {
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 
+let nextResultId = 0;
+
 interface GeneratedResult {
+  id: number;
   name: string;
   steps: InferenceStep[];
 }
@@ -24,7 +27,7 @@ export default function InferencePage({ model }: { model: ModelState }) {
   const generate = (count: number) => {
     const newResults: GeneratedResult[] = [];
     for (let i = 0; i < count; i++) {
-      newResults.push(generateName(model, temp));
+      newResults.push({ id: nextResultId++, ...generateName(model, temp) });
     }
     setResults((prev) => [...newResults, ...prev]);
     if (newResults[0]) {
@@ -107,9 +110,9 @@ export default function InferencePage({ model }: { model: ModelState }) {
       <div className="panel">
         <div className="panel-title">Noms générés ({results.length})</div>
         <div className="gen-names">
-          {results.map((r, i) => (
+          {results.map((r) => (
             <button
-              key={i}
+              key={r.id}
               type="button"
               className={`gen-name${activeTrace === r ? " gen-name--active" : ""}`}
               onClick={() => {
@@ -144,7 +147,7 @@ export default function InferencePage({ model }: { model: ModelState }) {
             <div className="controls" style={{ gap: 4 }}>
               {activeTrace.steps.map((s, i) => (
                 <button
-                  key={i}
+                  key={s.pos}
                   className={`btn btn-toggle ${i === activeStep ? "" : "btn-secondary"}`}
                   onClick={() => setActiveStep(i)}
                 >
@@ -157,7 +160,10 @@ export default function InferencePage({ model }: { model: ModelState }) {
             {step && (
               <div className="trace">
                 {activeTrace.steps.map((s, i) => (
-                  <div key={i} style={{ opacity: i === activeStep ? 1 : 0.5 }}>
+                  <div
+                    key={s.pos}
+                    style={{ opacity: i === activeStep ? 1 : 0.5 }}
+                  >
                     <span style={{ color: "var(--text-dim)" }}>
                       pos {s.pos} :{" "}
                     </span>
