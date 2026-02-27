@@ -108,20 +108,17 @@ export default function InferencePage({ model }: { model: ModelState }) {
         <div className="panel-title">Noms générés ({results.length})</div>
         <div className="gen-names">
           {results.map((r, i) => (
-            <span
+            <button
               key={i}
-              className="gen-name"
-              style={{
-                cursor: "pointer",
-                borderColor: activeTrace === r ? "var(--blue)" : undefined,
-              }}
+              type="button"
+              className={`gen-name${activeTrace === r ? " gen-name--active" : ""}`}
               onClick={() => {
                 setActiveTrace(r);
                 setActiveStep(0);
               }}
             >
               {r.name || "(vide)"}
-            </span>
+            </button>
           ))}
           {results.length === 0 && (
             <span style={{ fontSize: 12, color: "var(--text-dim)" }}>

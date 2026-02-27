@@ -430,6 +430,18 @@ canvas.chart {
   border: 1px solid var(--border-hover);
   animation: fadeUp 0.3s;
 }
+button.gen-name {
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+button.gen-name:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.gen-name--active {
+  border-color: var(--blue);
+}
 @keyframes fadeUp {
   from {
     opacity: 0;
