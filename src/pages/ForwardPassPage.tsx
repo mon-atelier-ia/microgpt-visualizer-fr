@@ -13,6 +13,7 @@ import { VectorBar } from "../components/Heatmap";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 import ProbabilityBar from "../components/ProbabilityBar";
+import HeatCell from "../components/HeatCell";
 
 interface Props {
   model: ModelState;
@@ -240,37 +241,13 @@ export default function ForwardPassPage({ model }: Props) {
             tokens dans la séquence, l'attention serait répartie sur les tokens
             précédents.
           </div>
-          <div style={{ display: "flex", gap: 24 }}>
+          <div className="attn-heads">
             {trace.attnWeights.map((hw, h) => (
               <div key={h}>
-                <div
-                  className="label-dim"
-                  style={{
-                    fontSize: 11,
-                    color: "var(--purple)",
-                    marginBottom: 4,
-                  }}
-                >
-                  Tête {h}
-                </div>
-                <div style={{ display: "flex", gap: 2 }}>
+                <div className="label-dim attn-head-label">Tête {h}</div>
+                <div className="attn-head-row">
                   {hw.map((w, t) => (
-                    <div
-                      key={t}
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 4,
-                        background: `rgba(122, 162, 247, ${w})`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 8,
-                        color: w > 0.3 ? "#fff" : "var(--text-dim)",
-                      }}
-                    >
-                      {w.toFixed(2)}
-                    </div>
+                    <HeatCell key={t} value={w} label={w.toFixed(2)} />
                   ))}
                 </div>
               </div>
