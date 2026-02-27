@@ -68,6 +68,18 @@
 | R-3 test: generate 20 items in 2 waves to verify no key duplication | `InferencePage.test.tsx`               | L'ancien test comptait seulement 10 boutons sans vérifier l'unicité                       |
 | Docs: correct false "47% réduction" to actual ~15% (10 sur 65)      | `audit-frontend.md`, `fork-changes.md` | Le chiffre initial était copié du plan sans vérification réelle du comptage inline styles |
 
+## Corrections audit Phase 3 — modérées
+
+| Change                                                           | Fichier(s)                                                       | Justification                                                                                             |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `aria-hidden="true"` on 3 decorative SVGs (hamburger, moon, sun) | `App.tsx`                                                        | W-5 : SVGs dans boutons avec texte visible — décoratifs, doivent être ignorés par lecteurs d'écran        |
+| 6 `:focus-visible` rules for all interactive buttons             | `styles.css`                                                     | W-6 : WCAG 2.4.7 Focus Visible — focus ring uniforme `2px solid var(--blue)` sur tous les boutons         |
+| Darken `--text-dim` in light theme: `#7a756b` → `#6a655d`        | `styles.css`                                                     | W-7 : WCAG 1.4.3 Contrast — ratio 3.87:1 → 4.74:1 sur `--surface2`, WCAG AA atteint                       |
+| `useMemo` on expensive computations + fix deps                   | `EmbeddingsPage.tsx`, `ForwardPassPage.tsx`, `InferencePage.tsx` | R-4/R-5 : vecteurs, top5, top10 mémorisés ; `model` mutable retiré des deps useMemo                       |
+| Throttle LossChart canvas redraws with `requestAnimationFrame`   | `LossChart.tsx`                                                  | P-4 : multiples updates dans la même frame ne déclenchent qu'un seul redraw canvas                        |
+| Extract `ProbabilityBar` shared component                        | `ProbabilityBar.tsx`, `ForwardPassPage.tsx`, `InferencePage.tsx` | D-5 : ~50 lignes JSX dupliquées → composant partagé avec `labelStyle`/`barColor` props                    |
+| S-3 marked as accepted (won't fix)                               | `audit-frontend.md`                                              | S-3 : `valToColor()` fait de l'interpolation RGB runtime — CSS custom properties ne peuvent pas remplacer |
+
 ## Deployment
 
 | Change                                                                     | Justification                                  |

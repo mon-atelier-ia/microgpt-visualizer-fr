@@ -172,17 +172,18 @@
 | R-2     | Pas de code splitting (`React.lazy`)           | App.tsx                                    | `React.lazy()` + `Suspense` fallback FR, 5+ chunks JS                                                                                    | Build vérifié       |
 | R-1     | Pas de `React.memo()` sur les pages            | TokenizerPage (seul faisable)              | `memo()` sur TokenizerPage (zéro prop). 4 autres bloqués par A-1                                                                         | —                   |
 
-### Modérée (bonnes pratiques)
+### Modérée (bonnes pratiques) — ✅ TOUS CORRIGÉS (sauf S-3 accepté)
 
-| #   | Problème                                         | Fichier(s)                     |
-| --- | ------------------------------------------------ | ------------------------------ |
-| R-4 | `useCallback`/`useMemo` absents des pages        | Toutes les pages               |
-| R-5 | `useMemo` deps trop larges                       | ForwardPassPage:20             |
-| W-5 | Boutons thème SVG sans `aria-label`              | App.tsx:110-128                |
-| W-6 | Pas de `:focus-visible` explicite                | styles.css                     |
-| W-7 | Contraste `--text-dim` à vérifier en thème clair | styles.css                     |
-| D-5 | Barres de probabilité dupliquées                 | ForwardPassPage, InferencePage |
-| S-3 | Couleurs hardcodées dans Heatmap                 | Heatmap.tsx                    |
+| #   | Problème                                          | Fichier(s)                             | Statut                                                                   |
+| --- | ------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------ |
+| R-4 | `useMemo` absents des calculs coûteux             | EmbeddingsPage, ForwardPass, Inference | ✅ `useMemo` sur vecteurs, top5, top10                                   |
+| R-5 | `useMemo` deps trop larges                        | ForwardPassPage:20                     | ✅ `model` retiré des deps, `model.totalStep` suffit                     |
+| W-5 | Boutons thème SVG sans `aria-hidden`              | App.tsx                                | ✅ `aria-hidden="true"` sur 3 SVGs décoratifs                            |
+| W-6 | Pas de `:focus-visible` explicite                 | styles.css                             | ✅ 6 règles `:focus-visible` ajoutées                                    |
+| W-7 | Contraste `--text-dim` insuffisant en thème clair | styles.css                             | ✅ `#7a756b` → `#6a655d` (4.74:1 sur surface2, WCAG AA)                  |
+| P-4 | LossChart canvas redraw sans RAF                  | LossChart.tsx                          | ✅ `requestAnimationFrame` + cleanup `cancelAnimationFrame`              |
+| D-5 | Barres de probabilité dupliquées                  | ForwardPassPage, InferencePage         | ✅ Composant `ProbabilityBar` partagé                                    |
+| S-3 | Couleurs hardcodées dans Heatmap                  | Heatmap.tsx                            | Accepté — interpolation RGB runtime, CSS custom properties inapplicables |
 
 ### Faible (améliorations)
 
