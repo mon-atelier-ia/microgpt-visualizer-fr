@@ -120,6 +120,10 @@ body {
   color: var(--text-dim);
   flex-shrink: 0;
 }
+.sidebar nav button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
 .sidebar nav button.active .num {
   background: var(--blue);
   color: var(--bg);
@@ -155,6 +159,10 @@ body {
 .dataset-btn:hover {
   background: var(--surface2);
   color: var(--text);
+}
+.dataset-btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 .dataset-btn.active {
   background: var(--surface2);
@@ -253,6 +261,10 @@ input[type="text"]:focus {
 }
 .btn:hover {
   filter: brightness(1.15);
+}
+.btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 .btn:disabled {
   opacity: 0.4;
@@ -623,6 +635,10 @@ button.gen-name:focus-visible {
   color: var(--text);
   border-color: var(--text-dim);
 }
+.theme-btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
 .theme-btn.active {
   background: var(--blue);
   color: var(--bg);
@@ -646,6 +662,10 @@ button.gen-name:focus-visible {
   font-weight: bold;
   text-align: center;
   transition: all 0.15s;
+}
+.guide-link:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 .guide-link:hover {
   filter: brightness(1.15);
@@ -700,6 +720,10 @@ button.gen-name:focus-visible {
   color: var(--text);
   transition: all 0.2s;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.mobile-menu-btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 .mobile-menu-btn:hover {
   background: var(--surface2);
