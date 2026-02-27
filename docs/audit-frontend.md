@@ -179,20 +179,18 @@
 | R-4 | `useMemo` absents des calculs coûteux             | ForwardPass, Inference         | ✅ `useMemo` sur trace (gptForward), top5, top10. EmbeddingsPage exclu (calcul trivial : 48 itérations)                   |
 | R-5 | `useMemo` deps trop larges                        | ForwardPassPage:20             | ✅ deps corrigées : `[tokenId, pos, model, model.totalStep]` — `model` pour identité reset, `totalStep` pour entraînement |
 | W-5 | Boutons thème SVG sans `aria-hidden`              | App.tsx                        | ✅ `aria-hidden="true"` sur 3 SVGs décoratifs                                                                             |
-| W-6 | Pas de `:focus-visible` explicite                 | styles.css                     | ✅ 6 règles `:focus-visible` ajoutées                                                                                     |
+| W-6 | Pas de `:focus-visible` explicite                 | styles.css                     | ✅ 9 règles `:focus-visible` (6 boutons + input text + range + select)                                                    |
 | W-7 | Contraste `--text-dim` insuffisant en thème clair | styles.css                     | ✅ `#7a756b` → `#6a655d` (4.73:1 sur surface2, 5.14:1 sur bg, WCAG AA)                                                    |
 | P-4 | LossChart canvas redraw sans RAF                  | LossChart.tsx                  | ✅ `requestAnimationFrame` + cleanup `cancelAnimationFrame`                                                               |
-| D-5 | Barres de probabilité dupliquées                  | ForwardPassPage, InferencePage | ✅ Composant `ProbabilityBar` partagé                                                                                     |
+| D-5 | Barres de probabilité dupliquées                  | ForwardPassPage, InferencePage | ✅ Composant `ProbabilityBar` partagé + 7 tests                                                                           |
 | S-3 | Couleurs hardcodées dans Heatmap                  | Heatmap.tsx                    | Accepté — interpolation RGB runtime, CSS custom properties inapplicables                                                  |
 
 ### Faible (améliorations)
 
-| #   | Problème                                       | Fichier(s)             |
-| --- | ---------------------------------------------- | ---------------------- |
-| R-6 | Types inline vs interface Props                | InferencePage, Heatmap |
-| P-6 | `valToColor()` non mémorisé                    | Heatmap.tsx            |
-| S-4 | CSS monolithique (599 lignes)                  | styles.css             |
-| D-4 | Labels violet dupliqués                        | ForwardPassPage        |
-| W-8 | Contraste `--text-dim` dark theme sous WCAG AA | styles.css             |
-
-> **W-8 (découverte)** : en thème sombre, `--text-dim` (#7d786e) sur `--surface2` (#2a2a27) = **3.28:1**, sur `--surface` (#222220) = **3.63:1**. Sous le seuil WCAG AA 4.5:1. Pré-existant upstream, non bloquant pour du texte secondaire (`font-size ≥ 14px bold` ou `≥ 18px` = AA large text 3:1 suffit), mais à surveiller.
+| #       | Problème                                           | Fichier(s)             |
+| ------- | -------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------- |
+| R-6     | Types inline vs interface Props                    | InferencePage, Heatmap |
+| P-6     | `valToColor()` non mémorisé                        | Heatmap.tsx            |
+| S-4     | CSS monolithique (599 lignes)                      | styles.css             |
+| D-4     | Labels violet dupliqués                            | ForwardPassPage        |
+| ~~W-8~~ | ~~Contraste `--text-dim` dark theme sous WCAG AA~~ | ~~styles.css~~         | ✅ Corrigé : `#7d786e` → `#959082` (4.52:1 sur surface2, 5.00:1 sur surface, WCAG AA) |

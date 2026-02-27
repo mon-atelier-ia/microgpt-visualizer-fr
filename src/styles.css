@@ -7,7 +7,7 @@
   --border: #363632;
   --border-hover: #4a4a44;
   --text: #cdc8be;
-  --text-dim: #7d786e;
+  --text-dim: #959082;
   --blue: #c28b4e;
   --purple: #a08cb4;
   --cyan: #6a9f9b;
@@ -245,6 +245,18 @@ input[type="text"] {
 }
 input[type="text"]:focus {
   border-color: var(--blue);
+}
+input[type="text"]:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.select-native:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .btn {
