@@ -1,13 +1,14 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { createModel, type ModelState } from "./engine/model";
 import { DATASETS, DEFAULT_DATASET_ID, getDataset } from "./datasets";
 import TermProvider from "./components/TermProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
-import TokenizerPage from "./pages/TokenizerPage";
-import EmbeddingsPage from "./pages/EmbeddingsPage";
-import ForwardPassPage from "./pages/ForwardPassPage";
-import TrainingPage from "./pages/TrainingPage";
-import InferencePage from "./pages/InferencePage";
+
+const TokenizerPage = lazy(() => import("./pages/TokenizerPage"));
+const EmbeddingsPage = lazy(() => import("./pages/EmbeddingsPage"));
+const ForwardPassPage = lazy(() => import("./pages/ForwardPassPage"));
+const TrainingPage = lazy(() => import("./pages/TrainingPage"));
+const InferencePage = lazy(() => import("./pages/InferencePage"));
 
 const PAGES = [
   { id: "tokenizer", num: 1, label: "Tokenisation" },
@@ -181,19 +182,38 @@ export default function App() {
 
         <main className="main">
           <ErrorBoundary>
-            {page === "tokenizer" && <TokenizerPage />}
-            {page === "embeddings" && (
-              <EmbeddingsPage model={modelRef.current} />
-            )}
-            {page === "forward" && <ForwardPassPage model={modelRef.current} />}
-            {page === "training" && (
-              <TrainingPage
-                model={modelRef.current}
-                onUpdate={rerender}
-                onReset={resetModel}
-              />
-            )}
-            {page === "inference" && <InferencePage model={modelRef.current} />}
+            <Suspense
+              fallback={
+                <div
+                  className="panel"
+                  style={{
+                    margin: 32,
+                    textAlign: "center",
+                    color: "var(--text-dim)",
+                  }}
+                >
+                  Chargement…
+                </div>
+              }
+            >
+              {page === "tokenizer" && <TokenizerPage />}
+              {page === "embeddings" && (
+                <EmbeddingsPage model={modelRef.current} />
+              )}
+              {page === "forward" && (
+                <ForwardPassPage model={modelRef.current} />
+              )}
+              {page === "training" && (
+                <TrainingPage
+                  model={modelRef.current}
+                  onUpdate={rerender}
+                  onReset={resetModel}
+                />
+              )}
+              {page === "inference" && (
+                <InferencePage model={modelRef.current} />
+              )}
+            </Suspense>
           </ErrorBoundary>
         </main>
       </div>

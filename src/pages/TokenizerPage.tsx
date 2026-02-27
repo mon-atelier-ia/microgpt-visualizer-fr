@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { uchars, BOS, tokenize, tokenLabel, vocabSize } from "../engine/model";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 
-export default function TokenizerPage() {
+// R-1: seul TokenizerPage est memo'd (zéro prop).
+// Les 4 autres reçoivent modelRef.current (même référence) →
+// memo empêcherait les re-renders après training. Requiert fix A-1.
+const TokenizerPage = memo(function TokenizerPage() {
   const [input, setInput] = useState("emma");
 
   const clean = input
@@ -152,4 +155,6 @@ export default function TokenizerPage() {
       </div>
     </PageSection>
   );
-}
+});
+
+export default TokenizerPage;
