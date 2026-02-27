@@ -98,7 +98,7 @@ Commit : `6fad5e0`
 Voir [`docs/audit-frontend.md`](docs/audit-frontend.md) — 37 problèmes répertoriés :
 
 - ~~3 critiques~~ → **corrigés** (rAF cleanup, roving tabindex Heatmap, `<label>` range input) + 15 tests
-- 8 hauts (pas de memo/lazy, 64 inline styles, keys index, HTML non sémantique)
+- ~~8 hauts~~ → **corrigés** (landmarks, buttons a11y, ErrorBoundary, CSS classes, stable keys, lazy/memo) + 9 tests
 - 7 modérés (useCallback absent, contraste à vérifier, focus visible)
 - 4 faibles (types inline, CSS monolithique)
 
@@ -135,9 +135,9 @@ Ensemble, ils forment une paire pedagogique complete pour tuto-llm :
 
 ```
 src/
-├── App.tsx                    # 161 lignes — shell, routing, theme, TermProvider wrapper
+├── App.tsx                    # ~220 lignes — shell, routing, theme, TermProvider, lazy imports, ErrorBoundary
 ├── main.tsx                   #   5 lignes — point d'entrée React
-├── styles.css                 # 599 lignes — CSS vars, composants, tooltips, modals, responsive
+├── styles.css                 # ~660 lignes — CSS vars, composants, tooltips, modals, BEM classes, responsive
 ├── data/
 │   ├── glossary.ts            # 298 lignes — 28 définitions (Tier 1 + Tier 2)
 │   └── glossary.test.ts       #  82 lignes — 8 tests intégrité données
@@ -152,7 +152,12 @@ src/
 │   ├── Term.test.tsx          # 129 lignes — 12 tests composant
 │   ├── TermProvider.tsx       #  88 lignes — contexte + singleton <dialog>
 │   ├── Heatmap.tsx            #  92 lignes — table heatmap + VectorBar
-│   └── LossChart.tsx          # 127 lignes — courbe de loss en Canvas 2D
+│   ├── Heatmap.test.tsx       # ~160 lignes — 10 tests roving tabindex, clavier
+│   ├── LossChart.tsx          # 127 lignes — courbe de loss en Canvas 2D
+│   ├── PageSection.tsx        #  15 lignes — DRY landmarks (section + h1)
+│   ├── PageSection.test.tsx   #  30 lignes — 3 tests aria-labelledby
+│   ├── ErrorBoundary.tsx      #  43 lignes — class component, French fallback
+│   └── ErrorBoundary.test.tsx #  53 lignes — 3 tests (render, catch, reload)
 ├── pages/
 │   ├── TokenizerPage.tsx      # ~130 lignes — mapping char→id, tokenisation
 │   ├── EmbeddingsPage.tsx     # ~105 lignes — heatmaps wte/wpe
@@ -167,7 +172,7 @@ src/
 └── assets/react.svg           # favicon Vite
 ```
 
-**Total : ~3 100+ lignes, 22 fichiers source.**
+**Total : ~3 500+ lignes, 28 fichiers source (dont 8 test files).**
 
 ### Constats clés
 
@@ -180,7 +185,10 @@ src/
 - **Training** : boucle `requestAnimationFrame` (5 steps/frame), pas de Web Worker
 - **Model sharing** : `useRef<ModelState>` dans App, passé en prop aux pages
 - **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
-- **Tests** : Vitest + jsdom + @testing-library/react (20 assertions glossaire + Term)
+- **Tests** : Vitest + jsdom + @testing-library/react (63 tests, 8 fichiers)
+- **ErrorBoundary** : class component, `window.location.reload()`, sidebar hors boundary
+- **Code splitting** : `React.lazy()` + `Suspense` → 5+ chunks JS séparés
+- **CSS BEM** : 7 classes utilitaires (`.btn-toggle`, `.btn--danger`, `.label-dim`, etc.)
 
 ---
 
@@ -233,7 +241,9 @@ Phase 2 (optionnelle) — Migration stack :
 Phase 3 — Corrections audit ([`docs/audit-frontend.md`](docs/audit-frontend.md)) :
 
 - ✅ 3 critiques corrigés + 15 tests (C-6 rAF leak, W-1 Heatmap clavier, W-2 range label)
-- ⬜ 8 hauts, 7 modérés, 4 faibles à traiter
+- ✅ 8 hauts corrigés + 9 tests (W-3 landmarks, W-4 buttons, A-2 ErrorBoundary, D-1/S-1/D-3 CSS, R-3 keys, R-2 lazy, R-1 memo)
+- ✅ Audit qualité post-fix : ErrorBoundary reload réel, hover states, a11y Suspense, docs corrigées
+- ⬜ 7 modérés, 4 faibles à traiter
 
 ---
 

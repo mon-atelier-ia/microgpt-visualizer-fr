@@ -56,6 +56,18 @@
 | React.memo on TokenizerPage (only safe candidate)                       | `TokenizerPage.tsx`                                                        | R-1 : seule page sans props. 4 autres bloquées par A-1 (useRef + forceUpdate)                                            |
 | 9 tests for haute fixes                                                 | `PageSection.test.tsx`, `ErrorBoundary.test.tsx`, `InferencePage.test.tsx` | Couverture : landmarks, error boundary, buttons accessibles, stable keys                                                 |
 
+## Corrections audit qualité post-Phase 3
+
+| Change                                                              | Fichier(s)                             | Justification                                                                             |
+| ------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| ErrorBoundary: `window.location.reload()` instead of `setState`     | `ErrorBoundary.tsx`                    | L'ancien `setState({hasError:false})` re-rendait l'enfant crashé → re-crash silencieux    |
+| ErrorBoundary fallback: extract 3 inline styles to CSS classes      | `ErrorBoundary.tsx`, `styles.css`      | `.error-fallback`, `.error-fallback__title`, `.error-fallback__desc` (BEM)                |
+| Suspense fallback: `role="status"` + extract inline styles          | `App.tsx`, `styles.css`                | Accessibilité lecteurs d'écran + `.loading-fallback` CSS class                            |
+| `button.gen-name`: add `:hover` state + `transition`                | `styles.css`                           | Feedback visuel au survol manquant (seul `:focus-visible` existait)                       |
+| ErrorBoundary test: verify `window.location.reload()` is called     | `ErrorBoundary.test.tsx`               | L'ancien test vérifiait seulement l'existence du bouton, pas son comportement             |
+| R-3 test: generate 20 items in 2 waves to verify no key duplication | `InferencePage.test.tsx`               | L'ancien test comptait seulement 10 boutons sans vérifier l'unicité                       |
+| Docs: correct false "47% réduction" to actual ~15% (10 sur 65)      | `audit-frontend.md`, `fork-changes.md` | Le chiffre initial était copié du plan sans vérification réelle du comptage inline styles |
+
 ## Deployment
 
 | Change                                                                     | Justification                                  |
