@@ -1,3 +1,4 @@
+import { useCallback, useRef } from "react";
 import { Value } from "../engine/autograd";
 
 const DISPLAY_DECIMALS = 2;
@@ -28,10 +29,49 @@ interface Props {
   onHoverRow?: (row: number | null) => void;
 }
 
-export default function Heatmap({ matrix, rowLabels, colCount, highlightRow, onHoverRow }: Props) {
+export default function Heatmap({
+  matrix,
+  rowLabels,
+  colCount,
+  highlightRow,
+  onHoverRow,
+}: Props) {
+  const rowsRef = useRef<(HTMLTableRowElement | null)[]>([]);
+
+  // Roving tabindex: Arrow Up/Down/Home/End to navigate rows (W-1)
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent, r: number) => {
+      let next = r;
+      switch (e.key) {
+        case "ArrowDown":
+          next = Math.min(r + 1, matrix.length - 1);
+          break;
+        case "ArrowUp":
+          next = Math.max(r - 1, 0);
+          break;
+        case "Home":
+          next = 0;
+          break;
+        case "End":
+          next = matrix.length - 1;
+          break;
+        default:
+          return;
+      }
+      if (next !== r) {
+        e.preventDefault();
+        rowsRef.current[next]?.focus();
+      }
+    },
+    [matrix.length],
+  );
+
   return (
     <div className="heatmap-wrap">
-      <table className="heatmap">
+      <table
+        className="heatmap"
+        aria-label={`Tableau ${rowLabels.length} lignes × ${colCount} colonnes`}
+      >
         <thead>
           <tr>
             <th></th>
@@ -44,9 +84,22 @@ export default function Heatmap({ matrix, rowLabels, colCount, highlightRow, onH
           {matrix.map((row, r) => (
             <tr
               key={r}
+              ref={(el) => {
+                rowsRef.current[r] = el;
+              }}
+              tabIndex={
+                onHoverRow ? (r === (highlightRow ?? 0) ? 0 : -1) : undefined
+              }
+              onKeyDown={onHoverRow ? (e) => handleKeyDown(e, r) : undefined}
               onMouseEnter={() => onHoverRow?.(r)}
               onMouseLeave={() => onHoverRow?.(null)}
-              style={highlightRow === r ? { outline: "2px solid var(--blue)" } : undefined}
+              onFocus={() => onHoverRow?.(r)}
+              onBlur={() => onHoverRow?.(null)}
+              style={
+                highlightRow === r
+                  ? { outline: "2px solid var(--blue)" }
+                  : undefined
+              }
             >
               <td className="row-label">{rowLabels[r]}</td>
               {row.slice(0, colCount).map((cell, c) => {
@@ -55,7 +108,10 @@ export default function Heatmap({ matrix, rowLabels, colCount, highlightRow, onH
                 return (
                   <td
                     key={c}
-                    style={{ background: bg, color: Math.abs(v) > 0.25 ? "#2a2a25" : "#4a4a42" }}
+                    style={{
+                      background: bg,
+                      color: Math.abs(v) > 0.25 ? "#2a2a25" : "#4a4a42",
+                    }}
                     title={`${rowLabels[r]} dim${c}: ${v.toFixed(TOOLTIP_DECIMALS)}`}
                   >
                     {v.toFixed(DISPLAY_DECIMALS)}
@@ -70,11 +126,23 @@ export default function Heatmap({ matrix, rowLabels, colCount, highlightRow, onH
   );
 }
 
-export function VectorBar({ values, label }: { values: number[]; label?: string }) {
+export function VectorBar({
+  values,
+  label,
+}: {
+  values: number[];
+  label?: string;
+}) {
   const maxAbs = Math.max(...values.map(Math.abs), 0.01);
   return (
     <div>
-      {label && <div style={{ fontSize: 10, color: "var(--text-dim)", marginBottom: 2 }}>{label}</div>}
+      {label && (
+        <div
+          style={{ fontSize: 10, color: "var(--text-dim)", marginBottom: 2 }}
+        >
+          {label}
+        </div>
+      )}
       <div className="vector-display">
         {values.map((v, i) => (
           <div
