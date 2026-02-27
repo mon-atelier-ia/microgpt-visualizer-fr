@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   type ModelState,
   generateName,
@@ -37,12 +37,16 @@ export default function InferencePage({ model }: { model: ModelState }) {
   };
 
   const step = activeTrace?.steps[activeStep];
-  const top10 = step
-    ? step.probs
-        .map((p, i) => ({ id: i, char: tokenLabel(i), prob: p }))
-        .sort((a, b) => b.prob - a.prob)
-        .slice(0, 12)
-    : [];
+  const top10 = useMemo(
+    () =>
+      step
+        ? step.probs
+            .map((p, i) => ({ id: i, char: tokenLabel(i), prob: p }))
+            .sort((a, b) => b.prob - a.prob)
+            .slice(0, 12)
+        : [],
+    [step],
+  );
   const maxProb = Math.max(...top10.map((t) => t.prob), 0.01);
 
   return (

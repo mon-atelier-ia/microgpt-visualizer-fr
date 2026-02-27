@@ -26,12 +26,16 @@ export default function ForwardPassPage({ model }: Props) {
     const vals = Array.from({ length: N_LAYER }, () => [] as any[]);
     const result = gptForward(tokenId, pos, keys, vals, model, true);
     return result.trace!;
-  }, [model, char, pos, model.totalStep]);
+  }, [char, pos, model.totalStep]);
 
-  const top5 = trace.probs
-    .map((p, i) => ({ id: i, char: tokenLabel(i), prob: p }))
-    .sort((a, b) => b.prob - a.prob)
-    .slice(0, 10);
+  const top5 = useMemo(
+    () =>
+      trace.probs
+        .map((p, i) => ({ id: i, char: tokenLabel(i), prob: p }))
+        .sort((a, b) => b.prob - a.prob)
+        .slice(0, 10),
+    [trace],
+  );
   const maxProb = Math.max(...top5.map((t) => t.prob), 0.01);
 
   return (
