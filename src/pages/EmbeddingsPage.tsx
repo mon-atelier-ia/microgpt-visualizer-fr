@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import { uchars, N_EMBD, BLOCK_SIZE, charToId } from "../engine/model";
 import Heatmap, { VectorBar } from "../components/Heatmap";
+import EmbeddingBarChart from "../components/EmbeddingBarChart";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 import { useModel } from "../modelStore";
-import { memo } from "react";
+import { computeCharStats } from "../utils/charStats";
 
 export default memo(function EmbeddingsPage() {
   const model = useModel();
@@ -21,6 +22,18 @@ export default memo(function EmbeddingsPage() {
   const posEmb = wpe[0].map((v) => v.data);
   const combined = tokEmb.map((t, i) => t + posEmb[i]);
 
+  // Dataset stats (recalculated when dataset changes)
+  const charStats = useMemo(() => computeCharStats(model.docs), [model.docs]);
+
+  // Bar chart data for hovered row
+  const hoveredValues =
+    hoverRow !== null ? wte[hoverRow].map((v) => v.data) : null;
+  const hoveredLabel = hoverRow !== null ? wteLabels[hoverRow] : null;
+  const hoveredStats =
+    hoverRow !== null && hoverRow < uchars.length
+      ? (charStats.get(uchars[hoverRow]) ?? null)
+      : null;
+
   return (
     <PageSection id="embeddings" title="2. Plongements (Embeddings)">
       <p className="page-desc">
@@ -34,6 +47,11 @@ export default memo(function EmbeddingsPage() {
       {/* WTE */}
       <div className="panel">
         <div className="panel-title">wte — Plongements de tokens</div>
+        <div className="label-dim" style={{ marginBottom: 8 }}>
+          {model.totalStep === 0
+            ? "Valeurs aléatoires — reviens après avoir entraîné le modèle à l'étape 4 pour voir des motifs apparaître"
+            : `Entraîné (${model.totalStep} étapes) — les lettres similaires développent des motifs proches`}
+        </div>
         <div className="explain">
           <b>
             <Term id="wte" />
@@ -46,7 +64,8 @@ export default memo(function EmbeddingsPage() {
           <br />
           Chaque ligne représente comment le modèle « voit » ce caractère. C'est
           la représentation interne de chaque lettre pour le modèle.{" "}
-          <b>Survole une ligne</b> pour la mettre en évidence.
+          <b>Survole une ligne</b> pour voir ses dimensions en barres
+          verticales.
           <br />
           <br />
           Couleurs : <span className="text-red">rouge = négatif</span>,{" "}
@@ -55,13 +74,24 @@ export default memo(function EmbeddingsPage() {
           valeurs sont <b>aléatoires</b> — après l'entraînement, les lettres
           similaires auront des motifs similaires.
         </div>
-        <Heatmap
-          matrix={wte}
-          rowLabels={wteLabels}
-          colCount={N_EMBD}
-          highlightRow={hoverRow ?? undefined}
-          onHoverRow={setHoverRow}
-        />
+        <div className="heatmap-with-bars">
+          <div>
+            <Heatmap
+              matrix={wte}
+              rowLabels={wteLabels}
+              colCount={N_EMBD}
+              highlightRow={hoverRow ?? undefined}
+              onHoverRow={setHoverRow}
+            />
+          </div>
+          <div className="barchart-side">
+            <EmbeddingBarChart
+              values={hoveredValues}
+              label={hoveredLabel}
+              charStats={hoveredStats}
+            />
+          </div>
+        </div>
       </div>
 
       {/* WPE */}
