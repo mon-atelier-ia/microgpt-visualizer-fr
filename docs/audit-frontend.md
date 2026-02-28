@@ -1,8 +1,8 @@
 # Audit frontend — microgpt-visualizer-fr
 
-> Date : 2026-02-27 (révisé 2026-02-28)
+> Date : 2026-02-27 (révisé 2026-02-28, CSS mis à jour 2026-02-28)
 > Périmètre : `src/` (pages, components, styles, App). Le répertoire `src/engine/` (code upstream read-only) est mentionné mais non priorisé.
-> Voir aussi : [`docs/audit-iso.md`](audit-iso.md) — audit ISO (25010, 40500, 9241-110), score global 4,2/5.
+> Voir aussi : [`docs/audit-iso.md`](audit-iso.md) — audit ISO (25010, 40500, 9241-110), score global 4,5/5.
 
 ---
 
@@ -27,17 +27,19 @@
 
 ## 2. Duplication
 
-### 2.1 Inline styles (64 occurrences)
+### 2.1 Inline styles — ✅ CORRIGÉ (64 → 7 dynamiques)
 
-| Fichier               | Nombre |
-| --------------------- | ------ |
-| `ForwardPassPage.tsx` | 15     |
-| `InferencePage.tsx`   | 15     |
-| `TrainingPage.tsx`    | 14     |
-| `TokenizerPage.tsx`   | 9      |
-| `EmbeddingsPage.tsx`  | 8      |
-| `Heatmap.tsx`         | 3      |
-| **Total**             | **64** |
+24 styles inline statiques extraits en 20 classes CSS utilitaires (`b0b3ad9`). Ne restent que 7 styles dynamiques (couleurs/opacité calculés au runtime) :
+
+| Fichier              | Dynamiques | Raison                                           |
+| -------------------- | ---------- | ------------------------------------------------ |
+| `Heatmap.tsx`        | 3          | `valToColor()` background/color, highlight row   |
+| `HeatCell.tsx`       | 1          | Background conditionnel sur valeur               |
+| `NeuronCell.tsx`     | 1          | Background conditionnel sur valeur               |
+| `LossCell.tsx`       | 1          | Background conditionnel sur loss                 |
+| `ProbabilityBar.tsx` | 1          | Width proportionnel + background                 |
+| `InferencePage.tsx`  | 1          | Opacity conditionnelle sur étape active          |
+| **Total**            | **7**      | Tous calculés au runtime — inline = seule option |
 
 ### 2.2 Patterns dupliqués
 
@@ -49,11 +51,11 @@
 | D-4 | Modéré   | Label violet `fontSize: 11, color: "var(--purple)"`                  | 2           | ForwardPassPage:192, 239                                                                                    |
 | D-5 | Modéré   | Barres de probabilité (width proportionnel, background conditionnel) | 2           | ForwardPassPage:170, InferencePage:190-197                                                                  |
 
-### 2.3 Recommandations
+### 2.3 Recommandations — ✅ TOUTES CORRIGÉES
 
-- Extraire des classes CSS utilitaires : `.flex-wrap-gap`, `.color-legend`, `.btn-sm`, `.label-sub`
-- Créer un composant `<ToggleButton>` partagé pour les 3 sélecteurs de caractère/étape
-- Créer un composant `<ProbabilityBar>` pour les barres de probabilité
+- ✅ Classes CSS utilitaires : 20 classes extraites (`controls--tight`, `cursor-default`, `d-contents`, `mt-*`, `label-control`, `explain--warning`, `btn-toggle--char`, `token-box--compact`, etc.)
+- ✅ Composant `<ProbabilityBar>` partagé (D-5, 7 tests)
+- Composant `<ToggleButton>` : non nécessaire — classes CSS BEM suffisent (`.btn-toggle`, `.btn-toggle--sm`, `.btn-toggle--char`)
 
 ---
 
@@ -136,17 +138,20 @@
 ### 7.1 Points forts
 
 - 46 custom properties (dark + light themes) avec noms sémantiques ✓
+- 20 classes utilitaires (margin, gap, display, font-size, contrôles, tokens) ✓
+- Scrollbars thématiques (webkit + standard `scrollbar-color`/`scrollbar-width`) ✓
 - Styles Term/TermProvider : positionnés avant les `@media` queries (cascade correcte) ✓
 - WCAG 1.4.13 : bridge `::before`, tooltip hoverable, flip viewport ✓
+- 3 `!important` : tous justifiés (1 row-label override inline, 2 prefers-reduced-motion) ✓
 
 ### 7.2 Problèmes
 
-| #   | Sévérité | Problème                                     | Détail                                                                                                                  |
-| --- | -------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| S-1 | Haute    | 64 inline styles dans les composants         | Contournent le système CSS, impossible à surcharger, pas de thème, pas de responsive                                    |
-| S-2 | Haute    | Pas de classes utilitaires                   | Les patterns flex/gap/wrap sont dupliqués 8+ fois en inline au lieu de classes `.flex-wrap`, `.gap-sm`                  |
-| S-3 | Modéré   | Couleurs hardcodées dans Heatmap             | `valToColor()` utilise des RGB littéraux (`rgb(...)`) au lieu de custom properties                                      |
-| S-4 | Faible   | `styles.css` = 599 lignes en un seul fichier | Pas de découpage (layout, components, utilities, themes). Acceptable pour la taille actuelle mais risque de croissance. |
+| #   | Sévérité  | Problème                                        | Détail                                                                                                                  |
+| --- | --------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| S-1 | ~~Haute~~ | ~~64 inline styles~~ → **7 dynamiques**         | ✅ 24 static extraits en 20 classes utilitaires. 7 dynamiques restants = runtime-computed (inline seule option)         |
+| S-2 | ~~Haute~~ | ~~Pas de classes utilitaires~~                  | ✅ 20 classes utilitaires dans `styles.css` (margin, gap, display, font-size, contrôles, tokens)                        |
+| S-3 | Modéré    | Couleurs hardcodées dans Heatmap                | `valToColor()` utilise des RGB littéraux (`rgb(...)`) au lieu de custom properties                                      |
+| S-4 | Faible    | `styles.css` = ~1 500 lignes en un seul fichier | Pas de découpage (layout, components, utilities, themes). Acceptable pour la taille actuelle mais risque de croissance. |
 
 ---
 
@@ -162,16 +167,16 @@
 
 ### Haute (qualité production) — ✅ TOUS CORRIGÉS
 
-| #       | Problème                                       | Fichier(s)                                 | Correction                                                                                                                               | Tests               |
-| ------- | ---------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| W-3     | HTML non sémantique (`<main>`, `<section>`)    | App.tsx, pages                             | `PageSection` composant partagé (`<section aria-labelledby>`), `<aside>`, `<header>`, `<main>`                                           | 3 tests PageSection |
-| W-4     | `<span onClick>` sans accès clavier            | InferencePage:94-109                       | `<button type="button">` natif + `.gen-name--active` CSS + `:focus-visible`                                                              | 2 tests             |
-| A-2     | Pas d'error boundary                           | App.tsx                                    | `ErrorBoundary` class component, `window.location.reload()`, French fallback BEM, sidebar hors boundary                                  | 3 tests             |
-| D-1/S-1 | 64 inline styles → extraire en classes CSS     | 5 pages + Heatmap                          | 7 classes BEM (`.btn-toggle`, `.btn--danger`, `.label-dim`, `.vector-divider`, `.token-pair`, `.select-native`), ~15% réduit (10 sur 65) | —                   |
-| D-3     | 3 boutons toggle dupliqués → composant partagé | EmbeddingsPage, InferencePage, ForwardPass | `.btn-toggle` / `.btn-toggle--sm` CSS classes (pas de composant générique — KISS)                                                        | —                   |
-| R-3     | `key={i}` (index instable) dans les listes     | InferencePage, TrainingPage                | `r.id` (compteur module-level), `s.pos`, compound keys                                                                                   | 1 test              |
-| R-2     | Pas de code splitting (`React.lazy`)           | App.tsx                                    | `React.lazy()` + `Suspense` fallback FR, 5+ chunks JS                                                                                    | Build vérifié       |
-| R-1     | Pas de `React.memo()` sur les pages            | TokenizerPage (seul faisable)              | `memo()` sur TokenizerPage (zéro prop). 4 autres bloqués par A-1                                                                         | —                   |
+| #       | Problème                                       | Fichier(s)                                 | Correction                                                                                                 | Tests               |
+| ------- | ---------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ------------------- |
+| W-3     | HTML non sémantique (`<main>`, `<section>`)    | App.tsx, pages                             | `PageSection` composant partagé (`<section aria-labelledby>`), `<aside>`, `<header>`, `<main>`             | 3 tests PageSection |
+| W-4     | `<span onClick>` sans accès clavier            | InferencePage:94-109                       | `<button type="button">` natif + `.gen-name--active` CSS + `:focus-visible`                                | 2 tests             |
+| A-2     | Pas d'error boundary                           | App.tsx                                    | `ErrorBoundary` class component, `window.location.reload()`, French fallback BEM, sidebar hors boundary    | 3 tests             |
+| D-1/S-1 | 64 inline styles → extraire en classes CSS     | 5 pages + Heatmap                          | 20 classes utilitaires CSS, 24 static extraits. 7 dynamiques restants (runtime). Réduction : 64 → 7 (89 %) | —                   |
+| D-3     | 3 boutons toggle dupliqués → composant partagé | EmbeddingsPage, InferencePage, ForwardPass | `.btn-toggle` / `.btn-toggle--sm` CSS classes (pas de composant générique — KISS)                          | —                   |
+| R-3     | `key={i}` (index instable) dans les listes     | InferencePage, TrainingPage                | `r.id` (compteur module-level), `s.pos`, compound keys                                                     | 1 test              |
+| R-2     | Pas de code splitting (`React.lazy`)           | App.tsx                                    | `React.lazy()` + `Suspense` fallback FR, 5+ chunks JS                                                      | Build vérifié       |
+| R-1     | Pas de `React.memo()` sur les pages            | TokenizerPage (seul faisable)              | `memo()` sur TokenizerPage (zéro prop). 4 autres bloqués par A-1                                           | —                   |
 
 ### Modérée (bonnes pratiques) — ✅ TOUS CORRIGÉS (sauf S-3 accepté)
 
@@ -193,5 +198,5 @@
 | ~~W-8~~ | ~~Contraste `--text-dim` dark theme sous WCAG AA~~ | ~~styles.css~~         | ✅ Corrigé : `#7d786e` → `#959082` (4.52:1 sur surface2, 5.00:1 sur surface, WCAG AA) |
 | R-6     | Types inline vs interface Props                    | InferencePage, Heatmap | Accepté — 1 seul fichier, idiomatique TypeScript pour prop unique                     |
 | P-6     | `valToColor()` non mémorisé                        | Heatmap.tsx            | Accepté — calcul trivial, mémoisation ajouterait de la complexité inutile             |
-| S-4     | CSS monolithique (599 → 1 400 lignes)              | styles.css             | Accepté — fichier unique acceptable pour cette taille de projet                       |
+| S-4     | CSS monolithique (~1 500 lignes)                   | styles.css             | Accepté — fichier unique acceptable pour cette taille de projet                       |
 | D-4     | Labels violet dupliqués                            | ForwardPassPage        | Accepté — 2 occurrences dans le même fichier, extraction non justifiée                |

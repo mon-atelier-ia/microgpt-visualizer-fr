@@ -137,7 +137,7 @@ Ensemble, ils forment une paire pedagogique complete pour tuto-llm :
 src/
 ├── App.tsx                        # 218 lignes — shell, routing, theme, TermProvider, lazy, ErrorBoundary
 ├── main.tsx                       #   5 lignes — point d'entrée React
-├── styles.css                     # 1 400 lignes — CSS vars, BEM, responsive, sr-only, reduced-motion
+├── styles.css                     # ~1 500 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion
 ├── data/
 │   ├── glossary.ts                # 298 lignes — 29 définitions (Tier 1 + Tier 2)
 │   └── glossary.test.ts           #  82 lignes — 8 tests intégrité données
@@ -187,23 +187,23 @@ src/
 └── assets/react.svg               # favicon Vite
 ```
 
-**Total : ~5 000 lignes, 29 fichiers source + 15 fichiers test. 86 tests.**
+**Total : ~5 000 lignes, 29 fichiers source + 16 fichiers test. 94 tests.**
 
 ### Constats clés
 
-- **Zero Tailwind** : styling 100% CSS custom (`styles.css`, 1 400 lignes, CSS vars dark/light)
+- **Zero Tailwind** : styling 100% CSS custom (`styles.css`, ~1 500 lignes, CSS vars dark/light)
 - **Zero librairie UI** : pas de shadcn, Radix, MUI — `<div>` + classes CSS + `<dialog>` natif
 - **Zero librairie chart** : LossChart = Canvas 2D pur, Heatmap = `<table>` HTML
 - **Zero routeur** : `useState("tokenizer")` + rendu conditionnel dans App.tsx
 - **Zero feature Vite-spécifique** : pas de `import.meta.env`, pas de `?raw`, pas de glob
-- **Thème** : hook custom `useTheme()` avec `data-theme` sur `<html>` + `localStorage`
+- **Thème** : hook custom `useTheme()` avec `data-theme` sur `<html>` + `localStorage`, scrollbars thématiques
 - **Training** : boucle `requestAnimationFrame` (5 steps/frame), pas de Web Worker
-- **Model sharing** : `useRef<ModelState>` dans App, passé en prop aux pages (A-1 à refactoriser)
+- **Model sharing** : `useSyncExternalStore` dans `modelStore.ts`, hook `useModel()` (A-1 corrigé)
 - **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
-- **Tests** : Vitest + jsdom + @testing-library/react (86 tests, 15 fichiers)
+- **Tests** : Vitest + jsdom + @testing-library/react (94 tests, 16 fichiers)
 - **ErrorBoundary** : class component, `window.location.reload()`, sidebar hors boundary
 - **Code splitting** : `React.lazy()` + `Suspense` → 5+ chunks JS séparés
-- **CSS BEM** : 7 classes utilitaires + `.sr-only` + `prefers-reduced-motion`
+- **CSS** : 20 classes utilitaires + BEM + `.sr-only` + `prefers-reduced-motion`. Inline styles réduits de 64 à 7 (dynamiques uniquement)
 - **Accessibilité** : WCAG 2.1 AA ~95 %, labels sur tous inputs/selects, `:focus-visible`, `aria-label` canvas
 
 ---
@@ -270,7 +270,7 @@ Voir [`docs/audit-iso.md`](docs/audit-iso.md) — audit contre 6 normes ISO :
 - ISO/IEC 40500:2012 (WCAG 2.1 AA)
 - ISO 9241-110:2020 (Interaction)
 
-Score global : **4,2/5**. 10 findings retirés (inhérents/hors périmètre), 4 a11y corrigés (NEW-1, NEW-4, MIN-3, MIN-4), 11 engine smoke tests ajoutés.
+Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 a11y corrigés (NEW-1, NEW-4, MIN-3, MIN-4), 11 engine smoke tests ajoutés.
 
 ### 8. Phase 4 — roadmap restante
 
@@ -280,6 +280,14 @@ Score global : **4,2/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 - ✅ MIN-8 : Hint clavier `<kbd>↑↓</kbd>` sous Heatmap interactif
 - ✅ MIN-1 : Retiré (faux positif — `.push()` in-place, `.length` = seul trigger)
 - ✅ README.md traduit en français (FR principal + EN en `<details>`)
+
+### 9. Polish CSS — FAIT
+
+- ✅ Scrollbars thématiques (webkit + standard `scrollbar-color`) — `86ef089`
+- ✅ Lisibilité petits textes : font-sizes augmentées (vector-cell 8→10px, heatmap 9→10/11px, flow 9→10/11px, heat-cell 8→10px) — `86ef089`
+- ✅ Extraction 24 inline styles statiques → 20 classes CSS utilitaires — `b0b3ad9`
+- 7 inline styles dynamiques conservés (couleurs/opacité calculés au runtime)
+- 3 `!important` légitimes (1 `.row-label` override inline, 2 `prefers-reduced-motion`)
 
 ---
 

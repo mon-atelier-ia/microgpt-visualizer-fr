@@ -1,9 +1,9 @@
 # Audit ISO — microgpt-visualizer-fr
 
-> Date : 2026-02-27 (révisé 2026-02-28, scores mis à jour 2026-02-28)
+> Date : 2026-02-27 (révisé 2026-02-28, scores mis à jour 2026-02-28, CSS/tests 2026-02-28)
 > Auditeur : Claude Opus 4.6 (assisté par 4 agents parallèles)
 > Périmètre : `src/` (pages, components, styles, App, engine read-only)
-> Commit de référence : `89a4ec8` (main), scores révisés après `7ac30a9`
+> Commit de référence : `89a4ec8` (main), scores révisés après `b0b3ad9`
 
 ---
 
@@ -92,7 +92,7 @@
 | Navigation clavier    | 5/5   | Roving tabindex, 9 `:focus-visible`, Escape dismiss, `<dialog>` natif   |
 | Landmarks sémantiques | 5/5   | `<main>`, `<aside>`, `<nav>`, `<header>`, `<section aria-labelledby>`   |
 | Récupérabilité        | 5/5   | ErrorBoundary FR, `resetModel()`, reload, rAF cleanup                   |
-| Tests                 | 4,5/5 | 94 tests, 16 fichiers. Composants + engine + pages + store + données.   |
+| Tests                 | 4,5/5 | 94 tests, 16 fichiers. Composants + engine + pages + store + données    |
 | Glossaire pédagogique | 4,5/5 | 30 termes, Tier 1/2, analogies adaptées 10-14 ans                       |
 | Code splitting        | 4,5/5 | `React.lazy()` + `Suspense`, 5 chunks 4-7 KB chacun                     |
 
@@ -122,6 +122,7 @@
 - (+) ESLint 0 warnings, Prettier en pre-commit
 - (+) TypeScript strict (`any` éliminé sauf 1 `eslint-disable` documenté)
 - (+) ~~InferencePage prop inline~~ : corrigé par A-1 — `useModel()` hook, plus aucune prop
+- (+) 20 classes CSS utilitaires, inline styles réduits de 64 à 7 (dynamiques uniquement)
 
 ### ISO/IEC 25010:2023 — Sécurité (5,0/5)
 
