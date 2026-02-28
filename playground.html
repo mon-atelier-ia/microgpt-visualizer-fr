@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural Network — Playground</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #181816;
+    color: #cdc8be;
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 { font-size: 18px; margin-bottom: 8px; color: #e0dbd2; }
+  .controls {
+    display: flex; gap: 10px; margin-bottom: 16px;
+  }
+  button {
+    background: #2a2a27; color: #cdc8be; border: 1px solid #3a3a36;
+    padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    font-family: inherit; font-size: 13px;
+  }
+  button:hover { background: #3a3a36; }
+  canvas { border-radius: 8px; cursor: crosshair; }
+  .info {
+    margin-top: 12px; font-size: 12px; color: #7a756b;
+    text-align: center; max-width: 600px;
+  }
+</style>
+</head>
+<body>
+<h1>Réseau de neurones — Propagation avant</h1>
+<div class="controls">
+  <button id="btn-replay">Rejouer animation</button>
+  <button id="btn-random">Nouvelles valeurs</button>
+</div>
+<canvas id="nn"></canvas>
+<div class="info">
+  Survole un neurone pour voir ses connexions. Chaque colonne = une couche du modèle.
+  <br>Couleurs : <span style="color:#bf6a63">rouge = négatif</span>,
+  <span style="color:#8aaa6b">vert = positif</span>.
+</div>
+
+<script>
+// ── Config ───────────────────────────────────────────────────────
+const LAYERS = [16, 16, 64, 16, 27];
+const LABELS = ["Embedding\n(16)", "Attention\n(16)", "MLP caché\n(64)", "MLP sortie\n(16)", "Logits\n(27)"];
+const BG = "#181816";
+const NEURON_STROKE = "rgba(205,200,190,0.6)";
+const CONNECTION_COLOR = "rgba(205,200,190,0.05)";
+const CONNECTION_ACTIVE = "rgba(205,200,190,0.25)";
+const LABEL_COLOR = "#7a756b";
+const ANIM_LAYER_DELAY = 350; // ms per layer
+const ANIM_FADE_DURATION = 300; // ms fade in
+
+// ── State ────────────────────────────────────────────────────────
+let activations = [];  // activations[layer][neuron] ∈ [-1, 1]
+let neurons = [];      // neurons[layer][neuron] = {x, y, r}
+let hoverNeuron = null; // {layer, index} or null
+let animStart = 0;
+let animating = false;
+let dpr = 1;
+
+const canvas = document.getElementById("nn");
+const ctx = canvas.getContext("2d");
+
+// ── Sizing ───────────────────────────────────────────────────────
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  const w = Math.min(window.innerWidth - 48, 960);
+  const h = Math.min(window.innerHeight - 180, 640);
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  computePositions(w, h);
+  draw();
+}
+
+// ── Random activations ───────────────────────────────────────────
+function randomActivations() {
+  activations = LAYERS.map(n =>
+    Array.from({ length: n }, () => Math.random() * 2 - 1)
+  );
+  // MLP ReLU: zero out negatives in layer 2 (MLP hidden)
+  activations[2] = activations[2].map(v => Math.max(0, v));
+}
+
+// ── Compute neuron positions ─────────────────────────────────────
+function computePositions(w, h) {
+  const padX = 70;
+  const padY = 40;
+  const usableW = w - padX * 2;
+  const usableH = h - padY * 2 - 30; // 30 for labels
+  const nLayers = LAYERS.length;
+
+  neurons = LAYERS.map((count, li) => {
+    const x = padX + (li / (nLayers - 1)) * usableW;
+    const maxR = count <= 20 ? 7 : count <= 30 ? 5 : 3;
+    const spacing = Math.min(usableH / (count + 1), maxR * 3.5);
+    const totalH = spacing * (count - 1);
+    const startY = padY + (usableH - totalH) / 2;
+
+    return Array.from({ length: count }, (_, ni) => ({
+      x,
+      y: startY + ni * spacing,
+      r: maxR,
+    }));
+  });
+}
+
+// ── Color from value ─────────────────────────────────────────────
+function valToColor(v, alpha = 1) {
+  const t = Math.max(-1, Math.min(1, v));
+  let r, g, b;
+  if (t < 0) {
+    // warm terracotta for negatives (matches Heatmap.tsx)
+    r = Math.floor(140 + t * 95);
+    g = Math.floor(120 + t * 50);
+    b = Math.floor(110 + t * 50);
+  } else {
+    // sage green for positives
+    r = Math.floor(130 + t * 10);
+    g = Math.floor(135 + t * 80);
+    b = Math.floor(120 + t * 20);
+  }
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ── Animation progress per layer [0..1] ──────────────────────────
+function layerProgress(layerIndex, now) {
+  if (!animating) return 1;
+  const elapsed = now - animStart;
+  const layerStart = layerIndex * ANIM_LAYER_DELAY;
+  const t = (elapsed - layerStart) / ANIM_FADE_DURATION;
+  return Math.max(0, Math.min(1, t));
+}
+
+// ── Draw ─────────────────────────────────────────────────────────
+function draw(timestamp) {
+  const now = timestamp || performance.now();
+  const w = canvas.width / dpr;
+  const h = canvas.height / dpr;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, w, h);
+
+  // Draw connections
+  for (let li = 0; li < LAYERS.length - 1; li++) {
+    const fromLayer = neurons[li];
+    const toLayer = neurons[li + 1];
+    const progressFrom = layerProgress(li, now);
+    const progressTo = layerProgress(li + 1, now);
+    const connProgress = Math.min(progressFrom, progressTo);
+
+    for (let fi = 0; fi < fromLayer.length; fi++) {
+      for (let ti = 0; ti < toLayer.length; ti++) {
+        const from = fromLayer[fi];
+        const to = toLayer[ti];
+
+        // Determine opacity
+        let alpha = 0.05 * connProgress;
+        let lineWidth = 0.5;
+
+        // Hover highlight
+        if (hoverNeuron) {
+          const hl = hoverNeuron.layer;
+          const hi = hoverNeuron.index;
+          if ((hl === li && hi === fi) || (hl === li + 1 && hi === ti)) {
+            alpha = 0.4 * connProgress;
+            lineWidth = 1.2;
+          }
+        }
+
+        // Active connection: color by activation magnitude
+        if (connProgress > 0 && alpha > 0.01) {
+          const fromVal = activations[li][fi];
+          const toVal = activations[li + 1][ti];
+          const strength = (Math.abs(fromVal) + Math.abs(toVal)) / 2;
+
+          if (hoverNeuron &&
+            ((hoverNeuron.layer === li && hoverNeuron.index === fi) ||
+             (hoverNeuron.layer === li + 1 && hoverNeuron.index === ti))) {
+            // Highlighted connection: colored by combined activation
+            ctx.strokeStyle = valToColor((fromVal + toVal) / 2, alpha);
+          } else {
+            ctx.strokeStyle = `rgba(205,200,190,${alpha})`;
+          }
+          ctx.lineWidth = lineWidth;
+          ctx.beginPath();
+          ctx.moveTo(from.x, from.y);
+          ctx.lineTo(to.x, to.y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // Draw neurons
+  for (let li = 0; li < LAYERS.length; li++) {
+    const progress = layerProgress(li, now);
+    const layer = neurons[li];
+
+    for (let ni = 0; ni < layer.length; ni++) {
+      const n = layer[ni];
+      const val = activations[li][ni];
+      const p = progress;
+
+      // Glow for active neurons during animation
+      if (p > 0.5 && p < 1 && Math.abs(val) > 0.3) {
+        const glowAlpha = (1 - Math.abs(p - 0.75) * 4) * 0.3;
+        if (glowAlpha > 0) {
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.r * 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = valToColor(val, glowAlpha);
+          ctx.fill();
+        }
+      }
+
+      // Neuron circle
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+
+      // Fill: activation color fading in
+      const fillAlpha = p * 0.8;
+      ctx.fillStyle = Math.abs(val) < 0.05
+        ? `rgba(34,34,32,${fillAlpha})`
+        : valToColor(val, fillAlpha);
+      ctx.fill();
+
+      // Stroke
+      const strokeAlpha = 0.3 + p * 0.4;
+      ctx.strokeStyle = `rgba(205,200,190,${strokeAlpha})`;
+      ctx.lineWidth = hoverNeuron && hoverNeuron.layer === li && hoverNeuron.index === ni ? 2 : 1;
+      ctx.stroke();
+    }
+  }
+
+  // Draw labels
+  ctx.textAlign = "center";
+  ctx.font = "11px 'SF Mono', 'Fira Code', monospace";
+  ctx.fillStyle = LABEL_COLOR;
+  const labelY = (canvas.height / dpr) - 12;
+  for (let li = 0; li < LAYERS.length; li++) {
+    const x = neurons[li][0].x;
+    const lines = LABELS[li].split("\n");
+    lines.forEach((line, i) => {
+      ctx.fillStyle = i === 0 ? "#cdc8be" : LABEL_COLOR;
+      ctx.fillText(line, x, labelY + i * 14 - (lines.length - 1) * 7);
+    });
+  }
+
+  // Continue animation
+  if (animating) {
+    const totalDuration = (LAYERS.length - 1) * ANIM_LAYER_DELAY + ANIM_FADE_DURATION + 200;
+    if (performance.now() - animStart > totalDuration) {
+      animating = false;
+    }
+    requestAnimationFrame(draw);
+  }
+}
+
+// ── Hover detection ──────────────────────────────────────────────
+canvas.addEventListener("mousemove", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  let closest = null;
+  let closestDist = Infinity;
+
+  for (let li = 0; li < neurons.length; li++) {
+    for (let ni = 0; ni < neurons[li].length; ni++) {
+      const n = neurons[li][ni];
+      const dx = mx - n.x;
+      const dy = my - n.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < n.r * 3 && dist < closestDist) {
+        closest = { layer: li, index: ni };
+        closestDist = dist;
+      }
+    }
+  }
+
+  const changed = JSON.stringify(closest) !== JSON.stringify(hoverNeuron);
+  hoverNeuron = closest;
+  if (changed && !animating) draw();
+});
+
+canvas.addEventListener("mouseleave", () => {
+  hoverNeuron = null;
+  if (!animating) draw();
+});
+
+// ── Animation trigger ────────────────────────────────────────────
+function startAnimation() {
+  animStart = performance.now();
+  animating = true;
+  requestAnimationFrame(draw);
+}
+
+// ── Buttons ──────────────────────────────────────────────────────
+document.getElementById("btn-replay").addEventListener("click", startAnimation);
+document.getElementById("btn-random").addEventListener("click", () => {
+  randomActivations();
+  startAnimation();
+});
+
+// ── Init ─────────────────────────────────────────────────────────
+randomActivations();
+resize();
+startAnimation();
+window.addEventListener("resize", resize);
+</script>
+</body>
+</html>
