@@ -1,7 +1,8 @@
 # Audit frontend — microgpt-visualizer-fr
 
-> Date : 2026-02-27
+> Date : 2026-02-27 (révisé 2026-02-28)
 > Périmètre : `src/` (pages, components, styles, App). Le répertoire `src/engine/` (code upstream read-only) est mentionné mais non priorisé.
+> Voir aussi : [`docs/audit-iso.md`](audit-iso.md) — audit ISO (25010, 40500, 9241-110), score global 4,2/5.
 
 ---
 
@@ -185,12 +186,12 @@
 | D-5 | Barres de probabilité dupliquées                  | ForwardPassPage, InferencePage | ✅ Composant `ProbabilityBar` partagé + 7 tests                                                                           |
 | S-3 | Couleurs hardcodées dans Heatmap                  | Heatmap.tsx                    | Accepté — interpolation RGB runtime, CSS custom properties inapplicables                                                  |
 
-### Faible (améliorations)
+### Faible (améliorations) — W-8 corrigé, reste accepté
 
-| #       | Problème                                           | Fichier(s)             |
+| #       | Problème                                           | Fichier(s)             | Statut                                                                                |
 | ------- | -------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------- |
-| R-6     | Types inline vs interface Props                    | InferencePage, Heatmap |
-| P-6     | `valToColor()` non mémorisé                        | Heatmap.tsx            |
-| S-4     | CSS monolithique (599 lignes)                      | styles.css             |
-| D-4     | Labels violet dupliqués                            | ForwardPassPage        |
 | ~~W-8~~ | ~~Contraste `--text-dim` dark theme sous WCAG AA~~ | ~~styles.css~~         | ✅ Corrigé : `#7d786e` → `#959082` (4.52:1 sur surface2, 5.00:1 sur surface, WCAG AA) |
+| R-6     | Types inline vs interface Props                    | InferencePage, Heatmap | Accepté — 1 seul fichier, idiomatique TypeScript pour prop unique                     |
+| P-6     | `valToColor()` non mémorisé                        | Heatmap.tsx            | Accepté — calcul trivial, mémoisation ajouterait de la complexité inutile             |
+| S-4     | CSS monolithique (599 → 1 400 lignes)              | styles.css             | Accepté — fichier unique acceptable pour cette taille de projet                       |
+| D-4     | Labels violet dupliqués                            | ForwardPassPage        | Accepté — 2 occurrences dans le même fichier, extraction non justifiée                |

@@ -72,7 +72,7 @@ Sélecteur de dataset dans la sidebar. Modification minimale de l'engine (`creat
 
 Commits : `bdca1f2`, `a433337`, `d89a5e2`, `8e81c27`
 
-- **28 termes** définis dans `src/data/glossary.ts` (15 Tier 1 tooltip seul + 13 Tier 2 tooltip + modal)
+- **29 termes** définis dans `src/data/glossary.ts` (16 Tier 1 tooltip seul + 13 Tier 2 tooltip + modal)
 - Composant `<Term id="…" />` avec tooltip WAI-ARIA (`role="tooltip"`, `aria-describedby`, WCAG 1.4.13)
 - `TermProvider` : singleton `<dialog>` natif à la racine (focus trap, Escape, `::backdrop`)
 - `useId()` pour IDs uniques par instance, flip viewport, bridge `::before` hoverable
@@ -99,8 +99,8 @@ Voir [`docs/audit-frontend.md`](docs/audit-frontend.md) — 37 problèmes réper
 
 - ~~3 critiques~~ → **corrigés** (rAF cleanup, roving tabindex Heatmap, `<label>` range input) + 15 tests
 - ~~8 hauts~~ → **corrigés** (landmarks, buttons a11y, ErrorBoundary, CSS classes, stable keys, lazy/memo) + 9 tests
-- 7 modérés (useCallback absent, contraste à vérifier, focus visible)
-- 4 faibles (types inline, CSS monolithique)
+- ~~7 modérés~~ → **corrigés** (useMemo, focus-visible, contraste, aria-hidden, RAF, ProbabilityBar) + S-3 accepté
+- ~~5 faibles~~ → W-8 **corrigé** (contraste dark), R-6/P-6/S-4/D-4 acceptés
 
 ---
 
@@ -135,60 +135,76 @@ Ensemble, ils forment une paire pedagogique complete pour tuto-llm :
 
 ```
 src/
-├── App.tsx                    # ~220 lignes — shell, routing, theme, TermProvider, lazy imports, ErrorBoundary
-├── main.tsx                   #   5 lignes — point d'entrée React
-├── styles.css                 # ~660 lignes — CSS vars, composants, tooltips, modals, BEM classes, responsive
+├── App.tsx                        # 218 lignes — shell, routing, theme, TermProvider, lazy, ErrorBoundary
+├── main.tsx                       #   5 lignes — point d'entrée React
+├── styles.css                     # 1 400 lignes — CSS vars, BEM, responsive, sr-only, reduced-motion
 ├── data/
-│   ├── glossary.ts            # 298 lignes — 28 définitions (Tier 1 + Tier 2)
-│   └── glossary.test.ts       #  82 lignes — 8 tests intégrité données
+│   ├── glossary.ts                # 298 lignes — 29 définitions (Tier 1 + Tier 2)
+│   └── glossary.test.ts           #  82 lignes — 8 tests intégrité données
 ├── datasets/
-│   ├── index.ts               # sélecteur de datasets
-│   ├── prenoms-simple.ts      # 50 prénoms FR
-│   ├── prenoms.ts             # 1 000 prénoms FR
-│   ├── pokemon-fr.ts          # 1 022 pokémon FR
-│   └── dinosaures.ts          # 1 530 dinosaures
+│   ├── index.ts                   # sélecteur de datasets
+│   ├── datasets.test.ts           # 108 lignes — 19 tests intégrité
+│   ├── prenoms-simple.ts          # 50 prénoms FR
+│   ├── prenoms.ts                 # 1 000 prénoms FR
+│   ├── prenoms-insee.ts           # 14 000+ prénoms INSEE
+│   ├── pokemon-fr.ts              # 1 022 pokémon FR
+│   └── dinosaures.ts              # 1 530 dinosaures
 ├── components/
-│   ├── Term.tsx               #  88 lignes — tooltip WAI-ARIA + lien modal
-│   ├── Term.test.tsx          # 129 lignes — 12 tests composant
-│   ├── TermProvider.tsx       #  88 lignes — contexte + singleton <dialog>
-│   ├── Heatmap.tsx            #  92 lignes — table heatmap + VectorBar
-│   ├── Heatmap.test.tsx       # ~160 lignes — 10 tests roving tabindex, clavier
-│   ├── LossChart.tsx          # 127 lignes — courbe de loss en Canvas 2D
-│   ├── PageSection.tsx        #  15 lignes — DRY landmarks (section + h1)
-│   ├── PageSection.test.tsx   #  30 lignes — 3 tests aria-labelledby
-│   ├── ErrorBoundary.tsx      #  43 lignes — class component, French fallback
-│   └── ErrorBoundary.test.tsx #  53 lignes — 3 tests (render, catch, reload)
+│   ├── Term.tsx                   #  88 lignes — tooltip WAI-ARIA + lien modal
+│   ├── Term.test.tsx              # 129 lignes — 12 tests composant
+│   ├── TermProvider.tsx           #  88 lignes — contexte + singleton <dialog>
+│   ├── Heatmap.tsx                # 158 lignes — table heatmap + VectorBar (roving tabindex)
+│   ├── Heatmap.test.tsx           # 165 lignes — 10 tests roving tabindex, clavier
+│   ├── HeatCell.tsx               #  18 lignes — cellule attention weights
+│   ├── NeuronCell.tsx             #  22 lignes — cellule activation MLP
+│   ├── LossCell.tsx               #  25 lignes — cellule per-position loss
+│   ├── LossChart.tsx              # 142 lignes — courbe de loss Canvas 2D + aria-label dynamique
+│   ├── LossChart.test.tsx         #  23 lignes — 2 tests a11y (role="img", aria-label)
+│   ├── ProbabilityBar.tsx         #  45 lignes — barres de probabilité partagées
+│   ├── ProbabilityBar.test.tsx    #  82 lignes — 7 tests
+│   ├── PageSection.tsx            #  20 lignes — DRY landmarks (section + h1)
+│   ├── PageSection.test.tsx       #  39 lignes — 3 tests aria-labelledby
+│   ├── ErrorBoundary.tsx          #  40 lignes — class component, French fallback
+│   └── ErrorBoundary.test.tsx     #  52 lignes — 3 tests (render, catch, reload)
 ├── pages/
-│   ├── TokenizerPage.tsx      # ~130 lignes — mapping char→id, tokenisation
-│   ├── EmbeddingsPage.tsx     # ~105 lignes — heatmaps wte/wpe
-│   ├── ForwardPassPage.tsx    # ~246 lignes — pipeline 7 étapes, attention, MLP
-│   ├── TrainingPage.tsx       # ~183 lignes — boucle rAF, loss chart
-│   └── InferencePage.tsx      # ~226 lignes — génération, trace, probas
-├── engine/                    # ~467 lignes — LECTURE SEULE (upstream)
-│   ├── autograd.ts            #  99 lignes — classe Value, backward
-│   ├── model.ts               # 339 lignes — GPT complet (+1 param optionnel docs)
-│   ├── random.ts              #  27 lignes — PRNG mulberry32
-│   └── data.ts                #   2 lignes — blob noms anglais (upstream)
-└── assets/react.svg           # favicon Vite
+│   ├── TokenizerPage.tsx          # 162 lignes — mapping char→id, tokenisation
+│   ├── TokenizerPage.test.tsx     #  19 lignes — 2 tests a11y (label sr-only)
+│   ├── EmbeddingsPage.tsx         # 136 lignes — heatmaps wte/wpe
+│   ├── ForwardPassPage.tsx        # 297 lignes — pipeline 7 étapes, attention, MLP
+│   ├── ForwardPassPage.test.tsx   #  62 lignes — 1 test a11y (select label)
+│   ├── TrainingPage.tsx           # 237 lignes — boucle rAF, loss chart
+│   ├── TrainingPage.test.tsx      #  37 lignes — 2 tests (rAF cleanup, stop)
+│   ├── InferencePage.tsx          # 259 lignes — génération, trace, probas
+│   └── InferencePage.test.tsx     #  95 lignes — 6 tests (W-2, W-4, R-3)
+├── engine/                        # 464 lignes — LECTURE SEULE (upstream)
+│   ├── autograd.ts                #  98 lignes — classe Value, backward
+│   ├── autograd.test.ts           #  48 lignes — 5 tests (arithmétique, backward, diamond)
+│   ├── model.ts                   # 338 lignes — GPT complet (+1 param optionnel docs)
+│   ├── model.test.ts              #  78 lignes — 5 tests (tokenize, softmax, createModel, forward, train)
+│   ├── random.ts                  #  26 lignes — PRNG mulberry32
+│   ├── random.test.ts             #  17 lignes — 1 test (déterminisme)
+│   └── data.ts                    #   2 lignes — blob noms anglais (upstream)
+└── assets/react.svg               # favicon Vite
 ```
 
-**Total : ~3 500+ lignes, 28 fichiers source (dont 8 test files).**
+**Total : ~5 000 lignes, 29 fichiers source + 15 fichiers test. 86 tests.**
 
 ### Constats clés
 
-- **Zero Tailwind** : styling 100% CSS custom (`styles.css`, 599 lignes, CSS vars dark/light)
+- **Zero Tailwind** : styling 100% CSS custom (`styles.css`, 1 400 lignes, CSS vars dark/light)
 - **Zero librairie UI** : pas de shadcn, Radix, MUI — `<div>` + classes CSS + `<dialog>` natif
 - **Zero librairie chart** : LossChart = Canvas 2D pur, Heatmap = `<table>` HTML
 - **Zero routeur** : `useState("tokenizer")` + rendu conditionnel dans App.tsx
 - **Zero feature Vite-spécifique** : pas de `import.meta.env`, pas de `?raw`, pas de glob
 - **Thème** : hook custom `useTheme()` avec `data-theme` sur `<html>` + `localStorage`
 - **Training** : boucle `requestAnimationFrame` (5 steps/frame), pas de Web Worker
-- **Model sharing** : `useRef<ModelState>` dans App, passé en prop aux pages
+- **Model sharing** : `useRef<ModelState>` dans App, passé en prop aux pages (A-1 à refactoriser)
 - **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
-- **Tests** : Vitest + jsdom + @testing-library/react (63 tests, 8 fichiers)
+- **Tests** : Vitest + jsdom + @testing-library/react (86 tests, 15 fichiers)
 - **ErrorBoundary** : class component, `window.location.reload()`, sidebar hors boundary
 - **Code splitting** : `React.lazy()` + `Suspense` → 5+ chunks JS séparés
-- **CSS BEM** : 7 classes utilitaires (`.btn-toggle`, `.btn--danger`, `.label-dim`, etc.)
+- **CSS BEM** : 7 classes utilitaires + `.sr-only` + `prefers-reduced-motion`
+- **Accessibilité** : WCAG 2.1 AA ~95 %, labels sur tous inputs/selects, `:focus-visible`, `aria-label` canvas
 
 ---
 
@@ -221,7 +237,7 @@ src/
 ### Verdict
 
 **Migration recommandee.** Effort ~2-3 jours, gain en coherence stack significatif.
-Le projet est petit (2 300 lignes), le CSS est le gros du travail, l'engine ne bouge pas.
+Le projet est petit (~5 000 lignes avec tests), le CSS est le gros du travail, l'engine ne bouge pas.
 
 ### Stratégie : traduction FR d'abord (sur stack Vite), migration stack ensuite
 
@@ -229,7 +245,7 @@ Phase 1 — Fork FR sur stack Vite existante — **FAIT** :
 
 - ✅ Cloner, créer repo mon-atelier-ia/microgpt-visualizer-fr
 - ✅ Traduire UI + intégrer datasets FR
-- ✅ Vocabulaire pédagogique (tooltips + modals, 28 termes)
+- ✅ Vocabulaire pédagogique (tooltips + modals, 29 termes)
 - ✅ Tests (20 assertions)
 - ✅ Déployer sur Vercel (https://microgpt-visualizer-fr.vercel.app)
 
@@ -243,7 +259,25 @@ Phase 3 — Corrections audit ([`docs/audit-frontend.md`](docs/audit-frontend.md
 - ✅ 3 critiques corrigés + 15 tests (C-6 rAF leak, W-1 Heatmap clavier, W-2 range label)
 - ✅ 8 hauts corrigés + 9 tests (W-3 landmarks, W-4 buttons, A-2 ErrorBoundary, D-1/S-1/D-3 CSS, R-3 keys, R-2 lazy, R-1 memo)
 - ✅ Audit qualité post-fix : ErrorBoundary reload réel, hover states, a11y Suspense, docs corrigées
-- ⬜ 7 modérés, 4 faibles à traiter
+- ✅ 7 modérés corrigés (R-4, R-5, W-5, W-6, W-7, P-4, D-5) + S-3 accepté
+- ✅ 4 faibles : W-8 corrigé, R-6/P-6/S-4/D-4 acceptés
+
+### 7. Audit ISO — FAIT
+
+Voir [`docs/audit-iso.md`](docs/audit-iso.md) — audit contre 6 normes ISO :
+
+- ISO/IEC 25010:2023 (Maintenabilité, Sécurité, Performance, Fiabilité)
+- ISO/IEC 40500:2012 (WCAG 2.1 AA)
+- ISO 9241-110:2020 (Interaction)
+
+Score global : **4,2/5**. 10 findings retirés (inhérents/hors périmètre), 4 a11y corrigés (NEW-1, NEW-4, MIN-3, MIN-4), 11 engine smoke tests ajoutés.
+
+### 8. Phase 4 — roadmap restante
+
+- ⬜ A-1 : Refactoriser `useRef` + `forceUpdate` → `useSyncExternalStore`
+- ⬜ C-4 : Décomposer `ForwardPassPage` en 5 sous-composants
+- ⬜ UX-1 : Confirmation avant changement dataset si `totalStep > 0`
+- ✅ README.md traduit en français (FR principal + EN en `<details>`)
 
 ---
 
