@@ -1,7 +1,7 @@
 # Architecture du réseau de neurones — MicroGPT
 
 > Graphe de calcul complet du forward pass, tracé à partir de `src/engine/model.ts`.
-> Sert de spécification pour la visualisation 3Blue1Brown dans le playground et l'app.
+> Sert de spécification pour la visualisation réseau de neurones dans le playground et l'app.
 
 ## Constantes du modèle
 
@@ -143,7 +143,7 @@ Valeurs capturées par `gptForward(..., trace=true)` et disponibles pour la visu
 | `logits`        | `number[V]`    | Scores bruts par token             |
 | `probs`         | `number[V]`    | Probabilités (softmax des logits)  |
 
-## Couches pour la visualisation 3Blue1Brown
+## Couches pour la visualisation
 
 Mapping du graphe vers des colonnes de neurones connectés :
 

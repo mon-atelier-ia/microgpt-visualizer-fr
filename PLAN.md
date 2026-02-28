@@ -193,8 +193,8 @@ docs/
 ├── audit-iso.md # Audit ISO (25010, 40500, 9241-110)
 └── fork-changes.md # Registre des divergences upstream
 
-playground.html # Visualisation 3Blue1Brown 5 colonnes, forward+backward animation
-playground-full.html # Visualisation 3Blue1Brown 13 colonnes fidèle architecture
+playground.html # Visualisation réseau de neurones 5 colonnes, forward+backward animation
+playground-full.html # Visualisation réseau de neurones 13 colonnes fidèle architecture
 
 **Total : ~5 000 lignes src, 29 fichiers source + 16 fichiers test. 94 tests. 2 playgrounds standalone.**
 
@@ -290,7 +290,7 @@ Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 - ✅ MIN-1 : Retiré (faux positif — `.push()` in-place, `.length` = seul trigger)
 - ✅ README.md traduit en français (FR principal + EN en `<details>`)
 
-### 9. Visualisation 3Blue1Brown — FAIT
+### 9. Visualisation réseau de neurones — FAIT
 
 - ✅ `docs/architecture-nn.md` — spécification complète du réseau (graphe de calcul, 13 colonnes, ~4 192 paramètres)
 - ✅ `playground.html` — visualisation 5 colonnes [16, 16, 64, 16, 27], 4 têtes d'attention (H0–H3), hover, dark/light

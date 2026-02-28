@@ -13,7 +13,7 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 - **Entraînement** — Regarde le modèle apprendre en temps réel (courbe de loss, heatmaps)
 - **Inférence** — Génère des noms et observe les prédictions à chaque position
 - **Moteur autograd** — Différentiation automatique intégrée, transparente et éducative
-- **Playground 3Blue1Brown** — Visualisation Canvas 2D du réseau de neurones (forward + backward animés)
+- **Playground réseau de neurones** — Visualisation Canvas 2D du réseau (forward + backward animés)
 
 ## Différences avec l'original
 
@@ -87,7 +87,7 @@ docs/
 ├── audit-iso.md        # Audit ISO (25010, 40500, 9241-110)
 └── fork-changes.md     # Registre divergences upstream
 
-playground.html         # Visualisation 3Blue1Brown (5 colonnes, forward+backward)
+playground.html         # Visualisation réseau de neurones (5 colonnes, forward+backward)
 playground-full.html    # Visualisation fidèle (13 colonnes, résidus, têtes)
 ```
 
@@ -161,7 +161,7 @@ An interactive web application for visualizing and understanding how GPT (Genera
 - **Training Process** — Watch the model learn in real-time with loss charts and heatmaps
 - **Inference Mode** — Generate text and see predictions as they happen
 - **Custom Autograd Engine** — Built-in automatic differentiation for transparency
-- **3Blue1Brown Playground** — Canvas 2D neural network visualization (animated forward + backward passes)
+- **Neural Network Playground** — Canvas 2D neural network visualization (animated forward + backward passes)
 
 ## Getting Started
 

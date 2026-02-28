@@ -101,14 +101,14 @@
 | Keyboard hint `<kbd>↑↓</kbd>` under interactive Heatmap     | `Heatmap.tsx`, `styles.css` | MIN-8 : roving tabindex existait mais aucune indication visuelle pour l'utilisateur               |
 | MIN-1 retracted (false positive)                            | `docs/audit-iso.md`         | `lossHistory` muté en place (`.push()`), `.length` est le seul trigger effectif — pas redondant   |
 
-## Visualisation 3Blue1Brown du réseau de neurones
+## Visualisation du réseau de neurones
 
 | Change                                                                | Fichier(s)                                | Justification                                                                                                      |
 | --------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Architecture spec: full computation graph, 13 layers, weight matrices | `docs/architecture-nn.md`                 | Spécification complète du forward pass pour guider la visualisation (~4 192 paramètres documentés)                 |
-| 3Blue1Brown playground: 5 columns, 4 attention head groups, hover     | `playground.html`                         | Canvas 2D, design system (CSS vars), purple brackets H0–H3, head-aware hover, dark/light themes                    |
+| Neural network playground: 5 columns, 4 attention head groups, hover  | `playground.html`                         | Canvas 2D, design system (CSS vars), purple brackets H0–H3, head-aware hover, dark/light themes                    |
 | Full 13-column architecture playground                                | `playground-full.html`                    | Fidèle au graphe de calcul complet : 13 colonnes, résidus bézier, section labels, head brackets                    |
-| Forward + backward animation                                          | `playground.html`                         | 3 phases (forward→pause→backward), orange gradient rings, vanishing gradient effect, phase indicator               |
+| Forward + backward animation                                          | `playground.html`, `playground-full.html` | 3 phases (forward→pause→backward), orange gradient rings, vanishing gradient effect, phase indicator               |
 | App design system integration                                         | `playground.html`, `playground-full.html` | CSS custom properties (`--bg`, `--surface`, `--blue`…), `.btn`/`.btn-toggle`, `.explain`, `prefers-reduced-motion` |
 
 ## Deployment

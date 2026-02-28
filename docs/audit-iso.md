@@ -203,7 +203,7 @@
 - (+) 5 pages couvrent le pipeline complet (tokenization → inference)
 - (+) Glossaire intégré avec 30 termes et analogies pour 10-14 ans
 - (+) Visualisations interactives (heatmap navigable, training animé)
-- (+) Playgrounds 3Blue1Brown (Canvas 2D) : visualisation neurones/connexions, animation forward+backward
+- (+) Playgrounds réseau de neurones (Canvas 2D) : visualisation neurones/connexions, animation forward+backward
 
 #### Autodescription (4,5/5)
 
