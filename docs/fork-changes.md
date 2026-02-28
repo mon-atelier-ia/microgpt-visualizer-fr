@@ -85,6 +85,13 @@
 | 4 semantic text color utilities + 14 replacements                | `styles.css`, 5 pages                                                                       | `.text-red`, `.text-green`, `.text-cyan`, `.text-dim` — remplace 14 inline `style={{ color }}`                                                      |
 | S-3 marked as accepted (won't fix)                               | `audit-frontend.md`                                                                         | S-3 : `valToColor()` fait de l'interpolation RGB runtime — CSS custom properties ne peuvent pas remplacer                                           |
 
+## Refactoring architectural
+
+| Change                                                                  | Fichier(s)                                                                                             | Justification                                                                                             |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| Replace `useRef` + `forceUpdate` with `useSyncExternalStore` + `memo()` | `modelStore.ts` (new), `App.tsx`, 4 pages                                                              | A-1 : antipattern couplant toutes les pages. Store externe + `useModel()` hook. `memo()` sur 5 pages.     |
+| Extract `ForwardPassPage` into 4 sub-components                         | `FlowDiagram.tsx`, `VectorsPanel.tsx`, `AttentionWeightsPanel.tsx`, `MLPActivationPanel.tsx` (all new) | C-4 : 296 LOC / 8 niveaux JSX → ~120 LOC / 4 niveaux. Sous-composants présentationnels, props primitives. |
+
 ## Deployment
 
 | Change                                                                     | Justification                                  |

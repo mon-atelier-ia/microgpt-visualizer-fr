@@ -5,15 +5,15 @@ import {
   charToId,
   tokenLabel,
   N_LAYER,
-  N_HEAD,
 } from "../engine/model";
 import type { Value } from "../engine/autograd";
-import { VectorBar } from "../components/Heatmap";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 import ProbabilityBar from "../components/ProbabilityBar";
-import HeatCell from "../components/HeatCell";
-import NeuronCell from "../components/NeuronCell";
+import FlowDiagram from "../components/FlowDiagram";
+import VectorsPanel from "../components/VectorsPanel";
+import AttentionWeightsPanel from "../components/AttentionWeightsPanel";
+import MLPActivationPanel from "../components/MLPActivationPanel";
 import { useModel } from "../modelStore";
 import { memo } from "react";
 
@@ -88,132 +88,27 @@ export default memo(function ForwardPassPage() {
         </div>
       </div>
 
-      {/* Flux étape par étape */}
-      <div className="panel">
-        <div className="panel-title">Les données traversent le modèle</div>
-        <div className="explain">
-          Chaque boîte montre les données à cette étape. Les 16 nombres sont
-          transformés à chaque étape. Les couleurs montrent les valeurs :{" "}
-          <span className="text-red">négatif</span> à{" "}
-          <span className="text-green">positif</span>.
-        </div>
+      <FlowDiagram
+        char={char}
+        pos={pos}
+        tokenId={tokenId}
+        mlpActiveCount={trace.mlpActiveMask?.filter(Boolean).length ?? 0}
+        topChar={top5[0]?.char ?? "?"}
+        topProbPct={(top5[0]?.prob * 100).toFixed(0)}
+      />
 
-        <div className="flow">
-          <div className="flow-step">
-            <div className="label">Token '{char}'</div>
-            <div className="values">
-              wte[{tokenId}]<br />
-              Chercher le plongement
-              <br />
-              de ce caractère dans la table
-            </div>
-          </div>
-          <div className="flow-arrow">→</div>
-          <div className="flow-step">
-            <div className="label">Position {pos}</div>
-            <div className="values">
-              wpe[{pos}]<br />
-              Chercher le plongement
-              <br />
-              de cette position dans la table
-            </div>
-          </div>
-          <div className="flow-arrow">→</div>
-          <div className="flow-step">
-            <div className="label">tok + pos</div>
-            <div className="values">
-              Addition élément par élément
-              <br />
-              Encode maintenant
-              <br />
-              le « quoi » et le « où »
-            </div>
-          </div>
-          <div className="flow-arrow">→</div>
-          <div className="flow-step">
-            <div className="label">
-              <Term id="rmsnorm" />
-            </div>
-            <div className="values">
-              Normaliser le vecteur
-              <br />
-              Maintient les valeurs
-              <br />
-              dans une plage stable
-            </div>
-          </div>
-          <div className="flow-arrow">→</div>
-          <div className="flow-step">
-            <div className="label">
-              <Term id="attention" />
-            </div>
-            <div className="values">
-              Q = "que cherche-je ?"
-              <br />
-              K = "que contiens-je ?"
-              <br />
-              V = "qu'ai-je à offrir ?"
-              <br />
-              {N_HEAD} têtes, chacune dim {16 / N_HEAD}
-            </div>
-          </div>
-          <div className="flow-arrow">→</div>
-          <div className="flow-step">
-            <div className="label">
-              <Term id="mlp" />
-            </div>
-            <div className="values">
-              Linéaire → <Term id="relu" /> → Linéaire
-              <br />
-              Expansé à 64 dims,
-              <br />
-              puis retour à 16
-              <br />
-              <span className="highlight">
-                {trace.mlpActiveMask?.filter(Boolean).length}/64{" "}
-                <Term id="neurone" />s actifs
-              </span>
-            </div>
-          </div>
-          <div className="flow-arrow">→</div>
-          <div className="flow-step">
-            <div className="label">Sortie</div>
-            <div className="values">
-              lm_head : 16 → 27 <Term id="logits" />
-              <br />
-              <Term id="softmax" /> → probabilités
-              <br />
-              <span className="highlight">
-                Top : '{top5[0]?.char}' {(top5[0]?.prob * 100).toFixed(0)}%
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Vecteurs détaillés */}
+      {/* Vecteurs détaillés + probabilités */}
       <div className="panel-row">
-        <div className="panel">
-          <div className="panel-title">Vecteurs intermédiaires (16 dims)</div>
-          <VectorBar
-            values={trace.tokEmb}
-            label={`Plongement de token : wte['${char}']`}
-          />
-          <VectorBar
-            values={trace.posEmb}
-            label={`Plongement de position : wpe[${pos}]`}
-          />
-          <VectorBar values={trace.combined} label="Combiné (tok + pos)" />
-          <VectorBar values={trace.afterNorm} label="Après RMSNorm" />
-          <VectorBar
-            values={trace.afterAttn || []}
-            label="Après Attention + Résiduel"
-          />
-          <VectorBar
-            values={trace.afterMlp || []}
-            label="Après MLP + Résiduel"
-          />
-        </div>
+        <VectorsPanel
+          char={char}
+          pos={pos}
+          tokEmb={trace.tokEmb}
+          posEmb={trace.posEmb}
+          combined={trace.combined}
+          afterNorm={trace.afterNorm}
+          afterAttn={trace.afterAttn || []}
+          afterMlp={trace.afterMlp || []}
+        />
 
         <div className="panel">
           <div className="panel-title">
@@ -234,61 +129,15 @@ export default memo(function ForwardPassPage() {
         </div>
       </div>
 
-      {/* Poids d'attention */}
       {trace.attnWeights && (
-        <div className="panel">
-          <div className="panel-title">Poids d'attention ({N_HEAD} têtes)</div>
-          <div className="explain">
-            Chaque tête apprend à se concentrer sur des aspects différents.
-            Puisque c'est le premier token, toutes les têtes ont un poids de{" "}
-            <b>1.0</b> sur elles-mêmes (rien d'autre à observer). Avec plus de
-            tokens dans la séquence, l'attention serait répartie sur les tokens
-            précédents.
-          </div>
-          <div className="attn-heads">
-            {trace.attnWeights.map((hw, h) => (
-              <div key={h}>
-                <div className="label-dim attn-head-label">Tête {h}</div>
-                <div className="attn-head-row">
-                  {hw.map((w, t) => (
-                    <HeatCell key={t} value={w} label={w.toFixed(2)} />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <AttentionWeightsPanel attnWeights={trace.attnWeights} />
       )}
 
-      {/* Activation MLP */}
       {trace.mlpHidden && (
-        <div className="panel">
-          <div className="panel-title">
-            Couche cachée <Term id="mlp" /> (64 <Term id="neurone" />
-            s)
-          </div>
-          <div className="explain">
-            Après la couche linéaire qui expanse de 16 → 64{" "}
-            <Term id="dimension" />
-            s, l'activation{" "}
-            <b>
-              <Term id="relu" />
-            </b>{" "}
-            met toutes les valeurs négatives à zéro. Seuls les{" "}
-            <Term id="neurone" />s « actifs » (verts) laissent passer
-            l'information. C'est ainsi que le modèle crée des représentations
-            non linéaires.
-          </div>
-          <div className="neuron-grid">
-            {trace.mlpHidden.map((v, i) => (
-              <NeuronCell key={i} value={v} index={i} />
-            ))}
-          </div>
-          <div className="label-dim" style={{ fontSize: 11, marginTop: 4 }}>
-            {trace.mlpActiveMask.filter(Boolean).length} / 64{" "}
-            <Term id="neurone" />s actifs après <Term id="relu" />
-          </div>
-        </div>
+        <MLPActivationPanel
+          mlpHidden={trace.mlpHidden}
+          mlpActiveMask={trace.mlpActiveMask}
+        />
       )}
     </PageSection>
   );

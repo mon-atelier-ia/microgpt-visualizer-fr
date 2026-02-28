@@ -30,11 +30,11 @@
 | ------- | -------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
 | ~~A-1~~ | 25010 Maintenabilité | ~~`useRef` + `forceUpdate` antipattern — couple 4 pages, bloque `memo`~~ | ✅ `useSyncExternalStore` dans `modelStore.ts`. Pages souscrivent via `useModel()`. `memo()` ajouté sur les 5 pages. |
 
-### Majeures (1)
+### Majeures — ✅ TOUS CORRIGÉS
 
-| #   | Norme                | Problème                                 | Fix                          |
-| --- | -------------------- | ---------------------------------------- | ---------------------------- |
-| C-4 | 25010 Maintenabilité | `ForwardPassPage` 292 LOC, 8 niveaux JSX | Extraire 4-5 sous-composants |
+| #       | Norme                | Problème                                     | Fix                                                                                                                                   |
+| ------- | -------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~C-4~~ | 25010 Maintenabilité | ~~`ForwardPassPage` 292 LOC, 8 niveaux JSX~~ | ✅ Extrait 4 sous-composants : `FlowDiagram`, `VectorsPanel`, `AttentionWeightsPanel`, `MLPActivationPanel`. Page réduite à ~120 LOC. |
 
 ### Informationnel (2) — inhérent à l'architecture
 
@@ -106,8 +106,8 @@
 - (+) Séparation claire `engine/` (read-only) / `pages/` / `components/`
 - (+) TermProvider context pattern isolé et réutilisable
 - (+) `PageSection`, `ProbabilityBar`, `ErrorBoundary`, `HeatCell`, `NeuronCell`, `LossCell` composants partagés
-- (-) **A-1** : `useRef` + `forceUpdate` dans `App.tsx` couple toutes les pages au mécanisme de mise à jour
-- (-) **C-4** : `ForwardPassPage` 292 LOC avec 8 niveaux JSX — fichier monolithique
+- (+) ~~A-1~~ : corrigé — `useSyncExternalStore` dans `modelStore.ts`
+- (+) ~~C-4~~ : corrigé — `ForwardPassPage` décomposé en 4 sous-composants (~120 LOC, 4 niveaux JSX)
 
 #### Testabilité (4/5)
 
