@@ -111,6 +111,17 @@
 | Forward + backward animation                                          | `playground.html`, `playground-full.html` | 3 phases (forward→pause→backward), orange gradient rings, vanishing gradient effect, phase indicator               |
 | App design system integration                                         | `playground.html`, `playground-full.html` | CSS custom properties (`--bg`, `--surface`, `--blue`…), `.btn`/`.btn-toggle`, `.explain`, `prefers-reduced-motion` |
 
+## EmbeddingsPage interactive (bar chart + dataset stats)
+
+| Change                                                                       | Fichier(s)                                              | Justification                                                                                              |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `EmbeddingBarChart` component: 16-bar visualization on wte row hover         | `EmbeddingBarChart.tsx`, `EmbeddingBarChart.test.tsx`   | Rend tangibles les 16 dimensions abstraites — survol = bar chart animé (vert positif, rouge négatif)       |
+| `charStats` utility: per-character dataset frequency and bigram analysis     | `src/utils/charStats.ts`, `src/utils/charStats.test.ts` | Contextualise chaque lettre : "41/50 prénoms (82%) · Avant : n, i, r · Après : r, l, n"                    |
+| Training state badge under wte panel title                                   | `EmbeddingsPage.tsx`                                    | Indique si les embeddings sont aléatoires ou entraînés, renvoie à l'étape 4 pour encourager la progression |
+| Side-by-side flex layout (`.heatmap-with-bars`) + responsive stacking <900px | `EmbeddingsPage.tsx`, `styles.css`                      | Utilise l'espace libre à droite de la heatmap (16 colonnes = ~600px). Passe en colonne sur mobile          |
+| BOS special message in bar chart                                             | `EmbeddingBarChart.tsx`                                 | "Token spécial — marque le début et la fin de chaque nom." au lieu des stats dataset                       |
+| 9 new tests (5 charStats + 4 EmbeddingBarChart)                              | `charStats.test.ts`, `EmbeddingBarChart.test.tsx`       | Couverture : empty state, label+stats, BOS, bar count, frequency, bigrams                                  |
+
 ## Deployment
 
 | Change                                                                     | Justification                                  |

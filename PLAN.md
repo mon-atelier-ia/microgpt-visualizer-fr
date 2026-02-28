@@ -137,7 +137,7 @@ Ensemble, ils forment une paire pedagogique complete pour tuto-llm :
 src/
 ├── App.tsx                        # 218 lignes — shell, routing, theme, TermProvider, lazy, ErrorBoundary
 ├── main.tsx                       #   5 lignes — point d'entrée React
-├── styles.css                     # ~1 500 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion
+├── styles.css                     # ~1 590 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion, barchart
 ├── data/
 │   ├── glossary.ts                # 298 lignes — 29 définitions (Tier 1 + Tier 2)
 │   └── glossary.test.ts           #  82 lignes — 8 tests intégrité données
@@ -164,18 +164,23 @@ src/
 │   ├── ProbabilityBar.test.tsx    #  82 lignes — 7 tests
 │   ├── PageSection.tsx            #  20 lignes — DRY landmarks (section + h1)
 │   ├── PageSection.test.tsx       #  39 lignes — 3 tests aria-labelledby
+│   ├── EmbeddingBarChart.tsx      #  45 lignes — bar chart 16 dimensions au hover wte
+│   ├── EmbeddingBarChart.test.tsx #  42 lignes — 4 tests (empty, stats, BOS, bars)
 │   ├── ErrorBoundary.tsx          #  40 lignes — class component, French fallback
 │   └── ErrorBoundary.test.tsx     #  52 lignes — 3 tests (render, catch, reload)
 ├── pages/
 │   ├── TokenizerPage.tsx          # 162 lignes — mapping char→id, tokenisation
 │   ├── TokenizerPage.test.tsx     #  19 lignes — 2 tests a11y (label sr-only)
-│   ├── EmbeddingsPage.tsx         # 136 lignes — heatmaps wte/wpe
+│   ├── EmbeddingsPage.tsx         # 154 lignes — heatmaps wte/wpe + bar chart + stats
 │   ├── ForwardPassPage.tsx        # 297 lignes — pipeline 7 étapes, attention, MLP
 │   ├── ForwardPassPage.test.tsx   #  62 lignes — 1 test a11y (select label)
 │   ├── TrainingPage.tsx           # 237 lignes — boucle rAF, loss chart
 │   ├── TrainingPage.test.tsx      #  37 lignes — 2 tests (rAF cleanup, stop)
 │   ├── InferencePage.tsx          # 259 lignes — génération, trace, probas
 │   └── InferencePage.test.tsx     #  95 lignes — 6 tests (W-2, W-4, R-3)
+├── utils/
+│   ├── charStats.ts               #  59 lignes — statistiques dataset (fréquence, bigrammes)
+│   └── charStats.test.ts          #  30 lignes — 5 tests
 ├── engine/                        # 464 lignes — LECTURE SEULE (upstream)
 │   ├── autograd.ts                #  98 lignes — classe Value, backward
 │   ├── autograd.test.ts           #  48 lignes — 5 tests (arithmétique, backward, diamond)
@@ -196,7 +201,12 @@ docs/
 playground.html # Visualisation réseau de neurones 5 colonnes, forward+backward animation
 playground-full.html # Visualisation réseau de neurones 13 colonnes fidèle architecture
 
-**Total : ~5 000 lignes src, 29 fichiers source + 16 fichiers test. 94 tests. 2 playgrounds standalone.**
+docs/
+├── plans/
+│ ├── 2026-03-01-embeddings-page-vivante-design.md # Design EmbeddingsPage vivante
+│ └── 2026-03-01-embeddings-page-vivante-plan.md # Plan d'implémentation
+
+**Total : ~5 200 lignes src, 31 fichiers source + 18 fichiers test. 103 tests. 2 playgrounds standalone.**
 
 ### Constats clés
 
@@ -298,6 +308,18 @@ Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 - ✅ Animation forward + backward dans `playground.html` (3 phases : forward→pause→backward, orange gradients)
 - ✅ Design system intégré (CSS custom properties, `.btn`, `.explain`, `prefers-reduced-motion`)
 - Prochain : intégrer dans l'app React (`ForwardPassPage` + `TrainingPage`) avec données réelles du modèle
+
+### 11. EmbeddingsPage vivante — FAIT
+
+- ✅ `EmbeddingBarChart.tsx` — bar chart interactif (16 barres, vert=positif, rouge=négatif) au survol d'une ligne wte
+- ✅ `charStats.ts` — utilitaire pur pour statistiques dataset (fréquence par caractère, top 3 bigrammes avant/après)
+- ✅ Statistiques dataset dans le bar chart : "41/50 prénoms (82%) · Avant : n, i, r · Après : r, l, n"
+- ✅ Badge entraînement : "Valeurs aléatoires — reviens après avoir entraîné le modèle à l'étape 4…"
+- ✅ Message spécial BOS : "Token spécial — marque le début et la fin de chaque nom."
+- ✅ Layout flex side-by-side (`heatmap-with-bars`), responsive column <900px
+- ✅ Couleurs thème : `var(--green)`, `var(--red)`, `var(--purple)` (dark + light)
+- ✅ 9 nouveaux tests (5 charStats + 4 EmbeddingBarChart)
+- ✅ Design doc : `docs/plans/2026-03-01-embeddings-page-vivante-design.md`
 
 ### 10. Polish CSS — FAIT
 

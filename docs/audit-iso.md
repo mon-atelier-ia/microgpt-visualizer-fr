@@ -92,7 +92,7 @@
 | Navigation clavier    | 5/5   | Roving tabindex, 9 `:focus-visible`, Escape dismiss, `<dialog>` natif   |
 | Landmarks sémantiques | 5/5   | `<main>`, `<aside>`, `<nav>`, `<header>`, `<section aria-labelledby>`   |
 | Récupérabilité        | 5/5   | ErrorBoundary FR, `resetModel()`, reload, rAF cleanup                   |
-| Tests                 | 4,5/5 | 94 tests, 16 fichiers. Composants + engine + pages + store + données    |
+| Tests                 | 4,5/5 | 103 tests, 18 fichiers. Composants + engine + pages + store + données   |
 | Glossaire pédagogique | 4,5/5 | 30 termes, Tier 1/2, analogies adaptées 10-14 ans                       |
 | Code splitting        | 4,5/5 | `React.lazy()` + `Suspense`, 5 chunks 4-7 KB chacun                     |
 
@@ -106,13 +106,13 @@
 
 - (+) Séparation claire `engine/` (read-only) / `pages/` / `components/`
 - (+) TermProvider context pattern isolé et réutilisable
-- (+) `PageSection`, `ProbabilityBar`, `ErrorBoundary`, `HeatCell`, `NeuronCell`, `LossCell` composants partagés
+- (+) `PageSection`, `ProbabilityBar`, `EmbeddingBarChart`, `ErrorBoundary`, `HeatCell`, `NeuronCell`, `LossCell` composants partagés
 - (+) ~~A-1~~ : corrigé — `useSyncExternalStore` dans `modelStore.ts`
 - (+) ~~C-4~~ : corrigé — `ForwardPassPage` décomposé en 4 sous-composants (144 LOC, 5 niveaux JSX)
 
 #### Testabilité (4/5)
 
-- (+) 94 tests, 16 fichiers de tests
+- (+) 103 tests, 18 fichiers de tests
 - (+) Composants isolés testables (Term, Heatmap, ProbabilityBar)
 - (+) Engine : 11 smoke tests (autograd, model, random) ajoutés
 - (-) Pages à couverture variable (TrainingPage : 2 tests, InferencePage : 6 tests)

@@ -8,7 +8,7 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 ## Fonctionnalités
 
 - **Tokenisation** — Observe comment un texte est découpé en tokens (caractère par caractère)
-- **Plongements** — Visualise comment les tokens deviennent des vecteurs de 16 dimensions
+- **Plongements** — Visualise comment les tokens deviennent des vecteurs de 16 dimensions, bar chart interactif au survol avec statistiques du dataset
 - **Propagation avant** — Parcours étape par étape la propagation dans le transformer
 - **Entraînement** — Regarde le modèle apprendre en temps réel (courbe de loss, heatmaps)
 - **Inférence** — Génère des noms et observe les prédictions à chaque position
@@ -21,7 +21,7 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 - Glossaire pédagogique intégré (30 termes avec analogies pour 10-14 ans)
 - 6 jeux de données dont 5 francophones (prénoms simples, prénoms top 1K, prénoms INSEE 14K, pokémon, dinosaures)
 - Accessibilité WCAG 2.1 AA (navigation clavier, contrastes, labels, `prefers-reduced-motion`)
-- 94 tests (composants, engine, accessibilité, store, intégrité des données)
+- 103 tests (composants, engine, accessibilité, store, intégrité des données)
 - ErrorBoundary avec message français et bouton de rechargement
 - Code splitting (`React.lazy` + `Suspense`)
 - Documentation architecture réseau de neurones ([`docs/architecture-nn.md`](docs/architecture-nn.md))
@@ -59,13 +59,13 @@ L'application est accessible sur `http://localhost:5173`
 | `pnpm build`   | Build de production                                |
 | `pnpm preview` | Aperçu local du build de production                |
 | `pnpm lint`    | ESLint                                             |
-| `pnpm test`    | Vitest (94 tests)                                  |
+| `pnpm test`    | Vitest (103 tests)                                 |
 
 ## Structure du projet
 
 ```
 src/
-├── components/     # Composants UI réutilisables (Heatmap, LossChart, Term…)
+├── components/     # Composants UI réutilisables (Heatmap, LossChart, EmbeddingBarChart, Term…)
 ├── pages/          # Pages principales
 │   ├── TokenizerPage.tsx
 │   ├── EmbeddingsPage.tsx
@@ -77,6 +77,7 @@ src/
 │   ├── model.ts    # Implémentation du GPT
 │   ├── data.ts     # Données d'entraînement
 │   └── random.ts   # PRNG déterministe
+├── utils/          # Utilitaires (charStats pour statistiques dataset)
 ├── data/           # Glossaire pédagogique
 ├── datasets/       # 6 jeux de données (EN + FR)
 └── App.tsx         # Composant racine
@@ -156,7 +157,7 @@ An interactive web application for visualizing and understanding how GPT (Genera
 ## Features
 
 - **Tokenizer Visualization** — See how text is broken down into tokens
-- **Embeddings Explorer** — Visualize how tokens are converted to vector representations
+- **Embeddings Explorer** — Visualize how tokens are converted to vector representations, with interactive bar chart and dataset statistics on hover
 - **Forward Pass Breakdown** — Step through the transformer's forward propagation
 - **Training Process** — Watch the model learn in real-time with loss charts and heatmaps
 - **Inference Mode** — Generate text and see predictions as they happen
