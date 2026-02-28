@@ -157,6 +157,7 @@ canvas {
 
 <div class="explain">
   <b>Survole un neurone</b> pour voir ses connexions. Chaque colonne = une couche du modèle.
+  <br>La couche Attention est divisée en <b>4 têtes</b> (H0–H3) de 4 dimensions chacune.
   <br>Couleurs : <span class="text-red">rouge = négatif</span>,
   <span class="text-green">vert = positif</span>.
 </div>
@@ -165,7 +166,7 @@ canvas {
 // ── Config ───────────────────────────────────────────────────────
 const LAYERS = [16, 16, 64, 16, 27];
 const LABELS = [
-  "Embedding\n(16)", "Attention\n(16)", "MLP caché\n(64)",
+  "Embedding\n(16)", "Attention\n(4×4 têtes)", "MLP caché\n(64)",
   "MLP sortie\n(16)", "Logits\n(27)"
 ];
 const ANIM_LAYER_DELAY = 350;
@@ -182,6 +183,12 @@ let dpr = 1;
 const canvas = document.getElementById("nn");
 const ctx = canvas.getContext("2d");
 
+// ── Architecture constants ────────────────────────────────────────
+const N_HEAD = 4;
+const HEAD_DIM = 4; // 16 / 4
+const ATTN_LAYER = 1; // index of attention column
+const MLP_LAYER = 2;  // index of MLP hidden column
+
 // ── Read CSS custom properties for theme-reactive canvas ─────────
 function getThemeColors() {
   const s = getComputedStyle(document.documentElement);
@@ -190,6 +197,7 @@ function getThemeColors() {
     text:    s.getPropertyValue("--text").trim(),
     textDim: s.getPropertyValue("--text-dim").trim(),
     blue:    s.getPropertyValue("--blue").trim(),
+    purple:  s.getPropertyValue("--purple").trim(),
     green:   s.getPropertyValue("--green").trim(),
     red:     s.getPropertyValue("--red").trim(),
     border:  s.getPropertyValue("--border").trim(),
@@ -243,6 +251,26 @@ function computePositions(w, h) {
   neurons = LAYERS.map((count, li) => {
     const x = padX + (li / (nLayers - 1)) * usableW;
     const maxR = count <= 20 ? 7 : count <= 30 ? 5 : 3;
+
+    // Attention layer: 4 groups of 4 with gaps between heads
+    if (li === ATTN_LAYER) {
+      const headGap = maxR * 2.5;  // gap between head groups
+      const spacing = Math.min(usableH / (count + N_HEAD), maxR * 3.5);
+      const totalH = spacing * (count - 1) + headGap * (N_HEAD - 1);
+      const startY = padY + (usableH - totalH) / 2;
+
+      return Array.from({ length: count }, (_, ni) => {
+        const headIndex = Math.floor(ni / HEAD_DIM);
+        const gapOffset = headIndex * headGap;
+        return {
+          x,
+          y: startY + ni * spacing + gapOffset,
+          r: maxR,
+          head: headIndex,  // track which head this neuron belongs to
+        };
+      });
+    }
+
     const spacing = Math.min(usableH / (count + 1), maxR * 3.5);
     const totalH = spacing * (count - 1);
     const startY = padY + (usableH - totalH) / 2;
@@ -318,9 +346,23 @@ function draw(timestamp) {
         if (hoverNeuron) {
           const hl = hoverNeuron.layer;
           const hi = hoverNeuron.index;
-          if ((hl === li && hi === fi) || (hl === li + 1 && hi === ti)) {
+          const isFrom = hl === li && hi === fi;
+          const isTo = hl === li + 1 && hi === ti;
+
+          if (isFrom || isTo) {
             alpha = 0.4 * connProgress;
             lineWidth = 1.2;
+          }
+          // When hovering attention layer, also highlight same-head connections
+          else if (hl === ATTN_LAYER) {
+            const hoveredHead = Math.floor(hi / HEAD_DIM);
+            if (li === ATTN_LAYER && Math.floor(fi / HEAD_DIM) === hoveredHead) {
+              alpha = 0.15 * connProgress;
+              lineWidth = 0.8;
+            } else if (li + 1 === ATTN_LAYER && Math.floor(ti / HEAD_DIM) === hoveredHead) {
+              alpha = 0.15 * connProgress;
+              lineWidth = 0.8;
+            }
           }
         }
 
@@ -376,14 +418,60 @@ function draw(timestamp) {
         : valToColor(val, fillAlpha);
       ctx.fill();
 
-      // Stroke
+      // Stroke — purple accent for attention head neurons
       const strokeAlpha = 0.3 + p * 0.4;
       const isHovered = hoverNeuron && hoverNeuron.layer === li && hoverNeuron.index === ni;
-      ctx.strokeStyle = isHovered
-        ? colors.blue
-        : `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${strokeAlpha})`;
-      ctx.lineWidth = isHovered ? 2 : 1;
+      const isAttnNeuron = li === ATTN_LAYER;
+      if (isHovered) {
+        ctx.strokeStyle = colors.blue;
+        ctx.lineWidth = 2;
+      } else if (isAttnNeuron) {
+        const purpleRgb = parseColor(colors.purple);
+        ctx.strokeStyle = `rgba(${purpleRgb[0]},${purpleRgb[1]},${purpleRgb[2]},${strokeAlpha})`;
+        ctx.lineWidth = 1;
+      } else {
+        ctx.strokeStyle = `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${strokeAlpha})`;
+        ctx.lineWidth = 1;
+      }
       ctx.stroke();
+    }
+  }
+
+  // Draw attention head brackets (H0–H3)
+  {
+    const attnLayer = neurons[ATTN_LAYER];
+    if (attnLayer && attnLayer.length === 16) {
+      const progress = layerProgress(ATTN_LAYER, now);
+      const bracketAlpha = progress * 0.6;
+      const bracketX = attnLayer[0].x + attnLayer[0].r + 8;
+      const bracketW = 5;
+
+      ctx.font = "9px 'SF Mono', 'Fira Code', monospace";
+      ctx.textAlign = "left";
+
+      for (let h = 0; h < N_HEAD; h++) {
+        const first = attnLayer[h * HEAD_DIM];
+        const last  = attnLayer[h * HEAD_DIM + HEAD_DIM - 1];
+        const top = first.y - first.r;
+        const bot = last.y + last.r;
+        const midY = (top + bot) / 2;
+
+        ctx.strokeStyle = colors.purple;
+        ctx.globalAlpha = bracketAlpha;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        // Bracket: ┐ shape
+        ctx.moveTo(bracketX, top);
+        ctx.lineTo(bracketX + bracketW, top);
+        ctx.lineTo(bracketX + bracketW, bot);
+        ctx.lineTo(bracketX, bot);
+        ctx.stroke();
+
+        // Head label
+        ctx.fillStyle = colors.purple;
+        ctx.fillText("H" + h, bracketX + bracketW + 3, midY + 3);
+        ctx.globalAlpha = 1;
+      }
     }
   }
 
