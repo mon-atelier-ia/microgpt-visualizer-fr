@@ -144,8 +144,8 @@ canvas {
 </style>
 </head>
 <body>
-<h1>Propagation avant</h1>
-<p class="page-desc">Visualisation 3Blue1Brown du réseau de neurones</p>
+<h1>Forward &amp; Backward</h1>
+<p class="page-desc">Visualisation 3Blue1Brown — propagation avant puis rétropropagation</p>
 
 <div class="controls">
   <button class="btn" id="btn-replay">Rejouer</button>
@@ -158,8 +158,10 @@ canvas {
 <div class="explain">
   <b>Survole un neurone</b> pour voir ses connexions. Chaque colonne = une couche du modèle.
   <br>La couche Attention est divisée en <b>4 têtes</b> (H0–H3) de 4 dimensions chacune.
-  <br>Couleurs : <span class="text-red">rouge = négatif</span>,
-  <span class="text-green">vert = positif</span>.
+  <br><b>Forward</b> (→) : <span class="text-red">rouge = négatif</span>,
+  <span class="text-green">vert = positif</span> — le modèle calcule sa prédiction.
+  <br><b>Backward</b> (←) : <span style="color:var(--orange)">orange = gradient</span>
+  — le signal d'erreur remonte pour ajuster les poids.
 </div>
 
 <script>
@@ -172,12 +174,17 @@ const LABELS = [
 const ANIM_LAYER_DELAY = 350;
 const ANIM_FADE_DURATION = 300;
 
+// ── Animation phases ─────────────────────────────────────────────
+// "idle" → "forward" → "pause" → "backward" → "idle"
+const PAUSE_DURATION = 500;
+
 // ── State ────────────────────────────────────────────────────────
 let activations = [];
+let gradients = [];   // simulated backward gradients
 let neurons = [];
 let hoverNeuron = null;
 let animStart = 0;
-let animating = false;
+let animPhase = "idle"; // "idle" | "forward" | "pause" | "backward"
 let dpr = 1;
 
 const canvas = document.getElementById("nn");
@@ -200,6 +207,7 @@ function getThemeColors() {
     purple:  s.getPropertyValue("--purple").trim(),
     green:   s.getPropertyValue("--green").trim(),
     red:     s.getPropertyValue("--red").trim(),
+    orange:  s.getPropertyValue("--orange").trim(),
     border:  s.getPropertyValue("--border").trim(),
   };
 }
@@ -232,12 +240,18 @@ function resize() {
   draw();
 }
 
-// ── Random activations ───────────────────────────────────────────
+// ── Random activations & gradients ───────────────────────────────
 function randomActivations() {
   activations = LAYERS.map(n =>
     Array.from({ length: n }, () => Math.random() * 2 - 1)
   );
   activations[2] = activations[2].map(v => Math.max(0, v));
+
+  // Simulated gradients: larger near output, smaller near input
+  gradients = LAYERS.map((n, li) => {
+    const scale = (li + 1) / LAYERS.length; // gradient vanishing effect
+    return Array.from({ length: n }, () => (Math.random() * 2 - 1) * scale);
+  });
 }
 
 // ── Compute neuron positions ─────────────────────────────────────
@@ -306,43 +320,109 @@ function valToColor(v, alpha = 1) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// ── Animation progress per layer [0..1] ──────────────────────────
-function layerProgress(layerIndex, now) {
-  if (!animating) return 1;
-  const elapsed = now - animStart;
+// ── Animation timing ─────────────────────────────────────────────
+const forwardDuration = (LAYERS.length - 1) * ANIM_LAYER_DELAY + ANIM_FADE_DURATION;
+const backwardDuration = forwardDuration; // symmetric
+
+// Forward progress per layer [0..1] — left to right
+function forwardProgress(layerIndex, elapsed) {
   const layerStart = layerIndex * ANIM_LAYER_DELAY;
-  const t = (elapsed - layerStart) / ANIM_FADE_DURATION;
-  return Math.max(0, Math.min(1, t));
+  return Math.max(0, Math.min(1, (elapsed - layerStart) / ANIM_FADE_DURATION));
+}
+
+// Backward progress per layer [0..1] — right to left
+function backwardProgress(layerIndex, elapsed) {
+  const reversedIndex = (LAYERS.length - 1) - layerIndex;
+  const layerStart = reversedIndex * ANIM_LAYER_DELAY;
+  return Math.max(0, Math.min(1, (elapsed - layerStart) / ANIM_FADE_DURATION));
+}
+
+// Gradient color: orange-based intensity
+function gradToColor(v, alpha, colors) {
+  const t = Math.min(1, Math.abs(v));
+  const orangeRgb = parseColor(colors.orange);
+  const neutral = parseColor(colors.bg);
+  const r = Math.round(neutral[0] * (1 - t) + orangeRgb[0] * t);
+  const g = Math.round(neutral[1] * (1 - t) + orangeRgb[1] * t);
+  const b = Math.round(neutral[2] * (1 - t) + orangeRgb[2] * t);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 // ── Draw ─────────────────────────────────────────────────────────
 function draw(timestamp) {
   const now = timestamp || performance.now();
+  const elapsed = now - animStart;
   const w = canvas.width / dpr;
   const h = canvas.height / dpr;
   const colors = getThemeColors();
   const textRgb = parseColor(colors.text);
+  const orangeRgb = parseColor(colors.orange);
+
+  // Phase transitions
+  if (animPhase === "forward" && elapsed > forwardDuration + 100) {
+    animPhase = "pause";
+    animStart = now; // reset timer for pause
+  } else if (animPhase === "pause" && elapsed > PAUSE_DURATION) {
+    animPhase = "backward";
+    animStart = now; // reset timer for backward
+  } else if (animPhase === "backward" && elapsed > backwardDuration + 200) {
+    animPhase = "idle";
+  }
+
+  // Compute per-layer progress for each phase
+  const fwdElapsed = animPhase === "forward" ? elapsed : (animPhase === "idle" ? Infinity : Infinity);
+  const bwdElapsed = animPhase === "backward" ? elapsed : -Infinity;
+
+  function fwdP(li) {
+    if (animPhase === "idle" || animPhase === "pause" || animPhase === "backward") return 1;
+    return forwardProgress(li, elapsed);
+  }
+  function bwdP(li) {
+    if (animPhase !== "backward") return animPhase === "idle" ? 0 : 0;
+    return backwardProgress(li, elapsed);
+  }
 
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = colors.bg;
   ctx.fillRect(0, 0, w, h);
 
-  // Draw connections
+  // ── Phase indicator ───────────────────────────────────────────
+  if (animPhase !== "idle") {
+    ctx.font = "bold 13px 'SF Mono', 'Fira Code', monospace";
+    ctx.textAlign = "center";
+    if (animPhase === "forward") {
+      ctx.fillStyle = colors.green;
+      ctx.fillText("→  Propagation avant (forward)", w / 2, 18);
+    } else if (animPhase === "pause") {
+      ctx.fillStyle = colors.textDim;
+      ctx.fillText("⋯  Calcul de l'erreur", w / 2, 18);
+    } else if (animPhase === "backward") {
+      ctx.fillStyle = colors.orange;
+      ctx.fillText("←  Rétropropagation (backward)", w / 2, 18);
+    }
+  }
+
+  // ── Draw connections ──────────────────────────────────────────
   for (let li = 0; li < LAYERS.length - 1; li++) {
     const fromLayer = neurons[li];
     const toLayer = neurons[li + 1];
-    const progressFrom = layerProgress(li, now);
-    const progressTo = layerProgress(li + 1, now);
-    const connProgress = Math.min(progressFrom, progressTo);
+
+    // Forward connections (left to right)
+    const fwdConn = Math.min(fwdP(li), fwdP(li + 1));
+    // Backward connections (right to left)
+    const bwdConn = Math.min(bwdP(li), bwdP(li + 1));
 
     for (let fi = 0; fi < fromLayer.length; fi++) {
       for (let ti = 0; ti < toLayer.length; ti++) {
         const from = fromLayer[fi];
         const to = toLayer[ti];
 
-        let alpha = 0.06 * connProgress;
+        // Base forward alpha
+        let alpha = 0.06 * fwdConn;
         let lineWidth = 0.5;
+        let useColor = `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},`;
 
+        // Hover highlight
         if (hoverNeuron) {
           const hl = hoverNeuron.layer;
           const hi = hoverNeuron.index;
@@ -350,32 +430,30 @@ function draw(timestamp) {
           const isTo = hl === li + 1 && hi === ti;
 
           if (isFrom || isTo) {
-            alpha = 0.4 * connProgress;
+            alpha = 0.4 * fwdConn;
             lineWidth = 1.2;
-          }
-          // When hovering attention layer, also highlight same-head connections
-          else if (hl === ATTN_LAYER) {
+          } else if (hl === ATTN_LAYER) {
             const hoveredHead = Math.floor(hi / HEAD_DIM);
             if (li === ATTN_LAYER && Math.floor(fi / HEAD_DIM) === hoveredHead) {
-              alpha = 0.15 * connProgress;
+              alpha = 0.15 * fwdConn;
               lineWidth = 0.8;
             } else if (li + 1 === ATTN_LAYER && Math.floor(ti / HEAD_DIM) === hoveredHead) {
-              alpha = 0.15 * connProgress;
+              alpha = 0.15 * fwdConn;
               lineWidth = 0.8;
             }
           }
         }
 
-        if (connProgress > 0 && alpha > 0.01) {
-          const fromVal = activations[li][fi];
-          const toVal = activations[li + 1][ti];
-
+        // Draw forward connection
+        if (fwdConn > 0 && alpha > 0.01) {
           if (hoverNeuron &&
             ((hoverNeuron.layer === li && hoverNeuron.index === fi) ||
              (hoverNeuron.layer === li + 1 && hoverNeuron.index === ti))) {
+            const fromVal = activations[li][fi];
+            const toVal = activations[li + 1][ti];
             ctx.strokeStyle = valToColor((fromVal + toVal) / 2, alpha);
           } else {
-            ctx.strokeStyle = `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${alpha})`;
+            ctx.strokeStyle = `${useColor}${alpha})`;
           }
           ctx.lineWidth = lineWidth;
           ctx.beginPath();
@@ -383,23 +461,38 @@ function draw(timestamp) {
           ctx.lineTo(to.x, to.y);
           ctx.stroke();
         }
+
+        // Draw backward connection (orange overlay)
+        if (bwdConn > 0) {
+          const gradMag = (Math.abs(gradients[li][fi]) + Math.abs(gradients[li + 1][ti])) / 2;
+          const bwdAlpha = 0.08 * bwdConn * (0.3 + gradMag * 0.7);
+          if (bwdAlpha > 0.01) {
+            ctx.strokeStyle = `rgba(${orangeRgb[0]},${orangeRgb[1]},${orangeRgb[2]},${bwdAlpha})`;
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(to.x, to.y);
+            ctx.stroke();
+          }
+        }
       }
     }
   }
 
-  // Draw neurons
+  // ── Draw neurons ──────────────────────────────────────────────
   for (let li = 0; li < LAYERS.length; li++) {
-    const progress = layerProgress(li, now);
+    const fP = fwdP(li);
+    const bP = bwdP(li);
     const layer = neurons[li];
 
     for (let ni = 0; ni < layer.length; ni++) {
       const n = layer[ni];
       const val = activations[li][ni];
-      const p = progress;
+      const grad = gradients[li] ? gradients[li][ni] : 0;
 
-      // Glow
-      if (p > 0.5 && p < 1 && Math.abs(val) > 0.3) {
-        const glowAlpha = (1 - Math.abs(p - 0.75) * 4) * 0.3;
+      // Forward glow
+      if (fP > 0.5 && fP < 1 && Math.abs(val) > 0.3) {
+        const glowAlpha = (1 - Math.abs(fP - 0.75) * 4) * 0.3;
         if (glowAlpha > 0) {
           ctx.beginPath();
           ctx.arc(n.x, n.y, n.r * 2.5, 0, Math.PI * 2);
@@ -408,18 +501,28 @@ function draw(timestamp) {
         }
       }
 
-      // Neuron circle
+      // Backward glow (orange)
+      if (bP > 0.3 && bP < 1 && Math.abs(grad) > 0.2) {
+        const glowAlpha = (1 - Math.abs(bP - 0.65) * 3) * 0.35 * Math.abs(grad);
+        if (glowAlpha > 0) {
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.r * 2.8, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${orangeRgb[0]},${orangeRgb[1]},${orangeRgb[2]},${glowAlpha})`;
+          ctx.fill();
+        }
+      }
+
+      // Neuron circle — forward fill
       ctx.beginPath();
       ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-
-      const fillAlpha = p * 0.85;
+      const fillAlpha = fP * 0.85;
       ctx.fillStyle = Math.abs(val) < 0.05
         ? `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${fillAlpha * 0.15})`
         : valToColor(val, fillAlpha);
       ctx.fill();
 
-      // Stroke — purple accent for attention head neurons
-      const strokeAlpha = 0.3 + p * 0.4;
+      // Stroke — purple for attention, default otherwise
+      const strokeAlpha = 0.3 + fP * 0.4;
       const isHovered = hoverNeuron && hoverNeuron.layer === li && hoverNeuron.index === ni;
       const isAttnNeuron = li === ATTN_LAYER;
       if (isHovered) {
@@ -434,24 +537,33 @@ function draw(timestamp) {
         ctx.lineWidth = 1;
       }
       ctx.stroke();
+
+      // Backward ring (orange outer ring proportional to gradient magnitude)
+      if (bP > 0) {
+        const ringAlpha = bP * 0.8 * Math.min(1, Math.abs(grad) + 0.2);
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r + 2, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${orangeRgb[0]},${orangeRgb[1]},${orangeRgb[2]},${ringAlpha})`;
+        ctx.lineWidth = 1.5 + Math.abs(grad) * 1.5;
+        ctx.stroke();
+      }
     }
   }
 
-  // Draw attention head brackets (H0–H3)
+  // ── Draw attention head brackets (H0–H3) ──────────────────────
   {
     const attnLayer = neurons[ATTN_LAYER];
     if (attnLayer && attnLayer.length === 16) {
-      const progress = layerProgress(ATTN_LAYER, now);
-      const bracketAlpha = progress * 0.6;
+      const bracketAlpha = fwdP(ATTN_LAYER) * 0.6;
       const bracketX = attnLayer[0].x + attnLayer[0].r + 8;
       const bracketW = 5;
 
       ctx.font = "9px 'SF Mono', 'Fira Code', monospace";
       ctx.textAlign = "left";
 
-      for (let h = 0; h < N_HEAD; h++) {
-        const first = attnLayer[h * HEAD_DIM];
-        const last  = attnLayer[h * HEAD_DIM + HEAD_DIM - 1];
+      for (let hp = 0; hp < N_HEAD; hp++) {
+        const first = attnLayer[hp * HEAD_DIM];
+        const last  = attnLayer[hp * HEAD_DIM + HEAD_DIM - 1];
         const top = first.y - first.r;
         const bot = last.y + last.r;
         const midY = (top + bot) / 2;
@@ -460,22 +572,20 @@ function draw(timestamp) {
         ctx.globalAlpha = bracketAlpha;
         ctx.lineWidth = 1;
         ctx.beginPath();
-        // Bracket: ┐ shape
         ctx.moveTo(bracketX, top);
         ctx.lineTo(bracketX + bracketW, top);
         ctx.lineTo(bracketX + bracketW, bot);
         ctx.lineTo(bracketX, bot);
         ctx.stroke();
 
-        // Head label
         ctx.fillStyle = colors.purple;
-        ctx.fillText("H" + h, bracketX + bracketW + 3, midY + 3);
+        ctx.fillText("H" + hp, bracketX + bracketW + 3, midY + 3);
         ctx.globalAlpha = 1;
       }
     }
   }
 
-  // Draw labels
+  // ── Draw labels ───────────────────────────────────────────────
   ctx.textAlign = "center";
   ctx.font = "11px 'SF Mono', 'Fira Code', monospace";
   const labelY = (canvas.height / dpr) - 12;
@@ -488,12 +598,8 @@ function draw(timestamp) {
     });
   }
 
-  // Continue animation
-  if (animating) {
-    const totalDuration = (LAYERS.length - 1) * ANIM_LAYER_DELAY + ANIM_FADE_DURATION + 200;
-    if (performance.now() - animStart > totalDuration) {
-      animating = false;
-    }
+  // ── Continue animation ────────────────────────────────────────
+  if (animPhase !== "idle") {
     requestAnimationFrame(draw);
   }
 }
@@ -522,18 +628,18 @@ canvas.addEventListener("mousemove", (e) => {
 
   const changed = JSON.stringify(closest) !== JSON.stringify(hoverNeuron);
   hoverNeuron = closest;
-  if (changed && !animating) draw();
+  if (changed && animPhase === "idle") draw();
 });
 
 canvas.addEventListener("mouseleave", () => {
   hoverNeuron = null;
-  if (!animating) draw();
+  if (animPhase === "idle") draw();
 });
 
 // ── Animation trigger ────────────────────────────────────────────
 function startAnimation() {
   animStart = performance.now();
-  animating = true;
+  animPhase = "forward";
   requestAnimationFrame(draw);
 }
 
