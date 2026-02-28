@@ -4,13 +4,19 @@ interface Props {
   values: number[] | null;
   label: string | null;
   charStats: CharStats | null;
+  emptyText?: string;
 }
 
-export default function EmbeddingBarChart({ values, label, charStats }: Props) {
+export default function EmbeddingBarChart({
+  values,
+  label,
+  charStats,
+  emptyText = "Survole une lettre dans le tableau",
+}: Props) {
   if (!values || !label) {
     return (
       <div className="barchart-container">
-        <div className="barchart-empty">Survole une lettre dans le tableau</div>
+        <div className="barchart-empty">{emptyText}</div>
       </div>
     );
   }

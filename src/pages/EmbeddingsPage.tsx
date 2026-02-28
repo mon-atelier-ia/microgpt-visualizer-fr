@@ -10,7 +10,9 @@ import { computeCharStats } from "../utils/charStats";
 export default memo(function EmbeddingsPage() {
   const model = useModel();
   const [hoverRow, setHoverRow] = useState<number | null>(null);
+  const [hoverRowWpe, setHoverRowWpe] = useState<number | null>(null);
   const [selectedChar, setSelectedChar] = useState("e");
+  const [selectedPos, setSelectedPos] = useState(0);
 
   const wte = model.stateDict.wte;
   const wpe = model.stateDict.wpe;
@@ -19,7 +21,7 @@ export default memo(function EmbeddingsPage() {
 
   const charId = charToId[selectedChar] ?? 0;
   const tokEmb = wte[charId].map((v) => v.data);
-  const posEmb = wpe[0].map((v) => v.data);
+  const posEmb = wpe[selectedPos].map((v) => v.data);
   const combined = tokEmb.map((t, i) => t + posEmb[i]);
 
   // Dataset stats (recalculated when dataset changes)
@@ -33,6 +35,11 @@ export default memo(function EmbeddingsPage() {
     hoverRow !== null && hoverRow < uchars.length
       ? (charStats.get(uchars[hoverRow]) ?? null)
       : null;
+
+  // Bar chart data for hovered wpe row
+  const hoveredWpeValues =
+    hoverRowWpe !== null ? wpe[hoverRowWpe].map((v) => v.data) : null;
+  const hoveredWpeLabel = hoverRowWpe !== null ? wpeLabels[hoverRowWpe] : null;
 
   return (
     <PageSection id="embeddings" title="2. Plongements (Embeddings)">
@@ -109,9 +116,28 @@ export default memo(function EmbeddingsPage() {
           <br />
           Sans cela, le modèle ne pourrait pas distinguer « ab » de « ba » — les
           deux ont les mêmes caractères ! Le <Term id="plongement" /> de
-          position est <b>additionné</b> au <Term id="plongement" /> de token.
+          position est <b>additionné</b> au <Term id="plongement" /> de token.{" "}
+          <b>Survole une ligne</b> pour voir ses dimensions.
         </div>
-        <Heatmap matrix={wpe} rowLabels={wpeLabels} colCount={N_EMBD} />
+        <div className="heatmap-with-bars">
+          <div>
+            <Heatmap
+              matrix={wpe}
+              rowLabels={wpeLabels}
+              colCount={N_EMBD}
+              highlightRow={hoverRowWpe ?? undefined}
+              onHoverRow={setHoverRowWpe}
+            />
+          </div>
+          <div className="barchart-side">
+            <EmbeddingBarChart
+              values={hoveredWpeValues}
+              label={hoveredWpeLabel}
+              charStats={null}
+              emptyText="Survole une position dans le tableau"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Interactif : comment ils se combinent */}
@@ -137,8 +163,20 @@ export default memo(function EmbeddingsPage() {
           ))}
         </div>
 
+        <div className="controls" style={{ marginTop: 8 }}>
+          {wpeLabels.map((label, i) => (
+            <button
+              key={label}
+              className={`btn btn-toggle btn-toggle--char ${i === selectedPos ? "" : "btn-secondary"}`}
+              onClick={() => setSelectedPos(i)}
+            >
+              {i}
+            </button>
+          ))}
+        </div>
+
         <div className="label-dim label-purple">
-          '{selectedChar}' à la position 0 :
+          '{selectedChar}' à la position {selectedPos} :
         </div>
 
         <VectorBar
@@ -146,7 +184,10 @@ export default memo(function EmbeddingsPage() {
           label={`wte['${selectedChar}'] (plongement de token)`}
         />
         <div className="vector-divider">+</div>
-        <VectorBar values={posEmb} label="wpe[0] (plongement de position)" />
+        <VectorBar
+          values={posEmb}
+          label={`wpe[${selectedPos}] (plongement de position)`}
+        />
         <div className="vector-divider">=</div>
         <VectorBar values={combined} label="combiné (entrée du modèle)" />
       </div>

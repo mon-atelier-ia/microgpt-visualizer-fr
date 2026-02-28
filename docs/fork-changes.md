@@ -121,6 +121,8 @@
 | Side-by-side flex layout (`.heatmap-with-bars`) + responsive stacking <900px | `EmbeddingsPage.tsx`, `styles.css`                      | Utilise l'espace libre à droite de la heatmap (16 colonnes = ~600px). Passe en colonne sur mobile          |
 | BOS special message in bar chart                                             | `EmbeddingBarChart.tsx`                                 | "Token spécial — marque le début et la fin de chaque nom." au lieu des stats dataset                       |
 | 9 new tests (5 charStats + 4 EmbeddingBarChart)                              | `charStats.test.ts`, `EmbeddingBarChart.test.tsx`       | Couverture : empty state, label+stats, BOS, bar count, frequency, bigrams                                  |
+| Bar chart on wpe heatmap hover + `emptyText` prop                            | `EmbeddingsPage.tsx`, `EmbeddingBarChart.tsx`           | Même pattern que wte — survol position = 16 barres. `emptyText` prop pour message contextuel               |
+| Interactive position selector (0–15) in combine panel                        | `EmbeddingsPage.tsx`                                    | Remplace `wpe[0]` codé en dur — sélection dynamique synchronise VectorBar + bar chart                      |
 
 ## Deployment
 
