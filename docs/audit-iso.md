@@ -1,8 +1,8 @@
 # Audit ISO — microgpt-visualizer-fr
 
-> Date : 2026-02-27 (révisé 2026-02-28, scores mis à jour 2026-02-28, CSS/tests 2026-02-28)
+> Date : 2026-02-27 (révisé 2026-02-28, scores mis à jour 2026-02-28, CSS/tests 2026-02-28, playgrounds 2026-02-28)
 > Auditeur : Claude Opus 4.6 (assisté par 4 agents parallèles)
-> Périmètre : `src/` (pages, components, styles, App, engine read-only)
+> Périmètre : `src/` (pages, components, styles, App, engine read-only). Playgrounds (`playground.html`, `playground-full.html`) hors périmètre (prototypes standalone).
 > Commit de référence : `89a4ec8` (main), scores révisés après `b0b3ad9`
 
 ---
@@ -203,6 +203,7 @@
 - (+) 5 pages couvrent le pipeline complet (tokenization → inference)
 - (+) Glossaire intégré avec 30 termes et analogies pour 10-14 ans
 - (+) Visualisations interactives (heatmap navigable, training animé)
+- (+) Playgrounds 3Blue1Brown (Canvas 2D) : visualisation neurones/connexions, animation forward+backward
 
 #### Autodescription (4,5/5)
 

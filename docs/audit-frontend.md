@@ -1,6 +1,6 @@
 # Audit frontend — microgpt-visualizer-fr
 
-> Date : 2026-02-27 (révisé 2026-02-28, CSS mis à jour 2026-02-28)
+> Date : 2026-02-27 (révisé 2026-02-28, CSS mis à jour 2026-02-28, playgrounds ajoutés 2026-02-28)
 > Périmètre : `src/` (pages, components, styles, App). Le répertoire `src/engine/` (code upstream read-only) est mentionné mais non priorisé.
 > Voir aussi : [`docs/audit-iso.md`](audit-iso.md) — audit ISO (25010, 40500, 9241-110), score global 4,5/5.
 

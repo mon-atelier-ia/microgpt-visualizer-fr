@@ -187,7 +187,16 @@ src/
 └── assets/react.svg               # favicon Vite
 ```
 
-**Total : ~5 000 lignes, 29 fichiers source + 16 fichiers test. 94 tests.**
+docs/
+├── architecture-nn.md # Spécification réseau de neurones (graphe, 13 couches, poids)
+├── audit-frontend.md # Audit qualité frontend (37 problèmes)
+├── audit-iso.md # Audit ISO (25010, 40500, 9241-110)
+└── fork-changes.md # Registre des divergences upstream
+
+playground.html # Visualisation 3Blue1Brown 5 colonnes, forward+backward animation
+playground-full.html # Visualisation 3Blue1Brown 13 colonnes fidèle architecture
+
+**Total : ~5 000 lignes src, 29 fichiers source + 16 fichiers test. 94 tests. 2 playgrounds standalone.**
 
 ### Constats clés
 
@@ -281,7 +290,16 @@ Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 - ✅ MIN-1 : Retiré (faux positif — `.push()` in-place, `.length` = seul trigger)
 - ✅ README.md traduit en français (FR principal + EN en `<details>`)
 
-### 9. Polish CSS — FAIT
+### 9. Visualisation 3Blue1Brown — FAIT
+
+- ✅ `docs/architecture-nn.md` — spécification complète du réseau (graphe de calcul, 13 colonnes, ~4 192 paramètres)
+- ✅ `playground.html` — visualisation 5 colonnes [16, 16, 64, 16, 27], 4 têtes d'attention (H0–H3), hover, dark/light
+- ✅ `playground-full.html` — visualisation fidèle 13 colonnes, résidus bézier, section labels
+- ✅ Animation forward + backward dans `playground.html` (3 phases : forward→pause→backward, orange gradients)
+- ✅ Design system intégré (CSS custom properties, `.btn`, `.explain`, `prefers-reduced-motion`)
+- Prochain : intégrer dans l'app React (`ForwardPassPage` + `TrainingPage`) avec données réelles du modèle
+
+### 10. Polish CSS — FAIT
 
 - ✅ Scrollbars thématiques (webkit + standard `scrollbar-color`) — `86ef089`
 - ✅ Lisibilité petits textes : font-sizes augmentées (vector-cell 8→10px, heatmap 9→10/11px, flow 9→10/11px, heat-cell 8→10px) — `86ef089`

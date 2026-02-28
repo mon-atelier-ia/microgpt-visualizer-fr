@@ -13,6 +13,7 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 - **Entraînement** — Regarde le modèle apprendre en temps réel (courbe de loss, heatmaps)
 - **Inférence** — Génère des noms et observe les prédictions à chaque position
 - **Moteur autograd** — Différentiation automatique intégrée, transparente et éducative
+- **Playground 3Blue1Brown** — Visualisation Canvas 2D du réseau de neurones (forward + backward animés)
 
 ## Différences avec l'original
 
@@ -23,6 +24,7 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 - 94 tests (composants, engine, accessibilité, store, intégrité des données)
 - ErrorBoundary avec message français et bouton de rechargement
 - Code splitting (`React.lazy` + `Suspense`)
+- Documentation architecture réseau de neurones ([`docs/architecture-nn.md`](docs/architecture-nn.md))
 
 Voir [`docs/fork-changes.md`](docs/fork-changes.md) pour le registre complet des divergences.
 
@@ -78,6 +80,15 @@ src/
 ├── data/           # Glossaire pédagogique
 ├── datasets/       # 6 jeux de données (EN + FR)
 └── App.tsx         # Composant racine
+
+docs/
+├── architecture-nn.md  # Spécification réseau (~4 192 paramètres, 13 couches)
+├── audit-frontend.md   # Audit qualité frontend
+├── audit-iso.md        # Audit ISO (25010, 40500, 9241-110)
+└── fork-changes.md     # Registre divergences upstream
+
+playground.html         # Visualisation 3Blue1Brown (5 colonnes, forward+backward)
+playground-full.html    # Visualisation fidèle (13 colonnes, résidus, têtes)
 ```
 
 ## Stack technique
@@ -102,6 +113,7 @@ Ce projet aide à comprendre les modèles transformer en :
 
 - Audit ISO (25010, 40500, 9241-110) : **4,5/5** — voir [`docs/audit-iso.md`](docs/audit-iso.md)
 - Audit frontend détaillé : voir [`docs/audit-frontend.md`](docs/audit-frontend.md)
+- Architecture réseau documentée : voir [`docs/architecture-nn.md`](docs/architecture-nn.md)
 - ESLint 0 warnings, Prettier en pre-commit, TypeScript strict
 
 ## Contribuer
@@ -149,6 +161,7 @@ An interactive web application for visualizing and understanding how GPT (Genera
 - **Training Process** — Watch the model learn in real-time with loss charts and heatmaps
 - **Inference Mode** — Generate text and see predictions as they happen
 - **Custom Autograd Engine** — Built-in automatic differentiation for transparency
+- **3Blue1Brown Playground** — Canvas 2D neural network visualization (animated forward + backward passes)
 
 ## Getting Started
 
