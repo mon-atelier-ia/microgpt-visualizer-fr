@@ -78,14 +78,24 @@ const TokenizerPage = memo(function TokenizerPage() {
 
         {clean && (
           <>
-            <div className="token-flow">
+            <div className="token-flow token-flow--animated">
               {tokens.map((t, i) => {
                 const label = tokenLabel(t);
                 const isBos = t === BOS;
                 return (
                   <span key={i} className="d-contents">
-                    {i > 0 && <span className="arrow-sym">→</span>}
-                    <div className={`token-box ${isBos ? "bos" : ""}`}>
+                    {i > 0 && (
+                      <span
+                        className="arrow-sym"
+                        style={{ animationDelay: `${i * 80 + 60}ms` }}
+                      >
+                        →
+                      </span>
+                    )}
+                    <div
+                      className={`token-box ${isBos ? "bos" : ""}`}
+                      style={{ animationDelay: `${i * 80}ms` }}
+                    >
                       <span className="char">{label}</span>
                       <span className="id">id: {t}</span>
                     </div>

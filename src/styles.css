@@ -415,6 +415,26 @@ input[type="range"]:focus-visible {
   color: var(--red);
   font-size: 12px;
 }
+
+/* Tokenisation slide+fade animation (TokenizerPage only) */
+@keyframes tokenSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+}
+.token-flow--animated .token-box {
+  animation: tokenSlideIn 0.3s ease backwards;
+}
+@keyframes arrowFadeIn {
+  from {
+    opacity: 0;
+  }
+}
+.token-flow--animated .arrow-sym {
+  animation: arrowFadeIn 0.2s ease backwards;
+}
+
 .arrow-sym {
   color: var(--text-dim);
   font-size: 18px;
