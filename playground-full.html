@@ -63,7 +63,7 @@ canvas { border-radius: 10px; cursor: crosshair; border: 1px solid var(--border)
 </style>
 </head>
 <body>
-<h1>Propagation avant — Architecture complète</h1>
+<h1>Forward &amp; Backward — Architecture complète</h1>
 <p class="page-desc">13 colonnes fidèles au graphe de calcul réel (model.ts)</p>
 <div class="controls">
   <button class="btn" id="btn-replay">Rejouer</button>
@@ -74,9 +74,11 @@ canvas { border-radius: 10px; cursor: crosshair; border: 1px solid var(--border)
 <div class="explain">
   <b>Survole un neurone</b> pour voir ses connexions.
   13 colonnes = les étapes réelles du forward pass.
-  <br>Couleurs : <span class="text-red">rouge = négatif</span>,
-  <span class="text-green">vert = positif</span>.
-  <span class="text-purple">Arcs pointillés</span> = connexions résiduelles (skip).
+  <br><b>Forward</b> (→) : <span class="text-red">rouge = négatif</span>,
+  <span class="text-green">vert = positif</span> — le modèle calcule sa prédiction.
+  <br><b>Backward</b> (←) : <span style="color:var(--orange)">orange = gradient</span>
+  — le signal d'erreur remonte pour ajuster les poids.
+  <br><span class="text-purple">Arcs pointillés</span> = connexions résiduelles (skip).
 </div>
 
 <script>
@@ -124,12 +126,19 @@ const RESIDUALS = [
 const ANIM_STAGE_DELAY = 180;
 const ANIM_FADE = 250;
 
+// ── Animation phases ─────────────────────────────────────────────
+const MAX_STAGE = Math.max(...COLS.map(c => c.stage));
+const PAUSE_DURATION = 500;
+const fwdDuration = MAX_STAGE * ANIM_STAGE_DELAY + ANIM_FADE;
+const bwdDuration = fwdDuration;
+
 // ── State ────────────────────────────────────────────────────────
 let activations = [];
+let gradients = [];
 let neurons = [];
 let hoverNeuron = null;
 let animStart = 0;
-let animating = false;
+let animPhase = "idle"; // "idle" | "forward" | "pause" | "backward"
 let dpr = 1;
 
 const canvas = document.getElementById("nn");
@@ -185,6 +194,12 @@ function randomActivations() {
   const s = ex.reduce((a, b) => a + b, 0);
   a[12] = ex.map(v => v / s);
   activations = a;
+
+  // Simulated gradients: larger near output (gradient vanishing effect)
+  gradients = COLS.map((col, ci) => {
+    const scale = (COLS[ci].stage + 1) / (MAX_STAGE + 1);
+    return Array.from({ length: col.n }, () => (Math.random() * 2 - 1) * scale);
+  });
 }
 
 // ── Compute neuron positions ─────────────────────────────────────
@@ -240,9 +255,13 @@ function valToColor(v, alpha) {
 }
 
 // ── Animation progress per stage ─────────────────────────────────
-function stageProgress(stage, now) {
-  if (!animating) return 1;
-  const t = (now - animStart - stage * ANIM_STAGE_DELAY) / ANIM_FADE;
+function fwdStageP(stage, elapsed) {
+  const t = (elapsed - stage * ANIM_STAGE_DELAY) / ANIM_FADE;
+  return Math.max(0, Math.min(1, t));
+}
+function bwdStageP(stage, elapsed) {
+  const reversed = MAX_STAGE - stage;
+  const t = (elapsed - reversed * ANIM_STAGE_DELAY) / ANIM_FADE;
   return Math.max(0, Math.min(1, t));
 }
 
@@ -258,6 +277,7 @@ function edgeAlpha(fromN, toN, type) {
 // ── Draw ─────────────────────────────────────────────────────────
 function draw(timestamp) {
   const now = timestamp || performance.now();
+  const elapsed = now - animStart;
   const w = canvas.width / dpr;
   const h = canvas.height / dpr;
   const colors = getThemeColors();
@@ -266,10 +286,47 @@ function draw(timestamp) {
     _rgb[k] = parseColor(colors[k]);
   }
   const tr = _rgb.text;
+  const or = _rgb.orange;
+
+  // Phase transitions
+  if (animPhase === "forward" && elapsed > fwdDuration + 100) {
+    animPhase = "pause"; animStart = now;
+  } else if (animPhase === "pause" && elapsed > PAUSE_DURATION) {
+    animPhase = "backward"; animStart = now;
+  } else if (animPhase === "backward" && elapsed > bwdDuration + 200) {
+    animPhase = "idle";
+  }
+
+  function fP(stage) {
+    if (animPhase === "forward") return fwdStageP(stage, elapsed);
+    return 1; // fully visible after forward
+  }
+  function bP(stage) {
+    if (animPhase !== "backward") return 0;
+    return bwdStageP(stage, elapsed);
+  }
 
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = colors.bg;
   ctx.fillRect(0, 0, w, h);
+
+  // ── Phase indicator ──────────────────────────────────────────
+  if (animPhase !== "idle") {
+    ctx.save();
+    ctx.font = "bold 12px 'SF Mono', 'Fira Code', monospace";
+    ctx.textAlign = "right";
+    if (animPhase === "forward") {
+      ctx.fillStyle = colors.green;
+      ctx.fillText("→  Forward", w - 12, 14);
+    } else if (animPhase === "pause") {
+      ctx.fillStyle = colors.textDim;
+      ctx.fillText("⋯  Erreur", w - 12, 14);
+    } else if (animPhase === "backward") {
+      ctx.fillStyle = colors.orange;
+      ctx.fillText("←  Backward", w - 12, 14);
+    }
+    ctx.restore();
+  }
 
   // ── Section labels (top) ──────────────────────────────────────
   const secs = {};
@@ -299,21 +356,16 @@ function draw(timestamp) {
   for (const edge of EDGES) {
     const fromLayer = neurons[edge.from];
     const toLayer = neurons[edge.to];
-    const pFrom = stageProgress(COLS[edge.from].stage, now);
-    const pTo = stageProgress(COLS[edge.to].stage, now);
-    const p = Math.min(pFrom, pTo);
-    if (p < 0.01) continue;
+    const p = Math.min(fP(COLS[edge.from].stage), fP(COLS[edge.to].stage));
+    const bp = Math.min(bP(COLS[edge.from].stage), bP(COLS[edge.to].stage));
 
     const baseA = edgeAlpha(fromLayer.length, toLayer.length, edge.type);
 
     if (edge.type === "one2one") {
       const count = Math.min(fromLayer.length, toLayer.length);
       for (let i = 0; i < count; i++) {
-        const from = fromLayer[i];
-        const to = toLayer[i];
-        let alpha = baseA * p;
-        let lw = 0.8;
-        let colored = false;
+        const from = fromLayer[i]; const to = toLayer[i];
+        let alpha = baseA * p; let lw = 0.8; let colored = false;
 
         if (hoverNeuron) {
           const hl = hoverNeuron.layer, hi = hoverNeuron.index;
@@ -322,22 +374,29 @@ function draw(timestamp) {
           }
         }
 
-        if (colored) {
-          const val = (activations[edge.from][i] + activations[edge.to][i]) / 2;
-          ctx.strokeStyle = valToColor(val, alpha);
-        } else {
-          ctx.strokeStyle = `rgba(${tr[0]},${tr[1]},${tr[2]},${alpha})`;
+        if (p > 0.01 && alpha > 0.003) {
+          ctx.strokeStyle = colored
+            ? valToColor((activations[edge.from][i] + activations[edge.to][i]) / 2, alpha)
+            : `rgba(${tr[0]},${tr[1]},${tr[2]},${alpha})`;
+          ctx.lineWidth = lw;
+          ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
         }
-        ctx.lineWidth = lw;
-        ctx.beginPath();
-        ctx.moveTo(from.x, from.y);
-        ctx.lineTo(to.x, to.y);
-        ctx.stroke();
+
+        // Backward overlay (orange)
+        if (bp > 0) {
+          const gm = (Math.abs(gradients[edge.from][i]) + Math.abs(gradients[edge.to][i])) / 2;
+          const ba = 0.35 * bp * (0.3 + gm * 0.7);
+          if (ba > 0.01) {
+            ctx.strokeStyle = `rgba(${or[0]},${or[1]},${or[2]},${ba})`;
+            ctx.lineWidth = 1.2; ctx.beginPath();
+            ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
+          }
+        }
       }
     } else {
-      // Dense: batch non-hovered, then draw hovered on top
+      // Dense: batch non-hovered forward connections
       const alpha = baseA * p;
-      if (alpha > 0.003) {
+      if (p > 0.01 && alpha > 0.003) {
         ctx.strokeStyle = `rgba(${tr[0]},${tr[1]},${tr[2]},${alpha})`;
         ctx.lineWidth = 0.4;
         ctx.beginPath();
@@ -354,29 +413,40 @@ function draw(timestamp) {
         ctx.stroke();
       }
 
-      // Hovered connections (colored, on top)
+      // Hovered forward connections (colored, on top)
       if (hoverNeuron && p > 0.01) {
         const hl = hoverNeuron.layer, hi = hoverNeuron.index;
         if (hl === edge.from) {
           for (let ti = 0; ti < toLayer.length; ti++) {
             const val = (activations[edge.from][hi] + activations[edge.to][ti]) / 2;
             ctx.strokeStyle = valToColor(val, 0.5 * p);
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.moveTo(fromLayer[hi].x, fromLayer[hi].y);
-            ctx.lineTo(toLayer[ti].x, toLayer[ti].y);
-            ctx.stroke();
+            ctx.lineWidth = 1.2; ctx.beginPath();
+            ctx.moveTo(fromLayer[hi].x, fromLayer[hi].y); ctx.lineTo(toLayer[ti].x, toLayer[ti].y); ctx.stroke();
           }
         } else if (hl === edge.to) {
           for (let fi = 0; fi < fromLayer.length; fi++) {
             const val = (activations[edge.from][fi] + activations[edge.to][hi]) / 2;
             ctx.strokeStyle = valToColor(val, 0.5 * p);
-            ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.moveTo(fromLayer[fi].x, fromLayer[fi].y);
-            ctx.lineTo(toLayer[hi].x, toLayer[hi].y);
-            ctx.stroke();
+            ctx.lineWidth = 1.2; ctx.beginPath();
+            ctx.moveTo(fromLayer[fi].x, fromLayer[fi].y); ctx.lineTo(toLayer[hi].x, toLayer[hi].y); ctx.stroke();
           }
+        }
+      }
+
+      // Dense backward overlay (orange batch)
+      if (bp > 0) {
+        const ba = baseA * 4 * bp;
+        if (ba > 0.003) {
+          ctx.strokeStyle = `rgba(${or[0]},${or[1]},${or[2]},${ba})`;
+          ctx.lineWidth = 0.4;
+          ctx.beginPath();
+          for (let fi = 0; fi < fromLayer.length; fi++) {
+            for (let ti = 0; ti < toLayer.length; ti++) {
+              ctx.moveTo(fromLayer[fi].x, fromLayer[fi].y);
+              ctx.lineTo(toLayer[ti].x, toLayer[ti].y);
+            }
+          }
+          ctx.stroke();
         }
       }
     }
@@ -384,9 +454,7 @@ function draw(timestamp) {
 
   // ── Residual arcs ─────────────────────────────────────────────
   for (const res of RESIDUALS) {
-    const pFrom = stageProgress(COLS[res.from].stage, now);
-    const pTo = stageProgress(COLS[res.to].stage, now);
-    const p = Math.min(pFrom, pTo);
+    const p = Math.min(fP(COLS[res.from].stage), fP(COLS[res.to].stage));
     if (p < 0.01) continue;
 
     const fN = neurons[res.from], tN = neurons[res.to];
@@ -417,14 +485,16 @@ function draw(timestamp) {
 
   // ── Draw neurons ──────────────────────────────────────────────
   for (let ci = 0; ci < COLS.length; ci++) {
-    const p = stageProgress(COLS[ci].stage, now);
+    const p = fP(COLS[ci].stage);
+    const bp = bP(COLS[ci].stage);
     const layer = neurons[ci];
 
     for (let ni = 0; ni < layer.length; ni++) {
       const n = layer[ni];
       const val = activations[ci][ni];
+      const grad = gradients[ci] ? gradients[ci][ni] : 0;
 
-      // Glow during animation
+      // Forward glow
       if (p > 0.5 && p < 1 && Math.abs(val) > 0.3) {
         const ga = (1 - Math.abs(p - 0.75) * 4) * 0.3;
         if (ga > 0) {
@@ -435,10 +505,21 @@ function draw(timestamp) {
         }
       }
 
+      // Backward glow (orange)
+      if (bp > 0.3 && bp < 1 && Math.abs(grad) > 0.2) {
+        const ga = (1 - Math.abs(bp - 0.65) * 3) * 0.35 * Math.abs(grad);
+        if (ga > 0) {
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.r * 2.8, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${or[0]},${or[1]},${or[2]},${ga})`;
+          ctx.fill();
+        }
+      }
+
       ctx.beginPath();
       ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
 
-      // Fill
+      // Fill (forward)
       const fa = p * 0.85;
       if (Math.abs(val) < 0.05) {
         ctx.fillStyle = `rgba(${tr[0]},${tr[1]},${tr[2]},${fa * 0.12})`;
@@ -455,12 +536,22 @@ function draw(timestamp) {
         : `rgba(${tr[0]},${tr[1]},${tr[2]},${sa})`;
       ctx.lineWidth = isHov ? 2.5 : 0.8;
       ctx.stroke();
+
+      // Backward ring (orange)
+      if (bp > 0) {
+        const ra = bp * 0.9 * Math.min(1, Math.abs(grad) + 0.3);
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r + 2, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${or[0]},${or[1]},${or[2]},${ra})`;
+        ctx.lineWidth = 1.5 + Math.abs(grad) * 2;
+        ctx.stroke();
+      }
     }
   }
 
   // ── Head group brackets ───────────────────────────────────────
   const headsCol = 6;
-  const hp = stageProgress(COLS[headsCol].stage, now);
+  const hp = fP(COLS[headsCol].stage);
   if (hp > 0.1) {
     const hNeurons = neurons[headsCol];
     const pr = _rgb.purple;
@@ -499,10 +590,7 @@ function draw(timestamp) {
   }
 
   // ── Animation loop ────────────────────────────────────────────
-  if (animating) {
-    const maxStage = Math.max(...COLS.map(c => c.stage));
-    const totalDur = maxStage * ANIM_STAGE_DELAY + ANIM_FADE + 200;
-    if (performance.now() - animStart > totalDur) animating = false;
+  if (animPhase !== "idle") {
     requestAnimationFrame(draw);
   }
 }
@@ -526,18 +614,19 @@ canvas.addEventListener("mousemove", (e) => {
   }
   const changed = JSON.stringify(closest) !== JSON.stringify(hoverNeuron);
   hoverNeuron = closest;
-  if (changed && !animating) draw();
+  if (changed && animPhase === "idle") draw();
 });
 
 canvas.addEventListener("mouseleave", () => {
   hoverNeuron = null;
-  if (!animating) draw();
+  if (animPhase === "idle") draw();
 });
 
 // ── Controls ─────────────────────────────────────────────────────
 function startAnimation() {
+  randomActivations();
   animStart = performance.now();
-  animating = true;
+  animPhase = "forward";
   requestAnimationFrame(draw);
 }
 
@@ -550,10 +639,7 @@ document.getElementById("btn-theme").addEventListener("click", function() {
 });
 
 document.getElementById("btn-replay").addEventListener("click", startAnimation);
-document.getElementById("btn-random").addEventListener("click", () => {
-  randomActivations();
-  startAnimation();
-});
+document.getElementById("btn-random").addEventListener("click", startAnimation);
 
 // ── Init ─────────────────────────────────────────────────────────
 randomActivations();
