@@ -36,6 +36,9 @@ function useTheme() {
 export default function App() {
   const [page, setPage] = useState("tokenizer");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // datasetId is UI-only state (sidebar active button). The store tracks
+  // its own currentDatasetId for resetModel(). Both are set together in
+  // handleDatasetChange to keep them in sync.
   const [datasetId, setDatasetId] = useState(DEFAULT_DATASET_ID);
   const { theme, toggle: toggleTheme } = useTheme();
 

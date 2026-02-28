@@ -4,8 +4,9 @@ import Heatmap, { VectorBar } from "../components/Heatmap";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 import { useModel } from "../modelStore";
+import { memo } from "react";
 
-export default function EmbeddingsPage() {
+export default memo(function EmbeddingsPage() {
   const model = useModel();
   const [hoverRow, setHoverRow] = useState<number | null>(null);
   const [selectedChar, setSelectedChar] = useState("e");
@@ -125,4 +126,4 @@ export default function EmbeddingsPage() {
       </div>
     </PageSection>
   );
-}
+});

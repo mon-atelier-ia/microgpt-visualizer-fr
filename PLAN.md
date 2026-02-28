@@ -274,7 +274,7 @@ Score global : **4,2/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 
 ### 8. Phase 4 — roadmap restante
 
-- ⬜ A-1 : Refactoriser `useRef` + `forceUpdate` → `useSyncExternalStore`
+- ✅ A-1 : `useSyncExternalStore` dans `modelStore.ts` + `memo()` sur 5 pages
 - ⬜ C-4 : Décomposer `ForwardPassPage` en 5 sous-composants
 - ⬜ UX-1 : Confirmation avant changement dataset si `totalStep > 0`
 - ✅ README.md traduit en français (FR principal + EN en `<details>`)

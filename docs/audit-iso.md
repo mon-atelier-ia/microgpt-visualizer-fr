@@ -24,13 +24,11 @@
 
 ## Non-conformités par sévérité
 
-### Critiques (1)
+### Critiques — ✅ TOUS CORRIGÉS
 
-| #   | Norme                | Problème                                                                    | Impact                                  |
-| --- | -------------------- | --------------------------------------------------------------------------- | --------------------------------------- |
-| A-1 | 25010 Maintenabilité | `useRef` + `forceUpdate` antipattern — couple 4 pages, bloque `memo`/`lazy` | Empêche toute optimisation React future |
-
-> **Note A-1** : la mutabilité du modèle est inhérente à l'engine autograd (read-only upstream). Le wrapper React (`useRef` + compteur) est corrigeable via `useSyncExternalStore` (React 18+). Blast radius : 1 fichier créé + 7 modifiés. Voir Phase 4B.
+| #       | Norme                | Problème                                                                 | Fix                                                                                                                  |
+| ------- | -------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| ~~A-1~~ | 25010 Maintenabilité | ~~`useRef` + `forceUpdate` antipattern — couple 4 pages, bloque `memo`~~ | ✅ `useSyncExternalStore` dans `modelStore.ts`. Pages souscrivent via `useModel()`. `memo()` ajouté sur les 5 pages. |
 
 ### Majeures (1)
 

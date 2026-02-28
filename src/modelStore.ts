@@ -39,6 +39,6 @@ export function notifyModelUpdate() {
 
 /** Hook: subscribe to the model store. Re-renders when the model changes. */
 export function useModel(): ModelState {
-  useSyncExternalStore(subscribe, getSnapshot);
+  useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   return model;
 }

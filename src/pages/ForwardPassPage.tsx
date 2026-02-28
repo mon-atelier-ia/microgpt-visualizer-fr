@@ -15,8 +15,9 @@ import ProbabilityBar from "../components/ProbabilityBar";
 import HeatCell from "../components/HeatCell";
 import NeuronCell from "../components/NeuronCell";
 import { useModel } from "../modelStore";
+import { memo } from "react";
 
-export default function ForwardPassPage() {
+export default memo(function ForwardPassPage() {
   const model = useModel();
   const [char, setChar] = useState("e");
   const [pos, setPos] = useState(0);
@@ -291,4 +292,4 @@ export default function ForwardPassPage() {
       )}
     </PageSection>
   );
-}
+});

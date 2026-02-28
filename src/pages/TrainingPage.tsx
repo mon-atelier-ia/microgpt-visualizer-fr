@@ -5,8 +5,9 @@ import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 import LossCell from "../components/LossCell";
 import { useModel, notifyModelUpdate, resetModel } from "../modelStore";
+import { memo } from "react";
 
-export default function TrainingPage() {
+export default memo(function TrainingPage() {
   const model = useModel();
   const [training, setTraining] = useState(false);
   const [lastResult, setLastResult] = useState<TrainStepResult | null>(null);
@@ -26,6 +27,8 @@ export default function TrainingPage() {
     setTraining(true);
     stopRef.current = false;
 
+    // model is mutable (engine constraint) — reads inside tick() see current state,
+    // not a stale closure, because trainStep mutates the same object in-place.
     const targetSteps = model.totalStep + steps;
     let done = 0;
 
@@ -225,4 +228,4 @@ export default function TrainingPage() {
       </div>
     </PageSection>
   );
-}
+});

@@ -4,6 +4,7 @@ import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 import ProbabilityBar from "../components/ProbabilityBar";
 import { useModel } from "../modelStore";
+import { memo } from "react";
 
 let nextResultId = 0;
 
@@ -13,7 +14,7 @@ interface GeneratedResult {
   steps: InferenceStep[];
 }
 
-export default function InferencePage() {
+export default memo(function InferencePage() {
   const model = useModel();
   const [temperature, setTemperature] = useState(5); // x10
   const [results, setResults] = useState<GeneratedResult[]>([]);
@@ -253,4 +254,4 @@ export default function InferencePage() {
       </div>
     </PageSection>
   );
-}
+});
