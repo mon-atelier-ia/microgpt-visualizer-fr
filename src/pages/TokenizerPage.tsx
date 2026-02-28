@@ -43,12 +43,12 @@ const TokenizerPage = memo(function TokenizerPage() {
         </div>
         <div className="char-mapping-scroll">
           {uchars.map((ch, i) => (
-            <div key={ch} className="token-box" style={{ cursor: "default" }}>
+            <div key={ch} className="token-box cursor-default">
               <span className="char">{ch}</span>
               <span className="id">{i}</span>
             </div>
           ))}
-          <div className="token-box bos" style={{ cursor: "default" }}>
+          <div className="token-box bos cursor-default">
             <span className="char">BOS</span>
             <span className="id">{BOS}</span>
           </div>
@@ -83,7 +83,7 @@ const TokenizerPage = memo(function TokenizerPage() {
                 const label = tokenLabel(t);
                 const isBos = t === BOS;
                 return (
-                  <span key={i} style={{ display: "contents" }}>
+                  <span key={i} className="d-contents">
                     {i > 0 && <span className="arrow-sym">→</span>}
                     <div className={`token-box ${isBos ? "bos" : ""}`}>
                       <span className="char">{label}</span>
@@ -95,7 +95,7 @@ const TokenizerPage = memo(function TokenizerPage() {
             </div>
 
             {/* Ce que le modèle doit apprendre */}
-            <div style={{ marginTop: 16 }}>
+            <div className="mt-16">
               <div className="panel-title">
                 Ce que le modèle doit apprendre :
               </div>
@@ -111,19 +111,14 @@ const TokenizerPage = memo(function TokenizerPage() {
                 </b>{" "}
                 — le cœur du fonctionnement de GPT.
               </div>
-              <div
-                className="controls"
-                style={{ marginTop: 8, marginBottom: 0 }}
-              >
+              <div className="controls mt-8-mb-0">
                 {tokens.slice(0, -1).map((t, i) => {
                   const from = tokenLabel(t);
                   const to = tokenLabel(tokens[i + 1]);
                   return (
                     <div key={i} className="token-pair">
                       <span className="text-cyan">{from}</span>
-                      <span className="text-dim" style={{ margin: "0 4px" }}>
-                        →
-                      </span>
+                      <span className="text-dim arrow-spacer">→</span>
                       <span className="text-green">{to}</span>
                     </div>
                   );

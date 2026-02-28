@@ -143,11 +143,7 @@ export function VectorBar({
   const maxAbs = Math.max(...values.map(Math.abs), 0.01);
   return (
     <div>
-      {label && (
-        <div className="label-dim" style={{ fontSize: 10, marginBottom: 2 }}>
-          {label}
-        </div>
-      )}
+      {label && <div className="label-dim vector-bar-label">{label}</div>}
       <div className="vector-display">
         {values.map((v, i) => (
           <div

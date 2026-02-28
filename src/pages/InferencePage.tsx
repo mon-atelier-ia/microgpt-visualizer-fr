@@ -62,7 +62,7 @@ export default memo(function InferencePage() {
       <div className="panel">
         <div className="panel-title">Générer</div>
         {model.totalStep === 0 && (
-          <div className="explain" style={{ borderLeftColor: "var(--orange)" }}>
+          <div className="explain explain--warning">
             Le modèle n'a pas encore été entraîné ! Va d'abord dans l'onglet{" "}
             <b>Entraînement</b>
             et entraîne-le pendant au moins 200 étapes. Tu peux quand même
@@ -79,10 +79,7 @@ export default memo(function InferencePage() {
           <button className="btn btn-secondary" onClick={() => setResults([])}>
             Effacer
           </button>
-          <label
-            htmlFor="temp-slider"
-            style={{ fontSize: 12, color: "var(--text-dim)", marginLeft: 8 }}
-          >
+          <label htmlFor="temp-slider" className="label-control">
             Température :
           </label>
           <input
@@ -92,7 +89,7 @@ export default memo(function InferencePage() {
             max="20"
             value={temperature}
             onChange={(e) => setTemperature(Number(e.target.value))}
-            style={{ width: 100 }}
+            className="slider-input"
           />
           <span className="stat">
             <b>{temp.toFixed(1)}</b>
@@ -147,15 +144,14 @@ export default memo(function InferencePage() {
               <Term id="distribution" /> de probabilités à chaque étape.
             </div>
 
-            <div className="controls" style={{ gap: 4 }}>
+            <div className="controls controls--tight">
               {activeTrace.steps.map((s, i) => (
                 <button
                   key={s.pos}
                   className={`btn btn-toggle ${i === activeStep ? "" : "btn-secondary"}`}
                   onClick={() => setActiveStep(i)}
                 >
-                  pos {s.pos} :{" "}
-                  <span style={{ fontWeight: "bold" }}>{s.chosenChar}</span>
+                  pos {s.pos} : <span className="fw-bold">{s.chosenChar}</span>
                 </button>
               ))}
             </div>

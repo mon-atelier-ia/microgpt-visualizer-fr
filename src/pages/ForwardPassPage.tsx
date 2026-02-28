@@ -55,7 +55,7 @@ export default memo(function ForwardPassPage() {
         <div className="panel-title">Choisis l'entrée</div>
         <div className="controls">
           <span className="label-dim">Token :</span>
-          <div className="controls" style={{ gap: 4, marginBottom: 0 }}>
+          <div className="controls controls--tight">
             {uchars.slice(0, 10).map((ch) => (
               <button
                 key={ch}
@@ -66,11 +66,7 @@ export default memo(function ForwardPassPage() {
               </button>
             ))}
           </div>
-          <label
-            htmlFor="forward-pos"
-            className="label-dim"
-            style={{ marginLeft: 12 }}
-          >
+          <label htmlFor="forward-pos" className="label-dim ml-12">
             Position :
           </label>
           <select

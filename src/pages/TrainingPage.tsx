@@ -155,20 +155,14 @@ export default memo(function TrainingPage() {
           </div>
 
           {/* Séquence de tokens */}
-          <div
-            className="token-flow"
-            style={{ marginTop: 0, marginBottom: 12 }}
-          >
+          <div className="token-flow mt-0-mb-12">
             {lastResult.tokens.map((t, i) => (
-              <span key={`${i}-${t}`} style={{ display: "contents" }}>
+              <span key={`${i}-${t}`} className="d-contents">
                 {i > 0 && <span className="arrow-sym">→</span>}
                 <div
-                  className={`token-box ${t === 26 ? "bos" : ""}`}
-                  style={{ padding: "4px 6px" }}
+                  className={`token-box token-box--compact ${t === 26 ? "bos" : ""}`}
                 >
-                  <span className="char" style={{ fontSize: 14 }}>
-                    {tokenLabel(t)}
-                  </span>
+                  <span className="char">{tokenLabel(t)}</span>
                   <span className="id">{t}</span>
                 </div>
               </span>
@@ -176,7 +170,7 @@ export default memo(function TrainingPage() {
           </div>
 
           {/* Loss par position */}
-          <div className="controls" style={{ gap: 6, marginBottom: 0 }}>
+          <div className="controls controls--snug">
             {lastResult.perPositionLoss.map((loss, i) => (
               <LossCell
                 key={`${i}-${lastResult.tokens[i]}-${lastResult.tokens[i + 1]}`}
@@ -186,7 +180,7 @@ export default memo(function TrainingPage() {
               />
             ))}
           </div>
-          <div className="label-dim" style={{ fontSize: 12, marginTop: 8 }}>
+          <div className="label-dim mt-8">
             Loss moyenne : {lastResult.loss.toFixed(4)} | Plus la boîte est
             rouge, plus le modèle a été surpris
           </div>

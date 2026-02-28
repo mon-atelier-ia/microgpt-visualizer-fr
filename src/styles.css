@@ -1406,6 +1406,78 @@ button.gen-name:focus-visible {
   }
 }
 
+/* ─── Utility classes (extracted from inline styles) ─── */
+.controls--tight {
+  gap: 4px;
+  margin-bottom: 0;
+}
+.controls--snug {
+  gap: 6px;
+  margin-bottom: 0;
+}
+.mt-0-mb-12 {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+.mt-4 {
+  margin-top: 4px;
+}
+.mt-8 {
+  margin-top: 8px;
+}
+.mt-16 {
+  margin-top: 16px;
+}
+.mt-8-mb-0 {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+.ml-12 {
+  margin-left: 12px;
+}
+.d-contents {
+  display: contents;
+}
+.cursor-default {
+  cursor: default;
+}
+.arrow-spacer {
+  margin: 0 4px;
+}
+.slider-input {
+  width: 100px;
+}
+.label-purple {
+  font-size: 13px;
+  color: var(--purple);
+  margin-bottom: 8px;
+}
+.label-control {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-left: 8px;
+}
+.explain--warning {
+  border-left-color: var(--orange);
+}
+.btn-toggle--char {
+  font-size: 14px;
+  min-width: 32px;
+}
+.token-box--compact {
+  padding: 4px 6px;
+}
+.token-box--compact .char {
+  font-size: 14px;
+}
+.fw-bold {
+  font-weight: bold;
+}
+.vector-bar-label {
+  font-size: 10px;
+  margin-bottom: 2px;
+}
+
 /* ─── Screenreader-only ─── */
 .sr-only {
   position: absolute;

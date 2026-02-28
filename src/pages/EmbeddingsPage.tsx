@@ -99,8 +99,7 @@ export default memo(function EmbeddingsPage() {
           {uchars.map((ch) => (
             <button
               key={ch}
-              className={`btn btn-toggle ${ch === selectedChar ? "" : "btn-secondary"}`}
-              style={{ fontSize: 14, minWidth: 32 }}
+              className={`btn btn-toggle btn-toggle--char ${ch === selectedChar ? "" : "btn-secondary"}`}
               onClick={() => setSelectedChar(ch)}
             >
               {ch}
@@ -108,10 +107,7 @@ export default memo(function EmbeddingsPage() {
           ))}
         </div>
 
-        <div
-          className="label-dim"
-          style={{ fontSize: 13, color: "var(--purple)", marginBottom: 8 }}
-        >
+        <div className="label-dim label-purple">
           '{selectedChar}' à la position 0 :
         </div>
 
