@@ -1,67 +1,180 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Neural Network — Playground</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #181816;
-    color: #cdc8be;
-    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    padding: 24px;
+/* ── Theme tokens (mirror of src/styles.css) ─────────────────── */
+:root,
+[data-theme="dark"] {
+  --bg: #181816;
+  --surface: #222220;
+  --surface2: #2a2a27;
+  --border: #363632;
+  --border-hover: #4a4a44;
+  --text: #cdc8be;
+  --text-dim: #959082;
+  --blue: #c28b4e;
+  --purple: #a08cb4;
+  --cyan: #6a9f9b;
+  --green: #8aaa6b;
+  --red: #bf6a63;
+  --orange: #c4885c;
+}
+[data-theme="light"] {
+  --bg: #f5f1ea;
+  --surface: #fffdf8;
+  --surface2: #ece8e0;
+  --border: #d6d0c5;
+  --border-hover: #b8b2a6;
+  --text: #2c2a25;
+  --text-dim: #6a655d;
+  --blue: #9c6b30;
+  --purple: #7b5ea0;
+  --cyan: #3a7d78;
+  --green: #527a34;
+  --red: #a04040;
+  --orange: #a06830;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* ── Page title (matches .page-title) ───────────────────────── */
+h1 {
+  font-size: 22px;
+  color: var(--blue);
+  margin-bottom: 6px;
+}
+.page-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* ── Controls bar ────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* ── Buttons (matches .btn / .btn-secondary) ─────────────────── */
+.btn {
+  padding: 7px 18px;
+  background: var(--blue);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn:hover { filter: brightness(1.15); }
+.btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.btn-secondary {
+  background: var(--border-hover);
+  color: var(--text);
+}
+.btn-toggle {
+  padding: 4px 10px;
+  background: var(--surface2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-toggle:hover { background: var(--border); color: var(--text); }
+
+/* ── Canvas ──────────────────────────────────────────────────── */
+canvas {
+  border-radius: 10px;
+  cursor: crosshair;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* ── Info box (matches .explain) ─────────────────────────────── */
+.explain {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-radius: 6px;
+  border-left: 3px solid var(--blue);
+  max-width: 620px;
+  text-align: left;
+}
+.explain b { color: var(--cyan); }
+.explain .text-red { color: var(--red); }
+.explain .text-green { color: var(--green); }
+
+/* ── Reduced motion ──────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
-  h1 { font-size: 18px; margin-bottom: 8px; color: #e0dbd2; }
-  .controls {
-    display: flex; gap: 10px; margin-bottom: 16px;
-  }
-  button {
-    background: #2a2a27; color: #cdc8be; border: 1px solid #3a3a36;
-    padding: 6px 14px; border-radius: 6px; cursor: pointer;
-    font-family: inherit; font-size: 13px;
-  }
-  button:hover { background: #3a3a36; }
-  canvas { border-radius: 8px; cursor: crosshair; }
-  .info {
-    margin-top: 12px; font-size: 12px; color: #7a756b;
-    text-align: center; max-width: 600px;
-  }
+}
 </style>
 </head>
 <body>
-<h1>Réseau de neurones — Propagation avant</h1>
+<h1>Propagation avant</h1>
+<p class="page-desc">Visualisation 3Blue1Brown du réseau de neurones</p>
+
 <div class="controls">
-  <button id="btn-replay">Rejouer animation</button>
-  <button id="btn-random">Nouvelles valeurs</button>
+  <button class="btn" id="btn-replay">Rejouer</button>
+  <button class="btn btn-secondary" id="btn-random">Nouvelles valeurs</button>
+  <button class="btn-toggle" id="btn-theme">Thème clair</button>
 </div>
+
 <canvas id="nn"></canvas>
-<div class="info">
-  Survole un neurone pour voir ses connexions. Chaque colonne = une couche du modèle.
-  <br>Couleurs : <span style="color:#bf6a63">rouge = négatif</span>,
-  <span style="color:#8aaa6b">vert = positif</span>.
+
+<div class="explain">
+  <b>Survole un neurone</b> pour voir ses connexions. Chaque colonne = une couche du modèle.
+  <br>Couleurs : <span class="text-red">rouge = négatif</span>,
+  <span class="text-green">vert = positif</span>.
 </div>
 
 <script>
 // ── Config ───────────────────────────────────────────────────────
 const LAYERS = [16, 16, 64, 16, 27];
-const LABELS = ["Embedding\n(16)", "Attention\n(16)", "MLP caché\n(64)", "MLP sortie\n(16)", "Logits\n(27)"];
-const BG = "#181816";
-const NEURON_STROKE = "rgba(205,200,190,0.6)";
-const CONNECTION_COLOR = "rgba(205,200,190,0.05)";
-const CONNECTION_ACTIVE = "rgba(205,200,190,0.25)";
-const LABEL_COLOR = "#7a756b";
-const ANIM_LAYER_DELAY = 350; // ms per layer
-const ANIM_FADE_DURATION = 300; // ms fade in
+const LABELS = [
+  "Embedding\n(16)", "Attention\n(16)", "MLP caché\n(64)",
+  "MLP sortie\n(16)", "Logits\n(27)"
+];
+const ANIM_LAYER_DELAY = 350;
+const ANIM_FADE_DURATION = 300;
 
 // ── State ────────────────────────────────────────────────────────
-let activations = [];  // activations[layer][neuron] ∈ [-1, 1]
-let neurons = [];      // neurons[layer][neuron] = {x, y, r}
-let hoverNeuron = null; // {layer, index} or null
+let activations = [];
+let neurons = [];
+let hoverNeuron = null;
 let animStart = 0;
 let animating = false;
 let dpr = 1;
@@ -69,11 +182,39 @@ let dpr = 1;
 const canvas = document.getElementById("nn");
 const ctx = canvas.getContext("2d");
 
+// ── Read CSS custom properties for theme-reactive canvas ─────────
+function getThemeColors() {
+  const s = getComputedStyle(document.documentElement);
+  return {
+    bg:      s.getPropertyValue("--surface").trim(),
+    text:    s.getPropertyValue("--text").trim(),
+    textDim: s.getPropertyValue("--text-dim").trim(),
+    blue:    s.getPropertyValue("--blue").trim(),
+    green:   s.getPropertyValue("--green").trim(),
+    red:     s.getPropertyValue("--red").trim(),
+    border:  s.getPropertyValue("--border").trim(),
+  };
+}
+
+// Parse "rgb(r,g,b)" or "#rrggbb" to [r,g,b]
+function parseColor(c) {
+  if (c.startsWith("#")) {
+    const hex = c.slice(1);
+    return [
+      parseInt(hex.slice(0, 2), 16),
+      parseInt(hex.slice(2, 4), 16),
+      parseInt(hex.slice(4, 6), 16),
+    ];
+  }
+  const m = c.match(/(\d+)/g);
+  return m ? m.map(Number) : [128, 128, 128];
+}
+
 // ── Sizing ───────────────────────────────────────────────────────
 function resize() {
   dpr = window.devicePixelRatio || 1;
   const w = Math.min(window.innerWidth - 48, 960);
-  const h = Math.min(window.innerHeight - 180, 640);
+  const h = Math.min(window.innerHeight - 220, 580);
   canvas.style.width = w + "px";
   canvas.style.height = h + "px";
   canvas.width = w * dpr;
@@ -88,16 +229,15 @@ function randomActivations() {
   activations = LAYERS.map(n =>
     Array.from({ length: n }, () => Math.random() * 2 - 1)
   );
-  // MLP ReLU: zero out negatives in layer 2 (MLP hidden)
   activations[2] = activations[2].map(v => Math.max(0, v));
 }
 
 // ── Compute neuron positions ─────────────────────────────────────
 function computePositions(w, h) {
   const padX = 70;
-  const padY = 40;
+  const padY = 36;
   const usableW = w - padX * 2;
-  const usableH = h - padY * 2 - 30; // 30 for labels
+  const usableH = h - padY * 2 - 30;
   const nLayers = LAYERS.length;
 
   neurons = LAYERS.map((count, li) => {
@@ -115,20 +255,25 @@ function computePositions(w, h) {
   });
 }
 
-// ── Color from value ─────────────────────────────────────────────
+// ── Color from activation value ──────────────────────────────────
 function valToColor(v, alpha = 1) {
   const t = Math.max(-1, Math.min(1, v));
+  const colors = getThemeColors();
+  const neg = parseColor(colors.red);
+  const pos = parseColor(colors.green);
+  const neutral = parseColor(colors.bg);
+
   let r, g, b;
   if (t < 0) {
-    // warm terracotta for negatives (matches Heatmap.tsx)
-    r = Math.floor(140 + t * 95);
-    g = Math.floor(120 + t * 50);
-    b = Math.floor(110 + t * 50);
+    const a = -t;
+    r = Math.round(neutral[0] * (1 - a) + neg[0] * a);
+    g = Math.round(neutral[1] * (1 - a) + neg[1] * a);
+    b = Math.round(neutral[2] * (1 - a) + neg[2] * a);
   } else {
-    // sage green for positives
-    r = Math.floor(130 + t * 10);
-    g = Math.floor(135 + t * 80);
-    b = Math.floor(120 + t * 20);
+    const a = t;
+    r = Math.round(neutral[0] * (1 - a) + pos[0] * a);
+    g = Math.round(neutral[1] * (1 - a) + pos[1] * a);
+    b = Math.round(neutral[2] * (1 - a) + pos[2] * a);
   }
   return `rgba(${r},${g},${b},${alpha})`;
 }
@@ -147,9 +292,11 @@ function draw(timestamp) {
   const now = timestamp || performance.now();
   const w = canvas.width / dpr;
   const h = canvas.height / dpr;
+  const colors = getThemeColors();
+  const textRgb = parseColor(colors.text);
 
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = BG;
+  ctx.fillStyle = colors.bg;
   ctx.fillRect(0, 0, w, h);
 
   // Draw connections
@@ -165,11 +312,9 @@ function draw(timestamp) {
         const from = fromLayer[fi];
         const to = toLayer[ti];
 
-        // Determine opacity
-        let alpha = 0.05 * connProgress;
+        let alpha = 0.06 * connProgress;
         let lineWidth = 0.5;
 
-        // Hover highlight
         if (hoverNeuron) {
           const hl = hoverNeuron.layer;
           const hi = hoverNeuron.index;
@@ -179,19 +324,16 @@ function draw(timestamp) {
           }
         }
 
-        // Active connection: color by activation magnitude
         if (connProgress > 0 && alpha > 0.01) {
           const fromVal = activations[li][fi];
           const toVal = activations[li + 1][ti];
-          const strength = (Math.abs(fromVal) + Math.abs(toVal)) / 2;
 
           if (hoverNeuron &&
             ((hoverNeuron.layer === li && hoverNeuron.index === fi) ||
              (hoverNeuron.layer === li + 1 && hoverNeuron.index === ti))) {
-            // Highlighted connection: colored by combined activation
             ctx.strokeStyle = valToColor((fromVal + toVal) / 2, alpha);
           } else {
-            ctx.strokeStyle = `rgba(205,200,190,${alpha})`;
+            ctx.strokeStyle = `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${alpha})`;
           }
           ctx.lineWidth = lineWidth;
           ctx.beginPath();
@@ -213,7 +355,7 @@ function draw(timestamp) {
       const val = activations[li][ni];
       const p = progress;
 
-      // Glow for active neurons during animation
+      // Glow
       if (p > 0.5 && p < 1 && Math.abs(val) > 0.3) {
         const glowAlpha = (1 - Math.abs(p - 0.75) * 4) * 0.3;
         if (glowAlpha > 0) {
@@ -228,17 +370,19 @@ function draw(timestamp) {
       ctx.beginPath();
       ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
 
-      // Fill: activation color fading in
-      const fillAlpha = p * 0.8;
+      const fillAlpha = p * 0.85;
       ctx.fillStyle = Math.abs(val) < 0.05
-        ? `rgba(34,34,32,${fillAlpha})`
+        ? `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${fillAlpha * 0.15})`
         : valToColor(val, fillAlpha);
       ctx.fill();
 
       // Stroke
       const strokeAlpha = 0.3 + p * 0.4;
-      ctx.strokeStyle = `rgba(205,200,190,${strokeAlpha})`;
-      ctx.lineWidth = hoverNeuron && hoverNeuron.layer === li && hoverNeuron.index === ni ? 2 : 1;
+      const isHovered = hoverNeuron && hoverNeuron.layer === li && hoverNeuron.index === ni;
+      ctx.strokeStyle = isHovered
+        ? colors.blue
+        : `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${strokeAlpha})`;
+      ctx.lineWidth = isHovered ? 2 : 1;
       ctx.stroke();
     }
   }
@@ -246,13 +390,12 @@ function draw(timestamp) {
   // Draw labels
   ctx.textAlign = "center";
   ctx.font = "11px 'SF Mono', 'Fira Code', monospace";
-  ctx.fillStyle = LABEL_COLOR;
   const labelY = (canvas.height / dpr) - 12;
   for (let li = 0; li < LAYERS.length; li++) {
     const x = neurons[li][0].x;
     const lines = LABELS[li].split("\n");
     lines.forEach((line, i) => {
-      ctx.fillStyle = i === 0 ? "#cdc8be" : LABEL_COLOR;
+      ctx.fillStyle = i === 0 ? colors.text : colors.textDim;
       ctx.fillText(line, x, labelY + i * 14 - (lines.length - 1) * 7);
     });
   }
@@ -305,6 +448,16 @@ function startAnimation() {
   animating = true;
   requestAnimationFrame(draw);
 }
+
+// ── Theme toggle ─────────────────────────────────────────────────
+const btnTheme = document.getElementById("btn-theme");
+btnTheme.addEventListener("click", () => {
+  const html = document.documentElement;
+  const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  btnTheme.textContent = next === "dark" ? "Thème clair" : "Thème sombre";
+  draw();
+});
 
 // ── Buttons ──────────────────────────────────────────────────────
 document.getElementById("btn-replay").addEventListener("click", startAnimation);
