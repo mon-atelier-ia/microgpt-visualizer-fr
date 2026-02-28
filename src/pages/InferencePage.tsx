@@ -205,7 +205,7 @@ export default memo(function InferencePage() {
                     : t.char === "BOS"
                       ? "var(--red)"
                       : "var(--cyan)",
-                fontSize: t.char === "BOS" ? 9 : 13,
+                fontSize: t.char === "BOS" ? 11 : 13,
               })}
               barColor={(t) =>
                 t.id === step?.chosenId

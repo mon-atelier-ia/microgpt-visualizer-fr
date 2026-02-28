@@ -41,6 +41,23 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scrollbar-color: var(--border-hover) var(--surface);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
 }
 
 body {
@@ -417,13 +434,13 @@ table.heatmap th {
   padding: 3px 5px;
   color: var(--text-dim);
   font-weight: normal;
-  font-size: 9px;
+  font-size: 11px;
 }
 table.heatmap td {
-  width: 32px;
-  height: 24px;
+  width: 36px;
+  height: 26px;
   text-align: center;
-  font-size: 9px;
+  font-size: 10px;
   border: 1px solid var(--bg);
   cursor: pointer;
   transition: all 0.1s;
@@ -456,7 +473,7 @@ table.heatmap .row-label {
 .heatmap-kbd-hint kbd {
   display: inline-block;
   padding: 1px 4px;
-  font-size: 9px;
+  font-size: 10px;
   font-family: inherit;
   border: 1px solid var(--border);
   border-radius: 3px;
@@ -580,7 +597,7 @@ button.gen-name:focus-visible {
   background: var(--surface2);
   border-radius: 8px;
   border: 1px solid var(--border-hover);
-  font-size: 10px;
+  font-size: 11px;
   text-align: center;
   transition: all 0.2s;
 }
@@ -591,11 +608,11 @@ button.gen-name:focus-visible {
   color: var(--purple);
   font-weight: bold;
   margin-bottom: 6px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .flow-step .values {
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.5;
 }
 .flow-step .values .highlight {
@@ -635,13 +652,13 @@ button.gen-name:focus-visible {
   margin: 4px 0;
 }
 .vector-cell {
-  width: 28px;
-  height: 20px;
+  width: 32px;
+  height: 22px;
   border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--vector-text);
 }
@@ -661,13 +678,13 @@ button.gen-name:focus-visible {
   gap: 2px;
 }
 .heat-cell {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 /* MLP neuron cells */
@@ -1117,12 +1134,12 @@ button.gen-name:focus-visible {
     padding: 4px 12px;
   }
   table.heatmap {
-    font-size: 9px;
+    font-size: 10px;
   }
   table.heatmap td {
-    width: 28px;
-    height: 22px;
-    font-size: 8px;
+    width: 32px;
+    height: 24px;
+    font-size: 9px;
   }
   table.heatmap .row-label {
     font-size: 11px;
@@ -1142,14 +1159,14 @@ button.gen-name:focus-visible {
   .flow-step {
     min-width: 100px;
     padding: 8px;
-    font-size: 9px;
+    font-size: 10px;
   }
   .flow-step .label {
-    font-size: 10px;
+    font-size: 11px;
     margin-bottom: 4px;
   }
   .flow-step .values {
-    font-size: 8px;
+    font-size: 9px;
   }
   .flow-arrow {
     font-size: 14px;
@@ -1164,9 +1181,9 @@ button.gen-name:focus-visible {
 
   /* Vector display */
   .vector-cell {
-    width: 24px;
-    height: 18px;
-    font-size: 7px;
+    width: 28px;
+    height: 20px;
+    font-size: 9px;
   }
 
   /* Probability rows */
@@ -1326,9 +1343,9 @@ button.gen-name:focus-visible {
   }
 
   table.heatmap td {
-    width: 24px;
-    height: 20px;
-    font-size: 7px;
+    width: 28px;
+    height: 22px;
+    font-size: 8px;
   }
   table.heatmap .row-label {
     font-size: 10px;
@@ -1345,9 +1362,9 @@ button.gen-name:focus-visible {
   }
 
   .vector-cell {
-    width: 20px;
-    height: 16px;
-    font-size: 6px;
+    width: 24px;
+    height: 18px;
+    font-size: 8px;
   }
 
   .sidebar {

@@ -31,7 +31,7 @@ export default function MLPActivationPanel({
           <NeuronCell key={i} value={v} index={i} />
         ))}
       </div>
-      <div className="label-dim" style={{ fontSize: 11, marginTop: 4 }}>
+      <div className="label-dim" style={{ fontSize: 12, marginTop: 4 }}>
         {mlpActiveMask.filter(Boolean).length} / 64 <Term id="neurone" />s
         actifs après <Term id="relu" />
       </div>

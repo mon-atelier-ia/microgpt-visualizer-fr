@@ -186,7 +186,7 @@ export default memo(function TrainingPage() {
               />
             ))}
           </div>
-          <div className="label-dim" style={{ fontSize: 11, marginTop: 8 }}>
+          <div className="label-dim" style={{ fontSize: 12, marginTop: 8 }}>
             Loss moyenne : {lastResult.loss.toFixed(4)} | Plus la boîte est
             rouge, plus le modèle a été surpris
           </div>
