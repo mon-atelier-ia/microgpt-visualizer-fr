@@ -1,9 +1,9 @@
 # Audit ISO — microgpt-visualizer-fr
 
-> Date : 2026-02-27 (révisé 2026-02-28)
+> Date : 2026-02-27 (révisé 2026-02-28, scores mis à jour 2026-02-28)
 > Auditeur : Claude Opus 4.6 (assisté par 4 agents parallèles)
 > Périmètre : `src/` (pages, components, styles, App, engine read-only)
-> Commit de référence : `89a4ec8` (main)
+> Commit de référence : `89a4ec8` (main), scores révisés après `7ac30a9`
 
 ---
 
@@ -11,14 +11,14 @@
 
 | Norme                               | Objet                                  | Score         |
 | ----------------------------------- | -------------------------------------- | ------------- |
-| ISO/IEC 25010:2023 — Maintenabilité | Modularité, testabilité, modifiabilité | 3,5/5         |
+| ISO/IEC 25010:2023 — Maintenabilité | Modularité, testabilité, modifiabilité | 4,3/5         |
 | ISO/IEC 25010:2023 — Sécurité       | XSS, confidentialité                   | 5,0/5         |
 | ISO/IEC 25010:2023 — Performance    | Bundle, mémoire, rAF, cleanup          | 4,0/5         |
 | ISO/IEC 25010:2023 — Fiabilité      | ErrorBoundary, edge cases, recovery    | 4,3/5         |
 | ISO/IEC 40500:2012 (WCAG 2.1 AA)    | Accessibilité web                      | 95 % conforme |
 | ISO 9241-110:2020 — Interaction     | Usabilité, ergonomie, pédagogie        | 4,2/5         |
 
-**Score global consolidé : 4,2/5 — BON, prêt pour production.**
+**Score global consolidé : 4,5/5 — TRÈS BON, prêt pour production.**
 
 ---
 
@@ -32,9 +32,9 @@
 
 ### Majeures — ✅ TOUS CORRIGÉS
 
-| #       | Norme                | Problème                                     | Fix                                                                                                                                   |
-| ------- | -------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| ~~C-4~~ | 25010 Maintenabilité | ~~`ForwardPassPage` 292 LOC, 8 niveaux JSX~~ | ✅ Extrait 4 sous-composants : `FlowDiagram`, `VectorsPanel`, `AttentionWeightsPanel`, `MLPActivationPanel`. Page réduite à ~120 LOC. |
+| #       | Norme                | Problème                                     | Fix                                                                                                                                        |
+| ------- | -------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| ~~C-4~~ | 25010 Maintenabilité | ~~`ForwardPassPage` 292 LOC, 8 niveaux JSX~~ | ✅ Extrait 4 sous-composants : `FlowDiagram`, `VectorsPanel`, `AttentionWeightsPanel`, `MLPActivationPanel`. Page réduite à 144 LOC (51%). |
 
 ### Informationnel (2) — inhérent à l'architecture
 
@@ -91,7 +91,7 @@
 | Navigation clavier    | 5/5   | Roving tabindex, 9 `:focus-visible`, Escape dismiss, `<dialog>` natif   |
 | Landmarks sémantiques | 5/5   | `<main>`, `<aside>`, `<nav>`, `<header>`, `<section aria-labelledby>`   |
 | Récupérabilité        | 5/5   | ErrorBoundary FR, `resetModel()`, reload, rAF cleanup                   |
-| Tests                 | 4,5/5 | 86 tests, 15 fichiers. Composants + engine + pages + données.           |
+| Tests                 | 4,5/5 | 91 tests, 16 fichiers. Composants + engine + pages + store + données.   |
 | Glossaire pédagogique | 4,5/5 | 30 termes, Tier 1/2, analogies adaptées 10-14 ans                       |
 | Code splitting        | 4,5/5 | `React.lazy()` + `Suspense`, 5 chunks 4-7 KB chacun                     |
 
@@ -99,28 +99,28 @@
 
 ## Détail par norme
 
-### ISO/IEC 25010:2023 — Maintenabilité (3,5/5)
+### ISO/IEC 25010:2023 — Maintenabilité (4,3/5)
 
-#### Modularité (3,5/5)
+#### Modularité (4,5/5)
 
 - (+) Séparation claire `engine/` (read-only) / `pages/` / `components/`
 - (+) TermProvider context pattern isolé et réutilisable
 - (+) `PageSection`, `ProbabilityBar`, `ErrorBoundary`, `HeatCell`, `NeuronCell`, `LossCell` composants partagés
 - (+) ~~A-1~~ : corrigé — `useSyncExternalStore` dans `modelStore.ts`
-- (+) ~~C-4~~ : corrigé — `ForwardPassPage` décomposé en 4 sous-composants (~120 LOC, 4 niveaux JSX)
+- (+) ~~C-4~~ : corrigé — `ForwardPassPage` décomposé en 4 sous-composants (144 LOC, 5 niveaux JSX)
 
 #### Testabilité (4/5)
 
-- (+) 86 tests, 15 fichiers de tests
+- (+) 91 tests, 16 fichiers de tests
 - (+) Composants isolés testables (Term, Heatmap, ProbabilityBar)
 - (+) Engine : 11 smoke tests (autograd, model, random) ajoutés
 - (-) Pages à couverture variable (TrainingPage : 2 tests, InferencePage : 6 tests)
 
-#### Modifiabilité (3,5/5)
+#### Modifiabilité (4,5/5)
 
 - (+) ESLint 0 warnings, Prettier en pre-commit
 - (+) TypeScript strict (`any` éliminé sauf 1 `eslint-disable` documenté)
-- (-) InferencePage utilise une prop inline `{ model }` au lieu d'une `interface Props` (mineur, 1 fichier)
+- (+) ~~InferencePage prop inline~~ : corrigé par A-1 — `useModel()` hook, plus aucune prop
 
 ### ISO/IEC 25010:2023 — Sécurité (5,0/5)
 
