@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural Network — Full Architecture</title>
+<style>
+:root,
+[data-theme="dark"] {
+  --bg: #181816; --surface: #222220; --surface2: #2a2a27;
+  --border: #363632; --border-hover: #4a4a44;
+  --text: #cdc8be; --text-dim: #959082;
+  --blue: #c28b4e; --purple: #a08cb4; --cyan: #6a9f9b;
+  --green: #8aaa6b; --red: #bf6a63; --orange: #c4885c;
+}
+[data-theme="light"] {
+  --bg: #f5f1ea; --surface: #fffdf8; --surface2: #ece8e0;
+  --border: #d6d0c5; --border-hover: #b8b2a6;
+  --text: #2c2a25; --text-dim: #6a655d;
+  --blue: #9c6b30; --purple: #7b5ea0; --cyan: #3a7d78;
+  --green: #527a34; --red: #a04040; --orange: #a06830;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  display: flex; flex-direction: column; align-items: center;
+  min-height: 100vh; padding: 20px;
+  transition: background 0.2s, color 0.2s;
+}
+h1 { font-size: 22px; color: var(--blue); margin-bottom: 4px; }
+.page-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 12px; text-align: center; }
+.controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.btn {
+  padding: 7px 18px; background: var(--blue); color: var(--bg); border: none;
+  border-radius: 6px; font-family: inherit; font-size: 12px; font-weight: bold;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { filter: brightness(1.15); }
+.btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.btn-secondary { background: var(--border-hover); color: var(--text); }
+.btn-toggle {
+  padding: 4px 10px; background: var(--surface2); color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: 6px; font-family: inherit;
+  font-size: 11px; cursor: pointer; transition: all 0.15s;
+}
+.btn-toggle:hover { background: var(--border); color: var(--text); }
+canvas { border-radius: 10px; cursor: crosshair; border: 1px solid var(--border); background: var(--surface); }
+.explain {
+  font-size: 12px; color: var(--text-dim); line-height: 1.7; margin-top: 10px;
+  padding: 10px 12px; background: var(--surface2); border-radius: 6px;
+  border-left: 3px solid var(--blue); max-width: 800px; text-align: left;
+}
+.explain b { color: var(--cyan); }
+.explain .text-red { color: var(--red); }
+.explain .text-green { color: var(--green); }
+.explain .text-purple { color: var(--purple); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+<h1>Propagation avant — Architecture complète</h1>
+<p class="page-desc">13 colonnes fidèles au graphe de calcul réel (model.ts)</p>
+<div class="controls">
+  <button class="btn" id="btn-replay">Rejouer</button>
+  <button class="btn btn-secondary" id="btn-random">Nouvelles valeurs</button>
+  <button class="btn-toggle" id="btn-theme">Thème clair</button>
+</div>
+<canvas id="nn"></canvas>
+<div class="explain">
+  <b>Survole un neurone</b> pour voir ses connexions.
+  13 colonnes = les étapes réelles du forward pass.
+  <br>Couleurs : <span class="text-red">rouge = négatif</span>,
+  <span class="text-green">vert = positif</span>.
+  <span class="text-purple">Arcs pointillés</span> = connexions résiduelles (skip).
+</div>
+
+<script>
+// ── Architecture (mirrors model.ts exactly) ──────────────────────
+const V = 27;
+
+const COLS = [
+  { n: 16, label: "Token\nEmb",  xFrac: 0.000, stage: 0, color: "cyan",   sec: "Embedding" },
+  { n: 16, label: "Pos\nEmb",    xFrac: 0.050, stage: 0, color: "cyan",   sec: "Embedding" },
+  { n: 16, label: "Add\n+Norm",  xFrac: 0.125, stage: 1, color: "text",   sec: "" },
+  { n: 16, label: "Q",           xFrac: 0.205, stage: 2, color: "purple", sec: "Attention" },
+  { n: 16, label: "K",           xFrac: 0.250, stage: 2, color: "purple", sec: "Attention" },
+  { n: 16, label: "V",           xFrac: 0.295, stage: 2, color: "purple", sec: "Attention" },
+  { n: 16, label: "4 Têtes",     xFrac: 0.375, stage: 3, color: "purple", sec: "Attention", headGroups: 4 },
+  { n: 16, label: "Après\nAttn", xFrac: 0.460, stage: 4, color: "purple", sec: "Attention" },
+  { n: 64, label: "MLP\n(×4)",   xFrac: 0.560, stage: 5, color: "orange", sec: "MLP" },
+  { n: 64, label: "ReLU",        xFrac: 0.645, stage: 6, color: "orange", sec: "MLP" },
+  { n: 16, label: "Après\nMLP",  xFrac: 0.735, stage: 7, color: "orange", sec: "MLP" },
+  { n: V,  label: "Logits",      xFrac: 0.870, stage: 8, color: "blue",   sec: "Sortie" },
+  { n: V,  label: "Probs",       xFrac: 1.000, stage: 9, color: "blue",   sec: "Sortie" },
+];
+
+const EDGES = [
+  { from: 0,  to: 2,  type: "one2one" },
+  { from: 1,  to: 2,  type: "one2one" },
+  { from: 2,  to: 3,  type: "dense" },
+  { from: 2,  to: 4,  type: "dense" },
+  { from: 2,  to: 5,  type: "dense" },
+  { from: 3,  to: 6,  type: "one2one" },
+  { from: 4,  to: 6,  type: "one2one" },
+  { from: 5,  to: 6,  type: "one2one" },
+  { from: 6,  to: 7,  type: "dense" },
+  { from: 7,  to: 8,  type: "dense" },
+  { from: 8,  to: 9,  type: "one2one" },
+  { from: 9,  to: 10, type: "dense" },
+  { from: 10, to: 11, type: "dense" },
+  { from: 11, to: 12, type: "one2one" },
+];
+
+const RESIDUALS = [
+  { from: 2, to: 7,  label: "+res₁" },
+  { from: 7, to: 10, label: "+res₂" },
+];
+
+const ANIM_STAGE_DELAY = 180;
+const ANIM_FADE = 250;
+
+// ── State ────────────────────────────────────────────────────────
+let activations = [];
+let neurons = [];
+let hoverNeuron = null;
+let animStart = 0;
+let animating = false;
+let dpr = 1;
+
+const canvas = document.getElementById("nn");
+const ctx = canvas.getContext("2d");
+
+// ── Theme colors ─────────────────────────────────────────────────
+function getThemeColors() {
+  const s = getComputedStyle(document.documentElement);
+  const g = (n) => s.getPropertyValue(n).trim();
+  return {
+    bg: g("--surface"), text: g("--text"), textDim: g("--text-dim"),
+    blue: g("--blue"), purple: g("--purple"), cyan: g("--cyan"),
+    green: g("--green"), red: g("--red"), orange: g("--orange"),
+    border: g("--border"),
+  };
+}
+
+function parseColor(c) {
+  if (c.startsWith("#")) {
+    const h = c.slice(1);
+    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+  }
+  const m = c.match(/(\d+)/g);
+  return m ? m.map(Number) : [128,128,128];
+}
+
+// ── Sizing ───────────────────────────────────────────────────────
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  const w = Math.min(window.innerWidth - 40, 1200);
+  const h = Math.min(window.innerHeight - 240, 700);
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  computePositions(w, h);
+  draw();
+}
+
+// ── Random activations (semi-realistic) ──────────────────────────
+function randomActivations() {
+  const a = COLS.map(col => Array.from({ length: col.n }, () => Math.random() * 2 - 1));
+  // Combined ≈ tokEmb + posEmb (normalized)
+  for (let i = 0; i < 16; i++) a[2][i] = (a[0][i] + a[1][i]) * 0.6;
+  // ReLU = max(0, mlpHidden)
+  for (let i = 0; i < 64; i++) a[9][i] = Math.max(0, a[8][i]);
+  // Logits: wider range
+  for (let i = 0; i < V; i++) a[11][i] = (Math.random() * 2 - 1) * 3;
+  // Probs = softmax(logits)
+  const maxL = Math.max(...a[11]);
+  const ex = a[11].map(v => Math.exp(v - maxL));
+  const s = ex.reduce((a, b) => a + b, 0);
+  a[12] = ex.map(v => v / s);
+  activations = a;
+}
+
+// ── Compute neuron positions ─────────────────────────────────────
+function computePositions(w, h) {
+  const padX = 46;
+  const padY = 44;
+  const labelH = 32;
+  const usableW = w - padX * 2;
+  const usableH = h - padY - labelH;
+
+  neurons = COLS.map((col) => {
+    const x = padX + col.xFrac * usableW;
+    const count = col.n;
+    const maxR = count <= 20 ? 6 : count <= 30 ? 4 : 2.5;
+
+    if (col.headGroups) {
+      const gs = count / col.headGroups;
+      const sp = maxR * 3;
+      const gap = maxR * 5;
+      const totalH = (count - 1) * sp + (col.headGroups - 1) * gap;
+      let cy = padY + (usableH - totalH) / 2;
+      const res = [];
+      for (let g = 0; g < col.headGroups; g++) {
+        for (let gi = 0; gi < gs; gi++) {
+          res.push({ x, y: cy, r: maxR });
+          cy += sp;
+        }
+        if (g < col.headGroups - 1) cy += gap;
+      }
+      return res;
+    }
+
+    const spacing = Math.min(usableH / (count + 1), maxR * 3.5);
+    const totalH = spacing * (count - 1);
+    const startY = padY + (usableH - totalH) / 2;
+    return Array.from({ length: count }, (_, ni) => ({
+      x, y: startY + ni * spacing, r: maxR,
+    }));
+  });
+}
+
+// ── Color helpers (cached per frame) ─────────────────────────────
+let _rgb = {};
+function valToColor(v, alpha) {
+  const t = Math.max(-1, Math.min(1, v));
+  const neg = _rgb.red, pos = _rgb.green, neu = _rgb.bg;
+  const a = Math.abs(t);
+  const src = t < 0 ? neg : pos;
+  const r = Math.round(neu[0] * (1 - a) + src[0] * a);
+  const g = Math.round(neu[1] * (1 - a) + src[1] * a);
+  const b = Math.round(neu[2] * (1 - a) + src[2] * a);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ── Animation progress per stage ─────────────────────────────────
+function stageProgress(stage, now) {
+  if (!animating) return 1;
+  const t = (now - animStart - stage * ANIM_STAGE_DELAY) / ANIM_FADE;
+  return Math.max(0, Math.min(1, t));
+}
+
+// ── Base alpha for connection density ────────────────────────────
+function edgeAlpha(fromN, toN, type) {
+  if (type === "one2one") return 0.25;
+  const total = fromN * toN;
+  if (total > 800) return 0.012;
+  if (total > 300) return 0.025;
+  return 0.04;
+}
+
+// ── Draw ─────────────────────────────────────────────────────────
+function draw(timestamp) {
+  const now = timestamp || performance.now();
+  const w = canvas.width / dpr;
+  const h = canvas.height / dpr;
+  const colors = getThemeColors();
+  _rgb = {};
+  for (const k of ["bg","text","textDim","red","green","blue","purple","orange","cyan"]) {
+    _rgb[k] = parseColor(colors[k]);
+  }
+  const tr = _rgb.text;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = colors.bg;
+  ctx.fillRect(0, 0, w, h);
+
+  // ── Section labels (top) ──────────────────────────────────────
+  const secs = {};
+  COLS.forEach((col, ci) => {
+    if (!col.sec) return;
+    if (!secs[col.sec]) secs[col.sec] = { minX: Infinity, maxX: -Infinity, color: col.color };
+    const cx = neurons[ci][0].x;
+    secs[col.sec].minX = Math.min(secs[col.sec].minX, cx);
+    secs[col.sec].maxX = Math.max(secs[col.sec].maxX, cx);
+  });
+  ctx.textAlign = "center";
+  ctx.font = "10px 'SF Mono', 'Fira Code', monospace";
+  for (const [name, sec] of Object.entries(secs)) {
+    const mx = (sec.minX + sec.maxX) / 2;
+    const rgb = _rgb[sec.color] || _rgb.textDim;
+    ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.7)`;
+    ctx.fillText(name, mx, 14);
+    ctx.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.25)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(sec.minX - 8, 19);
+    ctx.lineTo(sec.maxX + 8, 19);
+    ctx.stroke();
+  }
+
+  // ── Draw connections ──────────────────────────────────────────
+  for (const edge of EDGES) {
+    const fromLayer = neurons[edge.from];
+    const toLayer = neurons[edge.to];
+    const pFrom = stageProgress(COLS[edge.from].stage, now);
+    const pTo = stageProgress(COLS[edge.to].stage, now);
+    const p = Math.min(pFrom, pTo);
+    if (p < 0.01) continue;
+
+    const baseA = edgeAlpha(fromLayer.length, toLayer.length, edge.type);
+
+    if (edge.type === "one2one") {
+      const count = Math.min(fromLayer.length, toLayer.length);
+      for (let i = 0; i < count; i++) {
+        const from = fromLayer[i];
+        const to = toLayer[i];
+        let alpha = baseA * p;
+        let lw = 0.8;
+        let colored = false;
+
+        if (hoverNeuron) {
+          const hl = hoverNeuron.layer, hi = hoverNeuron.index;
+          if ((hl === edge.from && hi === i) || (hl === edge.to && hi === i)) {
+            alpha = 0.6 * p; lw = 1.8; colored = true;
+          }
+        }
+
+        if (colored) {
+          const val = (activations[edge.from][i] + activations[edge.to][i]) / 2;
+          ctx.strokeStyle = valToColor(val, alpha);
+        } else {
+          ctx.strokeStyle = `rgba(${tr[0]},${tr[1]},${tr[2]},${alpha})`;
+        }
+        ctx.lineWidth = lw;
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+      }
+    } else {
+      // Dense: batch non-hovered, then draw hovered on top
+      const alpha = baseA * p;
+      if (alpha > 0.003) {
+        ctx.strokeStyle = `rgba(${tr[0]},${tr[1]},${tr[2]},${alpha})`;
+        ctx.lineWidth = 0.4;
+        ctx.beginPath();
+        for (let fi = 0; fi < fromLayer.length; fi++) {
+          for (let ti = 0; ti < toLayer.length; ti++) {
+            if (hoverNeuron) {
+              const hl = hoverNeuron.layer, hi = hoverNeuron.index;
+              if ((hl === edge.from && hi === fi) || (hl === edge.to && hi === ti)) continue;
+            }
+            ctx.moveTo(fromLayer[fi].x, fromLayer[fi].y);
+            ctx.lineTo(toLayer[ti].x, toLayer[ti].y);
+          }
+        }
+        ctx.stroke();
+      }
+
+      // Hovered connections (colored, on top)
+      if (hoverNeuron && p > 0.01) {
+        const hl = hoverNeuron.layer, hi = hoverNeuron.index;
+        if (hl === edge.from) {
+          for (let ti = 0; ti < toLayer.length; ti++) {
+            const val = (activations[edge.from][hi] + activations[edge.to][ti]) / 2;
+            ctx.strokeStyle = valToColor(val, 0.5 * p);
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(fromLayer[hi].x, fromLayer[hi].y);
+            ctx.lineTo(toLayer[ti].x, toLayer[ti].y);
+            ctx.stroke();
+          }
+        } else if (hl === edge.to) {
+          for (let fi = 0; fi < fromLayer.length; fi++) {
+            const val = (activations[edge.from][fi] + activations[edge.to][hi]) / 2;
+            ctx.strokeStyle = valToColor(val, 0.5 * p);
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(fromLayer[fi].x, fromLayer[fi].y);
+            ctx.lineTo(toLayer[hi].x, toLayer[hi].y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+  }
+
+  // ── Residual arcs ─────────────────────────────────────────────
+  for (const res of RESIDUALS) {
+    const pFrom = stageProgress(COLS[res.from].stage, now);
+    const pTo = stageProgress(COLS[res.to].stage, now);
+    const p = Math.min(pFrom, pTo);
+    if (p < 0.01) continue;
+
+    const fN = neurons[res.from], tN = neurons[res.to];
+    const x1 = fN[0].x, x2 = tN[0].x;
+    const y1 = fN[0].y - fN[0].r - 2;
+    const y2 = tN[0].y - tN[0].r - 2;
+    const cpX = (x1 + x2) / 2;
+    const cpY = Math.min(y1, y2) - 30;
+
+    const pr = _rgb.purple;
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = `rgba(${pr[0]},${pr[1]},${pr[2]},${0.5 * p})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.quadraticCurveTo(cpX, cpY, x2, y2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // "+" label
+    const midX = cpX;
+    const midY = 0.25 * y1 + 0.5 * cpY + 0.25 * y2;
+    ctx.fillStyle = `rgba(${pr[0]},${pr[1]},${pr[2]},${0.7 * p})`;
+    ctx.font = "bold 10px 'SF Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(res.label, midX, midY - 2);
+  }
+
+  // ── Draw neurons ──────────────────────────────────────────────
+  for (let ci = 0; ci < COLS.length; ci++) {
+    const p = stageProgress(COLS[ci].stage, now);
+    const layer = neurons[ci];
+
+    for (let ni = 0; ni < layer.length; ni++) {
+      const n = layer[ni];
+      const val = activations[ci][ni];
+
+      // Glow during animation
+      if (p > 0.5 && p < 1 && Math.abs(val) > 0.3) {
+        const ga = (1 - Math.abs(p - 0.75) * 4) * 0.3;
+        if (ga > 0) {
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.r * 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = valToColor(val, ga);
+          ctx.fill();
+        }
+      }
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+
+      // Fill
+      const fa = p * 0.85;
+      if (Math.abs(val) < 0.05) {
+        ctx.fillStyle = `rgba(${tr[0]},${tr[1]},${tr[2]},${fa * 0.12})`;
+      } else {
+        ctx.fillStyle = valToColor(val, fa);
+      }
+      ctx.fill();
+
+      // Stroke
+      const isHov = hoverNeuron && hoverNeuron.layer === ci && hoverNeuron.index === ni;
+      const sa = 0.3 + p * 0.4;
+      ctx.strokeStyle = isHov
+        ? colors.blue
+        : `rgba(${tr[0]},${tr[1]},${tr[2]},${sa})`;
+      ctx.lineWidth = isHov ? 2.5 : 0.8;
+      ctx.stroke();
+    }
+  }
+
+  // ── Head group brackets ───────────────────────────────────────
+  const headsCol = 6;
+  const hp = stageProgress(COLS[headsCol].stage, now);
+  if (hp > 0.1) {
+    const hNeurons = neurons[headsCol];
+    const pr = _rgb.purple;
+    ctx.font = "9px 'SF Mono', monospace";
+    ctx.textAlign = "right";
+    for (let g = 0; g < 4; g++) {
+      const first = hNeurons[g * 4];
+      const last = hNeurons[g * 4 + 3];
+      const bx = first.x - first.r - 5;
+      ctx.strokeStyle = `rgba(${pr[0]},${pr[1]},${pr[2]},${0.35 * hp})`;
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(bx, first.y);
+      ctx.lineTo(bx - 3, first.y);
+      ctx.lineTo(bx - 3, last.y);
+      ctx.lineTo(bx, last.y);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(${pr[0]},${pr[1]},${pr[2]},${0.5 * hp})`;
+      ctx.fillText("H" + g, bx - 5, (first.y + last.y) / 2 + 3);
+    }
+  }
+
+  // ── Column labels (bottom) ────────────────────────────────────
+  ctx.textAlign = "center";
+  ctx.font = "10px 'SF Mono', 'Fira Code', monospace";
+  const labelY = (canvas.height / dpr) - 10;
+  for (let ci = 0; ci < COLS.length; ci++) {
+    const x = neurons[ci][0].x;
+    const lines = COLS[ci].label.split("\n");
+    const rgb = _rgb[COLS[ci].color] || _rgb.text;
+    lines.forEach((line, i) => {
+      const a = i === 0 ? 0.9 : 0.55;
+      ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
+      ctx.fillText(line, x, labelY + i * 12 - (lines.length - 1) * 6);
+    });
+  }
+
+  // ── Animation loop ────────────────────────────────────────────
+  if (animating) {
+    const maxStage = Math.max(...COLS.map(c => c.stage));
+    const totalDur = maxStage * ANIM_STAGE_DELAY + ANIM_FADE + 200;
+    if (performance.now() - animStart > totalDur) animating = false;
+    requestAnimationFrame(draw);
+  }
+}
+
+// ── Hover ────────────────────────────────────────────────────────
+canvas.addEventListener("mousemove", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  let closest = null, closestDist = Infinity;
+
+  for (let ci = 0; ci < neurons.length; ci++) {
+    for (let ni = 0; ni < neurons[ci].length; ni++) {
+      const n = neurons[ci][ni];
+      const d = Math.hypot(mx - n.x, my - n.y);
+      if (d < n.r * 3 && d < closestDist) {
+        closest = { layer: ci, index: ni };
+        closestDist = d;
+      }
+    }
+  }
+  const changed = JSON.stringify(closest) !== JSON.stringify(hoverNeuron);
+  hoverNeuron = closest;
+  if (changed && !animating) draw();
+});
+
+canvas.addEventListener("mouseleave", () => {
+  hoverNeuron = null;
+  if (!animating) draw();
+});
+
+// ── Controls ─────────────────────────────────────────────────────
+function startAnimation() {
+  animStart = performance.now();
+  animating = true;
+  requestAnimationFrame(draw);
+}
+
+document.getElementById("btn-theme").addEventListener("click", function() {
+  const html = document.documentElement;
+  const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  this.textContent = next === "dark" ? "Thème clair" : "Thème sombre";
+  draw();
+});
+
+document.getElementById("btn-replay").addEventListener("click", startAnimation);
+document.getElementById("btn-random").addEventListener("click", () => {
+  randomActivations();
+  startAnimation();
+});
+
+// ── Init ─────────────────────────────────────────────────────────
+randomActivations();
+resize();
+startAnimation();
+window.addEventListener("resize", resize);
+</script>
+</body>
+</html>
