@@ -1,13 +1,9 @@
 import { useState, useMemo } from "react";
-import {
-  type ModelState,
-  generateName,
-  type InferenceStep,
-  tokenLabel,
-} from "../engine/model";
+import { generateName, type InferenceStep, tokenLabel } from "../engine/model";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 import ProbabilityBar from "../components/ProbabilityBar";
+import { useModel } from "../modelStore";
 
 let nextResultId = 0;
 
@@ -17,7 +13,8 @@ interface GeneratedResult {
   steps: InferenceStep[];
 }
 
-export default function InferencePage({ model }: { model: ModelState }) {
+export default function InferencePage() {
+  const model = useModel();
   const [temperature, setTemperature] = useState(5); // x10
   const [results, setResults] = useState<GeneratedResult[]>([]);
   const [activeTrace, setActiveTrace] = useState<GeneratedResult | null>(null);

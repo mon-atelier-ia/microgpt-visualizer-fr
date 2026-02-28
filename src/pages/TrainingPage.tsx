@@ -1,22 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  type ModelState,
-  trainStep,
-  type TrainStepResult,
-  tokenLabel,
-} from "../engine/model";
+import { trainStep, type TrainStepResult, tokenLabel } from "../engine/model";
 import LossChart from "../components/LossChart";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 import LossCell from "../components/LossCell";
+import { useModel, notifyModelUpdate, resetModel } from "../modelStore";
 
-interface Props {
-  model: ModelState;
-  onUpdate: () => void;
-  onReset: () => void;
-}
-
-export default function TrainingPage({ model, onUpdate, onReset }: Props) {
+export default function TrainingPage() {
+  const model = useModel();
   const [training, setTraining] = useState(false);
   const [lastResult, setLastResult] = useState<TrainStepResult | null>(null);
   const stopRef = useRef(false);
@@ -41,7 +32,7 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
     const tick = () => {
       if (stopRef.current || done >= steps) {
         setTraining(false);
-        onUpdate();
+        notifyModelUpdate();
         return;
       }
 
@@ -52,7 +43,7 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
         done++;
       }
       if (result) setLastResult(result);
-      onUpdate();
+      notifyModelUpdate();
       rafRef.current = requestAnimationFrame(tick);
     };
 
@@ -106,7 +97,7 @@ export default function TrainingPage({ model, onUpdate, onReset }: Props) {
           )}
           <button
             className="btn btn-secondary"
-            onClick={onReset}
+            onClick={() => resetModel()}
             disabled={training}
           >
             Réinitialiser

@@ -1,7 +1,21 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
-import type { ModelState } from "../engine/model";
+
+vi.mock("../modelStore", () => ({
+  useModel: () => ({
+    stateDict: { wte: [], wpe: [] },
+    params: [],
+    adamM: new Float64Array(0),
+    adamV: new Float64Array(0),
+    totalStep: 0,
+    lossHistory: [],
+    docs: ["test"],
+    rng: () => 0.5,
+  }),
+  notifyModelUpdate: vi.fn(),
+  resetModel: vi.fn(),
+}));
 
 // Mock trainStep pour éviter d'exécuter le vrai modèle
 vi.mock("../engine/model", async (importOriginal) => {
@@ -28,20 +42,6 @@ import TrainingPage from "./TrainingPage";
 
 afterEach(() => cleanup());
 
-/** ModelState minimal pour le rendu. */
-function makeModel(): ModelState {
-  return {
-    stateDict: { wte: [], wpe: [] },
-    params: [],
-    adamM: new Float64Array(0),
-    adamV: new Float64Array(0),
-    totalStep: 0,
-    lossHistory: [],
-    docs: ["test"],
-    rng: () => 0.5,
-  };
-}
-
 describe("TrainingPage — cleanup rAF au démontage (C-6)", () => {
   it("appelle cancelAnimationFrame au démontage pendant l'entraînement", () => {
     const cancelSpy = vi.spyOn(window, "cancelAnimationFrame");
@@ -49,9 +49,7 @@ describe("TrainingPage — cleanup rAF au démontage (C-6)", () => {
       .spyOn(window, "requestAnimationFrame")
       .mockReturnValue(42);
 
-    const { unmount } = render(
-      <TrainingPage model={makeModel()} onUpdate={vi.fn()} onReset={vi.fn()} />,
-    );
+    const { unmount } = render(<TrainingPage />);
 
     // Lancer l'entraînement
     fireEvent.click(screen.getByText("Entraîner 200 étapes"));
@@ -71,9 +69,7 @@ describe("TrainingPage — cleanup rAF au démontage (C-6)", () => {
       .spyOn(window, "requestAnimationFrame")
       .mockReturnValue(99);
 
-    render(
-      <TrainingPage model={makeModel()} onUpdate={vi.fn()} onReset={vi.fn()} />,
-    );
+    render(<TrainingPage />);
 
     fireEvent.click(screen.getByText("Entraîner 200 étapes"));
 

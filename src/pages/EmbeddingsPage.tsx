@@ -1,20 +1,12 @@
 import { useState } from "react";
-import {
-  type ModelState,
-  uchars,
-  N_EMBD,
-  BLOCK_SIZE,
-  charToId,
-} from "../engine/model";
+import { uchars, N_EMBD, BLOCK_SIZE, charToId } from "../engine/model";
 import Heatmap, { VectorBar } from "../components/Heatmap";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
+import { useModel } from "../modelStore";
 
-interface Props {
-  model: ModelState;
-}
-
-export default function EmbeddingsPage({ model }: Props) {
+export default function EmbeddingsPage() {
+  const model = useModel();
   const [hoverRow, setHoverRow] = useState<number | null>(null);
   const [selectedChar, setSelectedChar] = useState("e");
 

@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import {
-  type ModelState,
   gptForward,
   uchars,
   charToId,
@@ -15,12 +14,10 @@ import PageSection from "../components/PageSection";
 import ProbabilityBar from "../components/ProbabilityBar";
 import HeatCell from "../components/HeatCell";
 import NeuronCell from "../components/NeuronCell";
+import { useModel } from "../modelStore";
 
-interface Props {
-  model: ModelState;
-}
-
-export default function ForwardPassPage({ model }: Props) {
+export default function ForwardPassPage() {
+  const model = useModel();
   const [char, setChar] = useState("e");
   const [pos, setPos] = useState(0);
 
@@ -30,7 +27,7 @@ export default function ForwardPassPage({ model }: Props) {
     const vals = Array.from({ length: N_LAYER }, () => [] as Value[][]);
     const result = gptForward(tokenId, pos, keys, vals, model, true);
     return result.trace!;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- model is mutable (A-1): identity detects reset, totalStep detects training
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- model is mutable (engine): identity detects reset, totalStep detects training
   }, [tokenId, pos, model, model.totalStep]);
 
   const top5 = useMemo(

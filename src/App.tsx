@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, lazy, Suspense } from "react";
-import { createModel, type ModelState } from "./engine/model";
-import { DATASETS, DEFAULT_DATASET_ID, getDataset } from "./datasets";
+import { useState, useEffect, lazy, Suspense } from "react";
+import { DATASETS, DEFAULT_DATASET_ID } from "./datasets";
+import { resetModel } from "./modelStore";
 import TermProvider from "./components/TermProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -37,18 +37,7 @@ export default function App() {
   const [page, setPage] = useState("tokenizer");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [datasetId, setDatasetId] = useState(DEFAULT_DATASET_ID);
-  const modelRef = useRef<ModelState>(
-    createModel(getDataset(DEFAULT_DATASET_ID).words),
-  );
-  const [, forceUpdate] = useState(0);
   const { theme, toggle: toggleTheme } = useTheme();
-
-  const rerender = () => forceUpdate((n) => n + 1);
-  const resetModel = (id?: string) => {
-    const ds = getDataset(id ?? datasetId);
-    modelRef.current = createModel(ds.words);
-    rerender();
-  };
 
   const handleDatasetChange = (id: string) => {
     setDatasetId(id);
@@ -193,22 +182,10 @@ export default function App() {
               }
             >
               {page === "tokenizer" && <TokenizerPage />}
-              {page === "embeddings" && (
-                <EmbeddingsPage model={modelRef.current} />
-              )}
-              {page === "forward" && (
-                <ForwardPassPage model={modelRef.current} />
-              )}
-              {page === "training" && (
-                <TrainingPage
-                  model={modelRef.current}
-                  onUpdate={rerender}
-                  onReset={resetModel}
-                />
-              )}
-              {page === "inference" && (
-                <InferencePage model={modelRef.current} />
-              )}
+              {page === "embeddings" && <EmbeddingsPage />}
+              {page === "forward" && <ForwardPassPage />}
+              {page === "training" && <TrainingPage />}
+              {page === "inference" && <InferencePage />}
             </Suspense>
           </ErrorBoundary>
         </main>

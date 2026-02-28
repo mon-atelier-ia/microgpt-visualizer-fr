@@ -1,8 +1,20 @@
 // @vitest-environment jsdom
 import { describe, expect, it, afterEach, vi } from "vitest";
 import { render, cleanup } from "@testing-library/react";
-import type { ModelState } from "../engine/model";
 import ForwardPassPage from "./ForwardPassPage";
+
+vi.mock("../modelStore", () => ({
+  useModel: () => ({
+    stateDict: { wte: [], wpe: [] },
+    params: [],
+    adamM: new Float64Array(0),
+    adamV: new Float64Array(0),
+    totalStep: 0,
+    lossHistory: [],
+    docs: ["test"],
+    rng: () => 0.5,
+  }),
+}));
 
 vi.mock("../engine/model", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
@@ -34,22 +46,9 @@ vi.mock("../engine/model", async (importOriginal) => {
 
 afterEach(() => cleanup());
 
-function makeModel(): ModelState {
-  return {
-    stateDict: { wte: [], wpe: [] },
-    params: [],
-    adamM: new Float64Array(0),
-    adamV: new Float64Array(0),
-    totalStep: 0,
-    lossHistory: [],
-    docs: ["test"],
-    rng: () => 0.5,
-  } as unknown as ModelState;
-}
-
 describe("ForwardPassPage — accessibilité", () => {
   it("le select de position est associé à un <label> via htmlFor/id", () => {
-    render(<ForwardPassPage model={makeModel()} />);
+    render(<ForwardPassPage />);
     const label = document.querySelector('label[for="forward-pos"]');
     expect(label).toBeTruthy();
     expect(label!.textContent).toContain("Position");

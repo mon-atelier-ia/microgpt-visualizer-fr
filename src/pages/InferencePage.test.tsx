@@ -1,8 +1,20 @@
 // @vitest-environment jsdom
 import { describe, expect, it, afterEach, vi } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
-import type { ModelState } from "../engine/model";
 import InferencePage from "./InferencePage";
+
+vi.mock("../modelStore", () => ({
+  useModel: () => ({
+    stateDict: { wte: [], wpe: [] },
+    params: [],
+    adamM: new Float64Array(0),
+    adamV: new Float64Array(0),
+    totalStep: 0,
+    lossHistory: [],
+    docs: ["test"],
+    rng: () => 0.5,
+  }),
+}));
 
 vi.mock("../engine/model", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
@@ -25,23 +37,9 @@ vi.mock("../engine/model", async (importOriginal) => {
 
 afterEach(() => cleanup());
 
-/** ModelState minimal pour le rendu. */
-function makeModel(): ModelState {
-  return {
-    stateDict: { wte: [], wpe: [] },
-    params: [],
-    adamM: new Float64Array(0),
-    adamV: new Float64Array(0),
-    totalStep: 0,
-    lossHistory: [],
-    docs: ["test"],
-    rng: () => 0.5,
-  };
-}
-
 describe("InferencePage — label accessible du slider (W-2)", () => {
   it("le range input est associé à un <label> via htmlFor/id", () => {
-    render(<InferencePage model={makeModel()} />);
+    render(<InferencePage />);
     const slider = screen.getByRole("slider");
     expect(slider.getAttribute("id")).toBe("temp-slider");
     const label = document.querySelector('label[for="temp-slider"]');
@@ -50,13 +48,13 @@ describe("InferencePage — label accessible du slider (W-2)", () => {
   });
 
   it("le range input n'a PAS d'aria-label (évite double annonce)", () => {
-    render(<InferencePage model={makeModel()} />);
+    render(<InferencePage />);
     const slider = screen.getByRole("slider");
     expect(slider.getAttribute("aria-label")).toBeNull();
   });
 
   it("getByLabelText trouve le slider via son label", () => {
-    render(<InferencePage model={makeModel()} />);
+    render(<InferencePage />);
     const slider = screen.getByLabelText(/température/i);
     expect(slider.getAttribute("type")).toBe("range");
   });
@@ -64,7 +62,7 @@ describe("InferencePage — label accessible du slider (W-2)", () => {
 
 describe("InferencePage — gen-name buttons (W-4)", () => {
   it("les noms générés sont des <button> avec type='button'", () => {
-    render(<InferencePage model={makeModel()} />);
+    render(<InferencePage />);
     // Cliquer Générer 1 pour créer un résultat
     fireEvent.click(screen.getByRole("button", { name: "Générer 1" }));
     const genButtons = document.querySelectorAll("button.gen-name");
@@ -73,7 +71,7 @@ describe("InferencePage — gen-name buttons (W-4)", () => {
   });
 
   it("le bouton actif a la classe gen-name--active", () => {
-    render(<InferencePage model={makeModel()} />);
+    render(<InferencePage />);
     fireEvent.click(screen.getByRole("button", { name: "Générer 1" }));
     const active = document.querySelector("button.gen-name--active");
     expect(active).toBeTruthy();
@@ -82,7 +80,7 @@ describe("InferencePage — gen-name buttons (W-4)", () => {
 
 describe("InferencePage — stable keys (R-3)", () => {
   it("les résultats générés ont des ids numériques uniques", () => {
-    render(<InferencePage model={makeModel()} />);
+    render(<InferencePage />);
     // Générer 10 une première fois
     fireEvent.click(screen.getByRole("button", { name: "Générer 10" }));
     expect(document.querySelectorAll("button.gen-name").length).toBe(10);
