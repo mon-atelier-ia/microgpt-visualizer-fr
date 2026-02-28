@@ -64,7 +64,11 @@ const TokenizerPage = memo(function TokenizerPage() {
           s. Le modèle apprend à partir de séquences comme celle-ci — en
           prédisant chaque <Term id="token" /> suivant à partir des précédents.
         </div>
+        <label htmlFor="tokenizer-input" className="sr-only">
+          Nom à tokeniser
+        </label>
         <input
+          id="tokenizer-input"
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}

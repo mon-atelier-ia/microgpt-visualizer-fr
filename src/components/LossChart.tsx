@@ -131,5 +131,12 @@ export default function LossChart({ lossHistory }: Props) {
     return () => cancelAnimationFrame(rafId);
   }, [lossHistory, lossHistory.length]);
 
-  return <canvas ref={canvasRef} className="chart" />;
+  const label =
+    lossHistory.length === 0
+      ? "Courbe de loss — en attente d'entraînement"
+      : `Courbe de loss — étape ${lossHistory.length}, dernière valeur ${lossHistory[lossHistory.length - 1].toFixed(3)}`;
+
+  return (
+    <canvas ref={canvasRef} className="chart" role="img" aria-label={label} />
+  );
 }

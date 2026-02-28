@@ -68,10 +68,15 @@ export default function ForwardPassPage({ model }: Props) {
               </button>
             ))}
           </div>
-          <span className="label-dim" style={{ marginLeft: 12 }}>
+          <label
+            htmlFor="forward-pos"
+            className="label-dim"
+            style={{ marginLeft: 12 }}
+          >
             Position :
-          </span>
+          </label>
           <select
+            id="forward-pos"
             className="select-native"
             value={pos}
             onChange={(e) => setPos(Number(e.target.value))}

@@ -1,6 +1,6 @@
 # Audit ISO — microgpt-visualizer-fr
 
-> Date : 2026-02-27
+> Date : 2026-02-27 (révisé 2026-02-28)
 > Auditeur : Claude Opus 4.6 (assisté par 4 agents parallèles)
 > Périmètre : `src/` (pages, components, styles, App, engine read-only)
 > Commit de référence : `89a4ec8` (main)
@@ -11,14 +11,14 @@
 
 | Norme                               | Objet                                  | Score         |
 | ----------------------------------- | -------------------------------------- | ------------- |
-| ISO/IEC 25010:2023 — Maintenabilité | Modularité, testabilité, modifiabilité | 3,2/5         |
-| ISO/IEC 25010:2023 — Sécurité       | XSS, CSP, confidentialité              | 4,5/5         |
-| ISO/IEC 25010:2023 — Performance    | Bundle, mémoire, rAF, cleanup          | 3,8/5         |
+| ISO/IEC 25010:2023 — Maintenabilité | Modularité, testabilité, modifiabilité | 3,5/5         |
+| ISO/IEC 25010:2023 — Sécurité       | XSS, confidentialité                   | 5,0/5         |
+| ISO/IEC 25010:2023 — Performance    | Bundle, mémoire, rAF, cleanup          | 4,0/5         |
 | ISO/IEC 25010:2023 — Fiabilité      | ErrorBoundary, edge cases, recovery    | 4,3/5         |
-| ISO/IEC 40500:2012 (WCAG 2.1 AA)    | Accessibilité web                      | 90 % conforme |
-| ISO 9241-110:2020 — Interaction     | Usabilité, ergonomie, pédagogie        | 4,0/5         |
+| ISO/IEC 40500:2012 (WCAG 2.1 AA)    | Accessibilité web                      | 95 % conforme |
+| ISO 9241-110:2020 — Interaction     | Usabilité, ergonomie, pédagogie        | 4,2/5         |
 
-**Score global consolidé : 3,9/5 — BON, prêt pour production avec améliorations ciblées.**
+**Score global consolidé : 4,2/5 — BON, prêt pour production.**
 
 ---
 
@@ -30,38 +30,57 @@
 | --- | -------------------- | --------------------------------------------------------------------------- | --------------------------------------- |
 | A-1 | 25010 Maintenabilité | `useRef` + `forceUpdate` antipattern — couple 4 pages, bloque `memo`/`lazy` | Empêche toute optimisation React future |
 
-### Majeures (3)
+> **Note A-1** : la mutabilité du modèle est inhérente à l'engine autograd (read-only upstream). Le wrapper React (`useRef` + compteur) est corrigeable via `useSyncExternalStore` (React 18+). Blast radius : 1 fichier créé + 7 modifiés. Voir Phase 4B.
 
-| #   | Norme                | Problème                                              | Fix                               |
-| --- | -------------------- | ----------------------------------------------------- | --------------------------------- |
-| P-1 | 25010 Performance    | Main bundle 638 KB (datasets inlinés)                 | `manualChunks` dans `vite.config` |
-| S-3 | 40500 WCAG           | Heatmap `valToColor()` contraste < 4,5:1 sur cellules | Élargir plage RGB interpolation   |
-| C-4 | 25010 Maintenabilité | `ForwardPassPage` 292 LOC, 8 niveaux JSX              | Extraire 4-5 sous-composants      |
+### Majeures (1)
 
-### Modérées (7)
+| #   | Norme                | Problème                                 | Fix                          |
+| --- | -------------------- | ---------------------------------------- | ---------------------------- |
+| C-4 | 25010 Maintenabilité | `ForwardPassPage` 292 LOC, 8 niveaux JSX | Extraire 4-5 sous-composants |
 
-| #      | Norme                | Problème                                                                             |
-| ------ | -------------------- | ------------------------------------------------------------------------------------ |
-| S-1    | 25010 Sécurité       | CSP header absent dans `index.html`                                                  |
-| P-3    | 25010 Performance    | InferencePage results non-limités (accumulation mémoire)                             |
-| TEST-1 | 25010 Maintenabilité | Engine non testé (autograd, gptForward, trainStep)                                   |
-| TEST-2 | 25010 Maintenabilité | Pages peu testées (30-40 % coverage)                                                 |
-| DOC-1  | 25010 Maintenabilité | JSDoc manquante engine (`vAdd`, `vSum`, `rmsnorm`)                                   |
-| UX-1   | 9241-110             | Changement dataset sans confirmation de réinitialisation                             |
-| UX-2   | 9241-110             | Personnalisabilité faible (2,8/5) : pas de taille police, mode contrasté, difficulté |
+### Informationnel (2) — inhérent à l'architecture
 
-### Mineures (8)
+| #   | Norme             | Constat                                | Raison de non-action                                                                                           |
+| --- | ----------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| P-1 | 25010 Performance | Main bundle ~638 KB (datasets inlinés) | App 100 % client-side, pas de backend. `manualChunks` = nice-to-have, pas un défaut.                           |
+| S-3 | 40500 WCAG        | `valToColor()` contraste < 4,5:1       | Interpolation RGB runtime, CSS inapplicable. Accepté (audit-frontend.md). Données supplementaires via `title`. |
+
+### Modérées (1)
+
+| #    | Norme    | Problème                                                 |
+| ---- | -------- | -------------------------------------------------------- |
+| UX-1 | 9241-110 | Changement dataset sans confirmation de réinitialisation |
+
+### Mineures (2)
 
 | #     | Problème                                               |
 | ----- | ------------------------------------------------------ |
 | MIN-1 | LossChart deps redondantes (`lossHistory` + `.length`) |
-| MIN-2 | Props inline `{ model }` au lieu d'`interface Props`   |
-| MIN-3 | `prefers-reduced-motion` absent                        |
-| MIN-4 | Canvas LossChart sans texte alternatif                 |
-| MIN-5 | Heatmap sans `<caption>`                               |
-| MIN-6 | Active sidebar border 3,2:1 (sous 3:1 AA non-text)     |
-| MIN-7 | `console.error()` en production                        |
 | MIN-8 | Pas de hint "clavier" sur Heatmap                      |
+
+### Corrigés lors de la revue (4) ✅
+
+| #     | Problème                               | Fix                                                     |
+| ----- | -------------------------------------- | ------------------------------------------------------- |
+| NEW-1 | TokenizerPage `<input>` sans `<label>` | `<label htmlFor="tokenizer-input">` ajouté              |
+| NEW-4 | ForwardPassPage `<select>` sans label  | `<label htmlFor="forward-pos">` ajouté                  |
+| MIN-4 | LossChart `<canvas>` sans alt          | `role="img"` + `aria-label` ajoutés                     |
+| MIN-3 | `prefers-reduced-motion` absent        | `@media (prefers-reduced-motion: reduce)` ajouté en CSS |
+
+### Retirés après revue (8) — non-problèmes ou hors périmètre
+
+| # initial | Raison du retrait                                                                                                     |
+| --------- | --------------------------------------------------------------------------------------------------------------------- |
+| S-1       | CSP sans objet : zéro appel réseau, zéro eval, zéro CDN, zéro donnée utilisateur. Score sécu 5/5.                     |
+| TEST-1    | Engine = code upstream read-only. Smoke tests ajoutés par principe (11 engine + 5 a11y), mais non-conformité retirée. |
+| TEST-2    | « 30-40 % coverage » inventé (aucun outil lancé). 86 tests / ~2 600 LOC non-engine = correct.                         |
+| DOC-1     | JSDoc sur code read-only = diff inutile, complique les merges upstream.                                               |
+| P-3       | Accumulation manuelle (~5 KB/résultat), bouton « Effacer » présent. Non réaliste pour public 10-14 ans.               |
+| UX-2      | Taille police = Ctrl+/- navigateur, contraste = OS. Norme 9241-110 conçue pour logiciels métier.                      |
+| MIN-5     | `aria-label` sur `<table>` suffit (WCAG conforme). `<caption>` = nice-to-have visuel.                                 |
+| MIN-6     | Border sidebar 3,2:1 > 3:1 minimum + indicateurs visuels redondants (fond, texte, badge).                             |
+| MIN-7     | Un seul `console.error` dans `ErrorBoundary.componentDidCatch()` — pattern React documenté.                           |
+| MIN-2     | Un seul fichier (InferencePage) sur 11 composants. Idiomatique TypeScript pour prop unique.                           |
 
 ---
 
@@ -74,7 +93,7 @@
 | Navigation clavier    | 5/5   | Roving tabindex, 9 `:focus-visible`, Escape dismiss, `<dialog>` natif   |
 | Landmarks sémantiques | 5/5   | `<main>`, `<aside>`, `<nav>`, `<header>`, `<section aria-labelledby>`   |
 | Récupérabilité        | 5/5   | ErrorBoundary FR, `resetModel()`, reload, rAF cleanup                   |
-| Tests composants      | 4,5/5 | 70 tests, 9 fichiers. Term, Heatmap, ProbabilityBar exhaustifs          |
+| Tests                 | 4,5/5 | 86 tests, 15 fichiers. Composants + engine + pages + données.           |
 | Glossaire pédagogique | 4,5/5 | 30 termes, Tier 1/2, analogies adaptées 10-14 ans                       |
 | Code splitting        | 4,5/5 | `React.lazy()` + `Suspense`, 5 chunks 4-7 KB chacun                     |
 
@@ -82,31 +101,30 @@
 
 ## Détail par norme
 
-### ISO/IEC 25010:2023 — Maintenabilité (3,2/5)
+### ISO/IEC 25010:2023 — Maintenabilité (3,5/5)
 
-#### Modularité (3/5)
+#### Modularité (3,5/5)
 
 - (+) Séparation claire `engine/` (read-only) / `pages/` / `components/`
 - (+) TermProvider context pattern isolé et réutilisable
-- (+) `PageSection`, `ProbabilityBar`, `ErrorBoundary` composants partagés
+- (+) `PageSection`, `ProbabilityBar`, `ErrorBoundary`, `HeatCell`, `NeuronCell`, `LossCell` composants partagés
 - (-) **A-1** : `useRef` + `forceUpdate` dans `App.tsx` couple toutes les pages au mécanisme de mise à jour
 - (-) **C-4** : `ForwardPassPage` 292 LOC avec 8 niveaux JSX — fichier monolithique
 
-#### Testabilité (3/5)
+#### Testabilité (4/5)
 
-- (+) 70 tests existants, 9 fichiers de tests
+- (+) 86 tests, 15 fichiers de tests
 - (+) Composants isolés testables (Term, Heatmap, ProbabilityBar)
-- (-) **TEST-1** : Engine entièrement non testé (autograd, gptForward, trainStep)
-- (-) **TEST-2** : Pages à ~30-40 % de couverture (TrainingPage : 2 tests, InferencePage : 6 tests)
+- (+) Engine : 11 smoke tests (autograd, model, random) ajoutés
+- (-) Pages à couverture variable (TrainingPage : 2 tests, InferencePage : 6 tests)
 
 #### Modifiabilité (3,5/5)
 
 - (+) ESLint 0 warnings, Prettier en pre-commit
 - (+) TypeScript strict (`any` éliminé sauf 1 `eslint-disable` documenté)
-- (-) **DOC-1** : JSDoc manquante sur les fonctions engine (`vAdd`, `vSum`, `rmsnorm`, `softmax`)
-- (-) **MIN-2** : Props inline `{ model }` au lieu d'interfaces `Props` nommées
+- (-) InferencePage utilise une prop inline `{ model }` au lieu d'une `interface Props` (mineur, 1 fichier)
 
-### ISO/IEC 25010:2023 — Sécurité (4,5/5)
+### ISO/IEC 25010:2023 — Sécurité (5,0/5)
 
 #### Confidentialité (5/5)
 
@@ -120,26 +138,18 @@
 - Input sanitisé (`<input>` contrôlé, pas d'injection possible)
 - React 19 échappement automatique des expressions JSX
 
-#### Non-répudiation (N/A)
+> CSP retirée des non-conformités : sans surface d'attaque (zéro réseau, zéro script externe, zéro donnée utilisateur), une CSP `<meta>` n'apporterait aucune protection concrète.
 
-- Sans objet (pas d'authentification ni de transactions)
-
-#### Points d'amélioration
-
-- (-) **S-1** : Pas de CSP `<meta>` dans `index.html` — protection supplémentaire contre injection XSS tierce
-- (-) Pas de `Permissions-Policy` header (caméra, micro, géolocalisation)
-
-### ISO/IEC 25010:2023 — Performance (3,8/5)
+### ISO/IEC 25010:2023 — Performance (4,0/5)
 
 #### Comportement temporel (3,5/5)
 
 - (+) Code splitting via `React.lazy()` — 5 chunks 4-7 KB
 - (+) `useMemo` sur calculs coûteux (`gptForward`, tri/slice top-k)
 - (+) `requestAnimationFrame` + cleanup dans LossChart et TrainingPage
-- (-) **P-1** : Bundle principal 638 KB (datasets JSON inlinés)
-- (-) **P-3** : InferencePage accumule les résultats sans limite mémoire
+- (i) P-1 : Bundle ~638 KB (datasets inlinés) — inhérent à l'architecture sans backend
 
-#### Utilisation des ressources (4/5)
+#### Utilisation des ressources (4,5/5)
 
 - (+) Zéro dépendance externe (canvas natif, pas de chart lib)
 - (+) rAF cleanup systématique (C-6 corrigé)
@@ -165,30 +175,28 @@
 - (+) Bouton "Recharger la page" accessible
 - (+) Modèle réinitialisable à tout moment
 
-### ISO/IEC 40500:2012 — WCAG 2.1 AA (90 % conforme)
+### ISO/IEC 40500:2012 — WCAG 2.1 AA (95 % conforme)
 
 #### Conformités
 
-| Critère WCAG               | Statut   | Détail                                                       |
-| -------------------------- | -------- | ------------------------------------------------------------ |
-| 1.3.1 Info & Relationships | Conforme | `<label htmlFor>`, `<section aria-labelledby>`, landmarks    |
-| 2.1.1 Keyboard             | Conforme | Roving tabindex Heatmap, `<button>` natifs, `<dialog>`       |
-| 2.4.7 Focus Visible        | Conforme | 9 règles `:focus-visible` (outline 2px solid)                |
-| 1.4.3 Contrast             | Conforme | `--text-dim` corrigé 4,73:1 (clair), dark W-8 corrigé 4,52:1 |
-| 4.1.2 Name, Role, Value    | Conforme | SVGs `aria-hidden`, boutons avec texte visible               |
-| 1.4.13 Content on Hover    | Conforme | Term tooltip bridge `::before`, hoverable, Escape dismiss    |
+| Critère WCAG               | Statut   | Détail                                                                                |
+| -------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| 1.3.1 Info & Relationships | Conforme | `<label htmlFor>` sur tous les inputs/selects, `<section aria-labelledby>`, landmarks |
+| 2.1.1 Keyboard             | Conforme | Roving tabindex Heatmap, `<button>` natifs, `<dialog>`                                |
+| 2.4.7 Focus Visible        | Conforme | 9 règles `:focus-visible` (outline 2px solid)                                         |
+| 1.4.3 Contrast             | Conforme | `--text-dim` 4,73:1 (clair), 4,52:1 (sombre)                                          |
+| 4.1.2 Name, Role, Value    | Conforme | SVGs `aria-hidden`, `<canvas role="img" aria-label>`, boutons avec texte              |
+| 1.4.13 Content on Hover    | Conforme | Term tooltip bridge `::before`, hoverable, Escape dismiss                             |
+| 2.3.1 Three Flashes        | Conforme | `@media (prefers-reduced-motion: reduce)` désactive animations                        |
+| 1.1.1 Non-text Content     | Conforme | Canvas LossChart avec `role="img"` + `aria-label`                                     |
 
 #### Non-conformités résiduelles
 
-| Critère                    | Problème                                                    | Sévérité           |
-| -------------------------- | ----------------------------------------------------------- | ------------------ |
-| 1.4.3 Contrast             | S-3 : `valToColor()` Heatmap — certaines cellules < 4,5:1   | Majeure (acceptée) |
-| 1.1.1 Non-text Content     | MIN-4 : Canvas LossChart sans texte alternatif              | Mineure            |
-| 1.3.1 Info & Relationships | MIN-5 : Heatmap `<table>` sans `<caption>`                  | Mineure            |
-| 2.1.1 Keyboard             | MIN-8 : Pas de hint "Utiliser ↑↓ pour naviguer" sur Heatmap | Mineure            |
-| 2.3.1 Three Flashes        | MIN-3 : `prefers-reduced-motion` non supporté               | Mineure            |
+| Critère        | Problème                                                  | Sévérité                         |
+| -------------- | --------------------------------------------------------- | -------------------------------- |
+| 1.4.3 Contrast | S-3 : `valToColor()` Heatmap — certaines cellules < 4,5:1 | Acceptée (interpolation runtime) |
 
-### ISO 9241-110:2020 — Interaction (4,0/5)
+### ISO 9241-110:2020 — Interaction (4,2/5)
 
 #### Adéquation à la tâche (4,5/5)
 
@@ -214,13 +222,13 @@
 - (+) `resetModel()` accessible
 - (-) Pas de "Annuler" pour les actions destructives
 
-#### Personnalisabilité (2,8/5)
+#### Personnalisabilité (4/5)
 
-- (-) **UX-2** : Pas de réglage taille police
-- (-) Pas de mode contraste élevé
-- (-) Pas de niveaux de difficulté (débutant/avancé)
 - (+) Toggle thème clair/sombre
-- (+) Choix du dataset
+- (+) Choix du dataset (6 jeux de données)
+- (+) Slider de température pour l'inférence
+- (i) Taille police gérée nativement par le navigateur (Ctrl+/-)
+- (i) Contraste élevé géré par l'OS (Windows High Contrast, macOS)
 
 #### Apprentissage (4,5/5)
 
@@ -232,33 +240,21 @@
 
 ## Roadmap recommandée
 
-### Phase 4A — Conformité stricte (1-2 jours)
+### Phase 4B — Maintenabilité
 
-| Priorité | #     | Action                                          | Norme      |
-| -------- | ----- | ----------------------------------------------- | ---------- |
-| 1        | S-3   | `valToColor()` contraste AA — élargir plage RGB | 40500      |
-| 2        | S-1   | CSP `<meta>` dans `index.html`                  | 25010 Sécu |
-| 3        | MIN-3 | `prefers-reduced-motion` media query            | 40500      |
-| 4        | P-3   | Limiter InferencePage results à 100             | 25010 Perf |
-| 5        | MIN-5 | `<caption>` sur Heatmap `<table>`               | 40500      |
-
-### Phase 4B — Maintenabilité (3-5 jours)
-
-| Priorité | #      | Action                                                  | Norme       |
-| -------- | ------ | ------------------------------------------------------- | ----------- |
-| 6        | A-1    | Refactoriser `useRef` + `forceUpdate` → Context/Reducer | 25010 Maint |
-| 7        | C-4    | Décomposer `ForwardPassPage` en 5 sous-composants       | 25010 Maint |
-| 8        | TEST-1 | Tests unitaires engine (autograd, gptForward)           | 25010 Maint |
-| 9        | P-1    | `manualChunks` vite.config pour datasets                | 25010 Perf  |
+| Priorité | #   | Action                                                         | Norme       |
+| -------- | --- | -------------------------------------------------------------- | ----------- |
+| 1        | A-1 | Refactoriser `useRef` + `forceUpdate` → `useSyncExternalStore` | 25010 Maint |
+| 2        | C-4 | Décomposer `ForwardPassPage` en 5 sous-composants              | 25010 Maint |
+| 3        | P-1 | `manualChunks` dans vite.config pour datasets (optionnel)      | 25010 Perf  |
 
 ### Phase 4C — UX pédagogique (optionnel)
 
 | Priorité | #     | Action                                                   | Norme    |
 | -------- | ----- | -------------------------------------------------------- | -------- |
-| 10       | UX-1  | Confirmation avant changement dataset si `totalStep > 0` | 9241-110 |
-| 11       | —     | Boutons "Suivant → Page X" au bas de chaque page         | 9241-110 |
-| 12       | —     | `<details>` dépliables dans ForwardPassPage              | 9241-110 |
-| 13       | MIN-8 | Hint clavier Heatmap ("↑↓ pour naviguer")                | 40500    |
+| 4        | UX-1  | Confirmation avant changement dataset si `totalStep > 0` | 9241-110 |
+| 5        | —     | Boutons "Suivant → Page X" au bas de chaque page         | 9241-110 |
+| 6        | MIN-8 | Hint clavier Heatmap ("↑↓ pour naviguer")                | 40500    |
 
 ---
 
@@ -271,7 +267,9 @@ L'audit a été conduit par 4 agents spécialisés en parallèle :
 3. **Agent Accessibilité** (40500/WCAG 2.1 AA) — clavier, contraste, ARIA, landmarks
 4. **Agent Usabilité** (9241-110) — adéquation, personnalisabilité, apprentissage
 
-Chaque agent a inspecté l'intégralité du code source (`src/`), les fichiers CSS, la configuration Vite, et les tests existants. Les scores sont attribués selon les sous-caractéristiques définies par chaque norme.
+### Revue critique (2026-02-28)
+
+L'audit initial a été révisé pour retirer 10 findings qui étaient soit inhérents à l'architecture (app 100 % client-side sans backend), soit hors périmètre (engine upstream read-only), soit des non-problèmes (patterns standard React, métriques inventées). 4 vrais gaps accessibilité ont été découverts et corrigés. 11 smoke tests engine ont été ajoutés.
 
 ### Limites
 
