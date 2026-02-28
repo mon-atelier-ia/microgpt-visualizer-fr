@@ -92,6 +92,15 @@
 | Replace `useRef` + `forceUpdate` with `useSyncExternalStore` + `memo()` | `modelStore.ts` (new), `App.tsx`, 4 pages                                                              | A-1 : antipattern couplant toutes les pages. Store externe + `useModel()` hook. `memo()` sur 5 pages.     |
 | Extract `ForwardPassPage` into 4 sub-components                         | `FlowDiagram.tsx`, `VectorsPanel.tsx`, `AttentionWeightsPanel.tsx`, `MLPActivationPanel.tsx` (all new) | C-4 : 296 LOC / 8 niveaux JSX → ~120 LOC / 4 niveaux. Sous-composants présentationnels, props primitives. |
 
+## Corrections audit — UX et accessibilité restantes
+
+| Change                                                      | Fichier(s)                  | Justification                                                                                     |
+| ----------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------- |
+| `window.confirm()` before dataset change if `totalStep > 0` | `App.tsx`, `modelStore.ts`  | UX-1 : changement dataset sans confirmation perdait la progression d'entraînement                 |
+| `getModelTotalStep()` non-reactive getter                   | `modelStore.ts`             | Getter synchrone pour event handler — évite d'abonner App au store (re-render à chaque trainStep) |
+| Keyboard hint `<kbd>↑↓</kbd>` under interactive Heatmap     | `Heatmap.tsx`, `styles.css` | MIN-8 : roving tabindex existait mais aucune indication visuelle pour l'utilisateur               |
+| MIN-1 retracted (false positive)                            | `docs/audit-iso.md`         | `lossHistory` muté en place (`.push()`), `.length` est le seul trigger effectif — pas redondant   |
+
 ## Deployment
 
 | Change                                                                     | Justification                                  |

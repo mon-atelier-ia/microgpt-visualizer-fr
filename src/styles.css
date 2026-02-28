@@ -448,6 +448,20 @@ table.heatmap .row-label {
   border: none;
   background: none !important;
 }
+.heatmap-kbd-hint {
+  font-size: 10px;
+  margin-top: 4px;
+  text-align: center;
+}
+.heatmap-kbd-hint kbd {
+  display: inline-block;
+  padding: 1px 4px;
+  font-size: 9px;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface);
+}
 
 .controls {
   display: flex;

@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { resetModel, notifyModelUpdate, useModel } from "./modelStore";
+import {
+  resetModel,
+  notifyModelUpdate,
+  useModel,
+  getModelTotalStep,
+} from "./modelStore";
 import { renderHook, act } from "@testing-library/react";
 
 // Re-import to access internal state via the hook
@@ -45,6 +50,16 @@ describe("modelStore", () => {
     const before = renderCount.value;
     act(() => notifyModelUpdate());
     expect(renderCount.value).toBeGreaterThan(before);
+  });
+
+  it("getModelTotalStep returns current totalStep (non-reactive)", () => {
+    const { result } = renderHook(() => useModel());
+    expect(getModelTotalStep()).toBe(0);
+    result.current.totalStep = 10;
+    expect(getModelTotalStep()).toBe(10);
+    // Reset back
+    act(() => resetModel());
+    expect(getModelTotalStep()).toBe(0);
   });
 
   it("subscribe/unsubscribe: no listener leak", () => {

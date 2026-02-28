@@ -162,4 +162,24 @@ describe("Heatmap — accessibilité clavier (W-1)", () => {
     fireEvent.keyDown(rows[3], { key: "ArrowDown" });
     expect(document.activeElement).toBe(rows[3]);
   });
+
+  it("hint clavier affiché quand onHoverRow est passé (MIN-8)", () => {
+    const onHover = vi.fn();
+    render(
+      <Heatmap
+        matrix={MATRIX}
+        rowLabels={LABELS}
+        colCount={2}
+        onHoverRow={onHover}
+      />,
+    );
+    const hint = screen.getByText(/naviguer/);
+    expect(hint).toBeTruthy();
+    expect(hint.classList.contains("heatmap-kbd-hint")).toBe(true);
+  });
+
+  it("hint clavier absent quand onHoverRow non passé", () => {
+    render(<Heatmap matrix={MATRIX} rowLabels={LABELS} colCount={2} />);
+    expect(screen.queryByText(/naviguer/)).toBeNull();
+  });
 });

@@ -276,7 +276,9 @@ Score global : **4,2/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 
 - ✅ A-1 : `useSyncExternalStore` dans `modelStore.ts` + `memo()` sur 5 pages
 - ✅ C-4 : Décomposer `ForwardPassPage` en 4 sous-composants (`FlowDiagram`, `VectorsPanel`, `AttentionWeightsPanel`, `MLPActivationPanel`)
-- ⬜ UX-1 : Confirmation avant changement dataset si `totalStep > 0`
+- ✅ UX-1 : `window.confirm()` avant changement dataset si `totalStep > 0`
+- ✅ MIN-8 : Hint clavier `<kbd>↑↓</kbd>` sous Heatmap interactif
+- ✅ MIN-1 : Retiré (faux positif — `.push()` in-place, `.length` = seul trigger)
 - ✅ README.md traduit en français (FR principal + EN en `<details>`)
 
 ---

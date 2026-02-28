@@ -122,6 +122,13 @@ export default function Heatmap({
           ))}
         </tbody>
       </table>
+      {onHoverRow && (
+        <div className="label-dim heatmap-kbd-hint">
+          <kbd>↑</kbd>
+          <kbd>↓</kbd> naviguer · <kbd>Début</kbd>
+          <kbd>Fin</kbd> extrémités
+        </div>
+      )}
     </div>
   );
 }

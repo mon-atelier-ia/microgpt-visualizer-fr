@@ -37,6 +37,11 @@ export function notifyModelUpdate() {
   emit();
 }
 
+/** Non-reactive getter for use in event handlers (not render path). */
+export function getModelTotalStep(): number {
+  return model.totalStep;
+}
+
 /** Hook: subscribe to the model store. Re-renders when the model changes. */
 export function useModel(): ModelState {
   useSyncExternalStore(subscribe, getSnapshot, getSnapshot);

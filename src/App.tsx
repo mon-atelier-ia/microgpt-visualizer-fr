@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { DATASETS, DEFAULT_DATASET_ID } from "./datasets";
-import { resetModel } from "./modelStore";
+import { resetModel, getModelTotalStep } from "./modelStore";
 import TermProvider from "./components/TermProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -43,6 +43,15 @@ export default function App() {
   const { theme, toggle: toggleTheme } = useTheme();
 
   const handleDatasetChange = (id: string) => {
+    if (id === datasetId) return;
+    if (
+      getModelTotalStep() > 0 &&
+      !window.confirm(
+        "L'entraînement est en cours.\nChanger de jeu de données réinitialisera le modèle.\n\nContinuer ?",
+      )
+    ) {
+      return;
+    }
     setDatasetId(id);
     resetModel(id);
   };

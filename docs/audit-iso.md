@@ -13,10 +13,10 @@
 | ----------------------------------- | -------------------------------------- | ------------- |
 | ISO/IEC 25010:2023 — Maintenabilité | Modularité, testabilité, modifiabilité | 4,3/5         |
 | ISO/IEC 25010:2023 — Sécurité       | XSS, confidentialité                   | 5,0/5         |
-| ISO/IEC 25010:2023 — Performance    | Bundle, mémoire, rAF, cleanup          | 4,0/5         |
-| ISO/IEC 25010:2023 — Fiabilité      | ErrorBoundary, edge cases, recovery    | 4,3/5         |
+| ISO/IEC 25010:2023 — Performance    | Bundle, mémoire, rAF, cleanup          | 4,3/5         |
+| ISO/IEC 25010:2023 — Fiabilité      | ErrorBoundary, edge cases, recovery    | 4,5/5         |
 | ISO/IEC 40500:2012 (WCAG 2.1 AA)    | Accessibilité web                      | 95 % conforme |
-| ISO 9241-110:2020 — Interaction     | Usabilité, ergonomie, pédagogie        | 4,2/5         |
+| ISO 9241-110:2020 — Interaction     | Usabilité, ergonomie, pédagogie        | 4,4/5         |
 
 **Score global consolidé : 4,5/5 — TRÈS BON, prêt pour production.**
 
@@ -43,18 +43,18 @@
 | P-1 | 25010 Performance | Main bundle ~638 KB (datasets inlinés) | App 100 % client-side, pas de backend. `manualChunks` = nice-to-have, pas un défaut.                           |
 | S-3 | 40500 WCAG        | `valToColor()` contraste < 4,5:1       | Interpolation RGB runtime, CSS inapplicable. Accepté (audit-frontend.md). Données supplementaires via `title`. |
 
-### Modérées (1)
+### Modérées — ✅ TOUS CORRIGÉS
 
-| #    | Norme    | Problème                                                 |
-| ---- | -------- | -------------------------------------------------------- |
-| UX-1 | 9241-110 | Changement dataset sans confirmation de réinitialisation |
+| #        | Norme    | Problème                                                     | Fix                                                                                                 |
+| -------- | -------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| ~~UX-1~~ | 9241-110 | ~~Changement dataset sans confirmation de réinitialisation~~ | ✅ `window.confirm()` si `totalStep > 0`. `getModelTotalStep()` getter non-réactif dans modelStore. |
 
-### Mineures (2)
+### Mineures (0) — ✅ TOUS CORRIGÉS OU RETIRÉS
 
-| #     | Problème                                               |
-| ----- | ------------------------------------------------------ |
-| MIN-1 | LossChart deps redondantes (`lossHistory` + `.length`) |
-| MIN-8 | Pas de hint "clavier" sur Heatmap                      |
+| #         | Problème                                                   | Fix                                                                                          |
+| --------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| ~~MIN-1~~ | ~~LossChart deps redondantes (`lossHistory` + `.length`)~~ | Retiré : faux positif. `lossHistory` muté en place (`.push()`), `.length` = seul trigger.    |
+| ~~MIN-8~~ | ~~Pas de hint "clavier" sur Heatmap~~                      | ✅ Hint `<kbd>↑↓</kbd> naviguer · <kbd>Début/Fin</kbd>` conditionnel si `onHoverRow` fourni. |
 
 ### Corrigés lors de la revue (4) ✅
 
@@ -65,7 +65,7 @@
 | MIN-4 | LossChart `<canvas>` sans alt          | `role="img"` + `aria-label` ajoutés                     |
 | MIN-3 | `prefers-reduced-motion` absent        | `@media (prefers-reduced-motion: reduce)` ajouté en CSS |
 
-### Retirés après revue (8) — non-problèmes ou hors périmètre
+### Retirés après revue (9) — non-problèmes ou hors périmètre
 
 | # initial | Raison du retrait                                                                                                     |
 | --------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -79,6 +79,7 @@
 | MIN-6     | Border sidebar 3,2:1 > 3:1 minimum + indicateurs visuels redondants (fond, texte, badge).                             |
 | MIN-7     | Un seul `console.error` dans `ErrorBoundary.componentDidCatch()` — pattern React documenté.                           |
 | MIN-2     | Un seul fichier (InferencePage) sur 11 composants. Idiomatique TypeScript pour prop unique.                           |
+| MIN-1     | `lossHistory` muté en place (`.push()`). `.length` est le seul trigger effectif de l'useEffect — pas redondant.       |
 
 ---
 
@@ -91,7 +92,7 @@
 | Navigation clavier    | 5/5   | Roving tabindex, 9 `:focus-visible`, Escape dismiss, `<dialog>` natif   |
 | Landmarks sémantiques | 5/5   | `<main>`, `<aside>`, `<nav>`, `<header>`, `<section aria-labelledby>`   |
 | Récupérabilité        | 5/5   | ErrorBoundary FR, `resetModel()`, reload, rAF cleanup                   |
-| Tests                 | 4,5/5 | 91 tests, 16 fichiers. Composants + engine + pages + store + données.   |
+| Tests                 | 4,5/5 | 94 tests, 16 fichiers. Composants + engine + pages + store + données.   |
 | Glossaire pédagogique | 4,5/5 | 30 termes, Tier 1/2, analogies adaptées 10-14 ans                       |
 | Code splitting        | 4,5/5 | `React.lazy()` + `Suspense`, 5 chunks 4-7 KB chacun                     |
 
@@ -111,7 +112,7 @@
 
 #### Testabilité (4/5)
 
-- (+) 91 tests, 16 fichiers de tests
+- (+) 94 tests, 16 fichiers de tests
 - (+) Composants isolés testables (Term, Heatmap, ProbabilityBar)
 - (+) Engine : 11 smoke tests (autograd, model, random) ajoutés
 - (-) Pages à couverture variable (TrainingPage : 2 tests, InferencePage : 6 tests)
@@ -138,7 +139,7 @@
 
 > CSP retirée des non-conformités : sans surface d'attaque (zéro réseau, zéro script externe, zéro donnée utilisateur), une CSP `<meta>` n'apporterait aucune protection concrète.
 
-### ISO/IEC 25010:2023 — Performance (4,0/5)
+### ISO/IEC 25010:2023 — Performance (4,3/5)
 
 #### Comportement temporel (3,5/5)
 
@@ -147,19 +148,19 @@
 - (+) `requestAnimationFrame` + cleanup dans LossChart et TrainingPage
 - (i) P-1 : Bundle ~638 KB (datasets inlinés) — inhérent à l'architecture sans backend
 
-#### Utilisation des ressources (4,5/5)
+#### Utilisation des ressources (5/5)
 
 - (+) Zéro dépendance externe (canvas natif, pas de chart lib)
 - (+) rAF cleanup systématique (C-6 corrigé)
-- (-) **MIN-1** : LossChart useEffect deps redondantes
+- (+) ~~MIN-1~~ : LossChart deps non redondantes (faux positif retiré — `.push()` in-place nécessite `.length`)
 
-### ISO/IEC 25010:2023 — Fiabilité (4,3/5)
+### ISO/IEC 25010:2023 — Fiabilité (4,5/5)
 
-#### Maturité (4/5)
+#### Maturité (4,5/5)
 
 - (+) ErrorBoundary avec fallback français et bouton rechargement
 - (+) `resetModel()` pour réinitialisation propre
-- (-) Edge case : changement de dataset pendant entraînement sans confirmation (UX-1)
+- (+) ~~UX-1~~ : `window.confirm()` avant changement dataset si `totalStep > 0`
 
 #### Tolérance aux fautes (4,5/5)
 
@@ -194,7 +195,7 @@
 | -------------- | --------------------------------------------------------- | -------------------------------- |
 | 1.4.3 Contrast | S-3 : `valToColor()` Heatmap — certaines cellules < 4,5:1 | Acceptée (interpolation runtime) |
 
-### ISO 9241-110:2020 — Interaction (4,2/5)
+### ISO 9241-110:2020 — Interaction (4,4/5)
 
 #### Adéquation à la tâche (4,5/5)
 
@@ -202,11 +203,11 @@
 - (+) Glossaire intégré avec 30 termes et analogies pour 10-14 ans
 - (+) Visualisations interactives (heatmap navigable, training animé)
 
-#### Autodescription (4/5)
+#### Autodescription (4,5/5)
 
 - (+) Labels en français, aide contextuelle via tooltips glossaire
 - (+) Feedback visuel entraînement (courbe de perte, compteur d'étapes)
-- (-) **UX-1** : Changement de dataset sans confirmation si entraînement en cours
+- (+) ~~UX-1~~ : `window.confirm()` avant changement dataset si entraînement en cours
 
 #### Conformité aux attentes utilisateur (4,5/5)
 
@@ -214,11 +215,11 @@
 - (+) Toggle thème clair/sombre
 - (+) Responsive mobile (menu hamburger)
 
-#### Tolérance aux erreurs (4/5)
+#### Tolérance aux erreurs (4,5/5)
 
 - (+) ErrorBoundary avec message français
 - (+) `resetModel()` accessible
-- (-) Pas de "Annuler" pour les actions destructives
+- (+) `window.confirm()` protège contre perte de progression entraînement
 
 #### Personnalisabilité (4/5)
 
