@@ -86,13 +86,13 @@ export default memo(function AttentionPage() {
           L'attention affichait <b>[1.0]</b> — le token ne regardait que
           lui-même, car il n'y avait personne d'autre.
         </div>
-        <div className="explain" style={{ marginTop: 8 }}>
+        <div className="explain mt-8">
           Mais pour prédire le caractère suivant, le modèle a besoin de{" "}
           <b>contexte</b> : après « em », la lettre « m » est probable ; après «
           emm », « a » est probable. Comment le modèle sait-il ce qui est venu
           avant ?
         </div>
-        <div className="explain" style={{ marginTop: 8 }}>
+        <div className="explain mt-8">
           <b>
             L'attention est le seul endroit où un token peut regarder les tokens
             passés.
@@ -158,7 +158,7 @@ export default memo(function AttentionPage() {
         </div>
 
         {/* Sélecteur de position (comme ForwardPassPage) */}
-        <div className="controls" style={{ marginTop: 8 }}>
+        <div className="controls mt-8">
           <span className="label-dim">Position :</span>
           {displayLabels.map((lbl, i) => (
             <button
@@ -171,7 +171,7 @@ export default memo(function AttentionPage() {
             </button>
           ))}
         </div>
-        <div className="label-dim" style={{ marginTop: 4 }}>
+        <div className="label-dim mt-4">
           Position {safePos} — le token « {displayLabels[safePos]} » voit{" "}
           {safePos === 0
             ? "uniquement lui-même"
@@ -202,7 +202,7 @@ export default memo(function AttentionPage() {
               sélectionne ? »
             </li>
           </ul>
-          <div className="explain" style={{ marginTop: 8 }}>
+          <div className="explain mt-8">
             Imagine une salle de classe. Chaque élève (token) a une{" "}
             <b>question</b> qu'il veut poser (Q), une <b>étiquette</b> qui dit
             ce qu'il sait (K) et un <b>cahier</b> avec l'info à partager (V). L'
@@ -223,7 +223,7 @@ export default memo(function AttentionPage() {
             <VectorBar values={trace.k} label="K (key)" />
             <VectorBar values={trace.v} label="V (value)" />
           </div>
-          <div className="label-dim" style={{ marginTop: 4 }}>
+          <div className="label-dim mt-4">
             Ces {N_HEAD * HEAD_DIM} nombres viennent des matrices wq, wk, wv que
             tu as vues à l'étape 3 dans le diagramme de flux.
           </div>
@@ -244,7 +244,7 @@ export default memo(function AttentionPage() {
             ). Le tiret « — » en haut à droite, c'est le <b>masque causal</b> :
             le modèle ne peut pas regarder le futur.
           </div>
-          <div className="controls" style={{ marginTop: 8 }}>
+          <div className="controls mt-8">
             <span className="label-dim">Tête :</span>
             {Array.from({ length: N_HEAD }, (_, h) => (
               <button
@@ -264,7 +264,7 @@ export default memo(function AttentionPage() {
               highlightRow={safePos}
             />
           </div>
-          <div className="explain" style={{ marginTop: 8 }}>
+          <div className="explain mt-8">
             💡 Le masque causal rend la génération possible — tu le verras en
             action à l'étape 6 (
             <Term id="generation-autoregressive">Inférence</Term>).
@@ -283,7 +283,7 @@ export default memo(function AttentionPage() {
             peut-être le token juste avant, une autre cherche les voyelles, une
             autre le début du nom…
           </div>
-          <div className="label-dim" style={{ marginTop: 4 }}>
+          <div className="label-dim mt-4">
             {model.totalStep === 0
               ? "Poids aléatoires — les têtes se ressemblent. Reviens après avoir entraîné le modèle à l'étape 5 pour voir des motifs apparaître."
               : `Entraîné (${model.totalStep} étapes) — observe comment les têtes ont appris des motifs différents.`}
@@ -327,7 +327,7 @@ export default memo(function AttentionPage() {
             rien d'utile, l'information passe quand même)
           </li>
         </ol>
-        <div className="explain" style={{ marginTop: 8 }}>
+        <div className="explain mt-8">
           <b>
             L'attention est le seul endroit où les tokens communiquent entre
             eux.
@@ -335,7 +335,7 @@ export default memo(function AttentionPage() {
           Tout le reste (<Term id="mlp" />, lm_head) travaille sur un seul token
           à la fois.
         </div>
-        <div className="explain" style={{ marginTop: 8 }}>
+        <div className="explain mt-8">
           À l'étape 5 (Entraînement), tu verras le modèle ajuster les paramètres
           des matrices Q, K, V et wo pour que l'attention apprenne les bons
           motifs. Et à l'étape 6 (Inférence), tu verras le modèle utiliser ce
