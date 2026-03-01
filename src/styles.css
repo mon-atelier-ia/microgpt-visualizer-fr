@@ -1136,6 +1136,7 @@ button.gen-name:focus-visible {
 .confirm-dialog {
   max-width: 400px;
   width: calc(100% - 32px);
+  margin: auto;
   padding: 0;
   border: 1px solid var(--border-hover);
   border-radius: 12px;
