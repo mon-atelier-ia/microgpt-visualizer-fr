@@ -801,6 +801,59 @@ button.gen-name:focus-visible {
   font-size: 10px;
 }
 
+/* Attention matrix (T×T grid) */
+.attn-matrix {
+  display: inline-block;
+}
+.attn-matrix-row {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+.attn-matrix-row--highlight {
+  outline: 2px solid var(--blue);
+  outline-offset: -1px;
+  border-radius: 4px;
+}
+.attn-matrix-label {
+  width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+.attn-matrix-col-label {
+  width: 30px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.heat-cell--masked {
+  background: var(--surface2) !important;
+  color: var(--text-dim) !important;
+  opacity: 0.4;
+}
+.heat-cell--compact {
+  width: 22px;
+  height: 22px;
+  font-size: 7px;
+}
+.attn-matrix--compact .attn-matrix-label {
+  width: 20px;
+  font-size: 8px;
+}
+.attn-matrix--compact .attn-matrix-col-label {
+  width: 22px;
+  font-size: 8px;
+}
+.attn-heads-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
 /* MLP neuron cells */
 .neuron-grid {
   display: flex;
