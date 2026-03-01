@@ -335,6 +335,57 @@ Constats et exigences pour la future page dédiée à l'attention :
 
 Données disponibles dans `ForwardTrace` : `q` (number[16]), `k` (number[16]), `v` (number[16]), `attnWeights` (number[4][T]) par position. Avec N_HEAD=4 et HEAD_DIM=4, chaque tête opère sur 4 dimensions.
 
+### 13. Nice-to-have : widget autograd interactif dans TrainingPage
+
+> **Priorité** : après la page Attention (section 12). Enrichissement, pas un gap critique.
+
+**Constat pédagogique** : l'autograd (section 4 du guide Karpathy) est le mécanisme le plus mathématique du code. Le guide lui-même dit _"this is the most mathematically and algorithmically intense part"_ et renvoie vers une vidéo de 2h30. Cependant, le **concept** (pas le mécanisme) est illustrable pour la cible 10-14 ans.
+
+**Ce qui est DIFFICILE (hors portée de la cible) :**
+
+- Les dérivées (calcul différentiel → hors programme collège)
+- La règle de la chaîne (composition de fonctions → abstraite)
+- Le tri topologique (algorithmique → pas adapté)
+- La notation ∂L/∂a (intimidante)
+
+**Ce qui est ACCESSIBLE (le concept, pas la mécanique) :**
+
+1. **Forward = calculer le résultat** — c'est de l'arithmétique :
+
+   ```
+   a = 2,  b = 3
+       ↓       ↓
+      [ × ]  →  c = 6
+                  ↓
+      c + a  →  L = 8
+   ```
+
+2. **Backward = remonter le "blâme"** — analogie de Karpathy :
+
+   > _"If a car travels twice as fast as a bicycle and the bicycle is four times as fast as a walking man, then the car travels 2 × 4 = 8 times as fast as the man."_
+
+   Traduit pour un ado : _"Si je bouge `a` d'un tout petit peu, de combien bouge `L` ?"_ On remonte les opérations en sens inverse en multipliant les "taux de changement". C'est la propagation du blâme : qui est responsable de l'erreur ?
+
+3. **La preuve visuelle** : l'ado bouge `a` de 2.0 à 2.001 → `L` passe de 8.0 à 8.004 → le gradient prédit exactement 4.0 (×0.001 = 0.004). Vérifiable, concret, pas de maths.
+
+**Spécification du widget :**
+
+- Emplacement : panneau dans TrainingPage (pas une page dédiée, ~100 lignes)
+- Mini-graphe de 4-5 nœuds (l'exemple `a×b + a` de Karpathy, section 4 du guide)
+- Animation forward : les nombres coulent de gauche à droite
+- Animation backward : les gradients remontent de droite à gauche (autre couleur)
+- Interactivité : l'ado bouge `a` avec un slider → voit `L` bouger → le gradient prédit le ratio exact
+- Texte de conclusion : _"C'est exactement ce que fait le modèle avec ses 4 192 paramètres — en beaucoup plus grand"_
+
+**Ce que le widget n'essaie PAS de montrer :**
+
+- La formule de la dérivée
+- Le tri topologique
+- Le graphe de 4 192 nœuds
+- La notation mathématique
+
+**Référence** : guide Karpathy section "Autograd" — exemple `a=2, b=3, c=a*b, L=c+a` + analogie voiture/vélo/piéton. Voir `docs/reference-microgpt-karpathy.md` section 4.
+
 ### 10. Polish CSS — FAIT
 
 - ✅ Scrollbars thématiques (webkit + standard `scrollbar-color`) — `86ef089`

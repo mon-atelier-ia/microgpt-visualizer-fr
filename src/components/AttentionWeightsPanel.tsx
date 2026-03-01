@@ -10,10 +10,14 @@ export default function AttentionWeightsPanel({ attnWeights }: Props) {
     <div className="panel">
       <div className="panel-title">Poids d'attention ({N_HEAD} têtes)</div>
       <div className="explain">
-        Chaque tête apprend à se concentrer sur des aspects différents. Puisque
-        c'est le premier token, toutes les têtes ont un poids de <b>1.0</b> sur
-        elles-mêmes (rien d'autre à observer). Avec plus de tokens dans la
-        séquence, l'attention serait répartie sur les tokens précédents.
+        Ici, un seul token passe dans le modèle — il n'a personne à qui « parler
+        ». Résultat : chaque tête met tout le poids (<b>1.0</b>) sur lui-même.
+        Pas très intéressant…
+      </div>
+      <div className="explain" style={{ marginTop: 8 }}>
+        💡 Reviens après avoir exploré l'<b>étape 4 — Attention</b> pour voir ce
+        qui se passe quand plusieurs tokens se parlent entre eux : les poids se
+        répartissent et chaque tête regarde des choses différentes !
       </div>
       <div className="attn-heads">
         {attnWeights.map((hw, h) => (

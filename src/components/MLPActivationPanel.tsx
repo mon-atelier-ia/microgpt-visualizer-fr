@@ -35,6 +35,12 @@ export default function MLPActivationPanel({
         {mlpActiveMask.filter(Boolean).length} / 64 <Term id="neurone" />s
         actifs après <Term id="relu" />
       </div>
+      <div className="explain" style={{ marginTop: 8 }}>
+        💡 Ici le MLP transforme un seul token isolé. À l'
+        <b>étape 4 — Attention</b>, tu verras comment l'attention mélange
+        d'abord l'information de plusieurs tokens — le MLP travaille alors sur
+        un vecteur bien plus riche.
+      </div>
     </div>
   );
 }
