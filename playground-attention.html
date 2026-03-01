@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playground — Attention : qui écoute qui ?</title>
+<style>
+  /* ── Theme (mirrored from app styles.css) ── */
+  :root, [data-theme="dark"] {
+    --bg: #181816; --surface: #222220; --surface2: #2a2a27;
+    --border: #363632; --border-hover: #4a4a44;
+    --text: #cdc8be; --text-dim: #959082;
+    --blue: #7aa2f7; --purple: #a08cb4; --cyan: #6a9f9b;
+    --green: #8aaa6b; --red: #bf6a63; --orange: #c4885c;
+  }
+  [data-theme="light"] {
+    --bg: #f5f0e8; --surface: #ece8e0; --surface2: #e0dbd2;
+    --border: #cdc8be; --border-hover: #b8b3a8;
+    --text: #2a2a27; --text-dim: #6a655d;
+    --blue: #4a7ad4; --purple: #7a6b8e; --cyan: #4a7a76;
+    --green: #5a7a3e; --red: #a04a42; --orange: #a06838;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    background: var(--bg); color: var(--text);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 16px; min-height: 100vh;
+  }
+  h1 { color: var(--blue); font-size: 20px; margin-bottom: 4px; }
+  .page-desc { color: var(--text-dim); font-size: 13px; margin-bottom: 16px; max-width: 700px; text-align: center; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .label-dim { color: var(--text-dim); font-size: 12px; }
+  .btn { padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer;
+    background: var(--blue); color: var(--bg); font: inherit; font-size: 12px; }
+  .btn:hover { filter: brightness(1.15); }
+  .btn-secondary { background: var(--border-hover); color: var(--text); }
+  .btn-toggle { padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px;
+    background: var(--surface2); color: var(--text-dim); cursor: pointer; font: inherit; font-size: 12px; }
+  .btn-toggle:hover { background: var(--border); color: var(--text); }
+  .btn-toggle.active { background: var(--blue); color: var(--bg); border-color: var(--blue); }
+  canvas { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .explain { background: var(--surface2); border-left: 3px solid var(--blue); padding: 10px 14px;
+    font-size: 12px; color: var(--text-dim); border-radius: 0 6px 6px 0;
+    max-width: 700px; margin-top: 12px; line-height: 1.6; }
+  .explain b { color: var(--text); }
+  .sections { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+  .section-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 16px; max-width: 340px; font-size: 12px; line-height: 1.5; }
+  .section-card h3 { color: var(--purple); font-size: 13px; margin-bottom: 6px; }
+  .phase-label { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+  .phase-qk { background: rgba(160, 140, 180, 0.2); color: var(--purple); }
+  .phase-softmax { background: rgba(122, 162, 247, 0.2); color: var(--blue); }
+  .phase-v { background: rgba(138, 170, 107, 0.2); color: var(--green); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Attention : qui écoute qui ?</h1>
+<p class="page-desc">
+  Visualise comment un token utilise Q (question) et K (clé) pour décider
+  quels tokens passés écouter, puis collecte leurs V (valeurs).
+</p>
+
+<div class="controls">
+  <span class="label-dim">Nom :</span>
+  <button type="button" class="btn-toggle active" data-name="emma">emma</button>
+  <button type="button" class="btn-toggle" data-name="hugo">hugo</button>
+  <button type="button" class="btn-toggle" data-name="lea">léa</button>
+  <button type="button" class="btn-toggle" data-name="ali">ali</button>
+  <span class="label-dim" style="margin-left: 12px;">Position :</span>
+  <span id="pos-buttons"></span>
+  <span class="label-dim" style="margin-left: 12px;">Phase :</span>
+  <button type="button" class="btn" id="btn-play">▶ Animer</button>
+  <button type="button" class="btn btn-secondary" id="btn-theme">Thème clair</button>
+</div>
+
+<canvas id="canvas" width="700" height="420"></canvas>
+
+<div class="explain">
+  <b>Prototype 1 — Arcs de connexion.</b> Chaque token est un nœud.
+  Le token sélectionné envoie sa <b style="color:var(--purple)">Query (Q)</b> vers les
+  <b style="color:var(--purple)">Keys (K)</b> des tokens passés. Le produit scalaire Q·K
+  donne un score. Après <b style="color:var(--blue)">softmax</b>, les scores deviennent
+  des poids (épaisseur des arcs). Enfin, les <b style="color:var(--green)">Values (V)</b>
+  sont mélangées selon ces poids.
+</div>
+
+<div class="sections">
+  <div class="section-card">
+    <h3><span class="phase-label phase-qk">Phase 1</span> Q · K → scores</h3>
+    <p>Le token courant projette sa <b>Query</b>. Chaque token passé a une <b>Key</b>.
+    On calcule le produit scalaire Q·K pour mesurer « à quel point ma question
+    correspond à ton étiquette ». Plus le score est élevé, plus le match est fort.</p>
+  </div>
+  <div class="section-card">
+    <h3><span class="phase-label phase-softmax">Phase 2</span> Softmax → poids</h3>
+    <p>Les scores bruts sont transformés en probabilités par <b>softmax</b> :
+    ils totalisent 100 %. C'est ce que tu vois dans la matrice d'attention.
+    L'épaisseur de chaque arc = le poids d'attention.</p>
+  </div>
+  <div class="section-card">
+    <h3><span class="phase-label phase-v">Phase 3</span> Poids × V → sortie</h3>
+    <p>Chaque token passé a une <b>Value</b> (son « cahier »). Le token courant
+    fait une moyenne pondérée de toutes les Values, selon les poids d'attention.
+    Le résultat est la sortie de l'attention pour cette position.</p>
+  </div>
+</div>
+
+<script>
+// ── Fake attention data (simulates trained model on "emma") ──
+const NAMES = {
+  emma: {
+    tokens: ["⟨BOS⟩", "e", "m", "m", "a"],
+    // Attention weights per position (who does position i listen to?)
+    // Row i has i+1 weights (causal: can only see past + self)
+    weights: [
+      [1.0],                           // BOS: only self
+      [0.35, 0.65],                    // e: listens to BOS a bit, mostly self
+      [0.15, 0.55, 0.30],             // m: "em" pattern — e is key
+      [0.10, 0.20, 0.45, 0.25],       // m: second m — first m matters
+      [0.05, 0.10, 0.25, 0.30, 0.30], // a: "mma" pattern — both m's matter
+    ],
+    // Fake Q·K raw scores (before softmax) for animation
+    rawScores: [
+      [2.0],
+      [-0.5, 1.2],
+      [-1.0, 1.5, 0.4],
+      [-1.2, -0.3, 1.1, 0.3],
+      [-1.5, -0.6, 0.5, 0.7, 0.7],
+    ],
+  },
+  hugo: {
+    tokens: ["⟨BOS⟩", "h", "u", "g", "o"],
+    weights: [
+      [1.0],
+      [0.40, 0.60],
+      [0.10, 0.50, 0.40],
+      [0.08, 0.15, 0.37, 0.40],
+      [0.05, 0.10, 0.20, 0.35, 0.30],
+    ],
+    rawScores: [
+      [2.0],
+      [-0.3, 1.0],
+      [-1.2, 1.3, 0.8],
+      [-1.4, -0.5, 0.6, 0.9],
+      [-1.6, -0.7, 0.0, 0.5, 0.4],
+    ],
+  },
+  lea: {
+    tokens: ["⟨BOS⟩", "l", "e", "a"],
+    weights: [
+      [1.0],
+      [0.30, 0.70],
+      [0.15, 0.50, 0.35],
+      [0.10, 0.20, 0.40, 0.30],
+    ],
+    rawScores: [
+      [2.0],
+      [-0.6, 1.4],
+      [-0.8, 1.2, 0.5],
+      [-1.0, -0.2, 0.8, 0.4],
+    ],
+  },
+  ali: {
+    tokens: ["⟨BOS⟩", "a", "l", "i"],
+    weights: [
+      [1.0],
+      [0.25, 0.75],
+      [0.10, 0.45, 0.45],
+      [0.08, 0.20, 0.32, 0.40],
+    ],
+    rawScores: [
+      [2.0],
+      [-0.4, 1.6],
+      [-1.0, 1.0, 1.0],
+      [-1.3, -0.1, 0.5, 0.8],
+    ],
+  },
+};
+
+let currentName = "emma";
+let selectedPos = 1;
+let animPhase = "idle"; // idle | qk | softmax | v | done
+let animStart = 0;
+let hoveredToken = -1;
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const dpr = window.devicePixelRatio || 1;
+
+function getColors() {
+  const s = getComputedStyle(document.documentElement);
+  const g = (v) => s.getPropertyValue(v).trim();
+  return {
+    bg: g("--bg"), surface: g("--surface"), surface2: g("--surface2"),
+    border: g("--border"), text: g("--text"), textDim: g("--text-dim"),
+    blue: g("--blue"), purple: g("--purple"), cyan: g("--cyan"),
+    green: g("--green"), red: g("--red"), orange: g("--orange"),
+  };
+}
+
+function parseColor(hex) {
+  const h = hex.replace("#", "");
+  return [parseInt(h.substring(0,2),16), parseInt(h.substring(2,4),16), parseInt(h.substring(4,6),16)];
+}
+
+function resize() {
+  const w = Math.min(window.innerWidth - 32, 720);
+  const h = Math.min(w * 0.6, 440);
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function getData() { return NAMES[currentName]; }
+
+function updatePosButtons() {
+  const data = getData();
+  const container = document.getElementById("pos-buttons");
+  container.innerHTML = "";
+  for (let i = 0; i < data.tokens.length; i++) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-toggle" + (i === selectedPos ? " active" : "");
+    btn.textContent = i + " " + data.tokens[i];
+    btn.addEventListener("click", () => {
+      selectedPos = i;
+      animPhase = "idle";
+      updatePosButtons();
+      draw();
+    });
+    container.appendChild(btn);
+  }
+}
+
+// ── Drawing ──
+
+function draw() {
+  const w = canvas.width / dpr;
+  const h = canvas.height / dpr;
+  const colors = getColors();
+  const data = getData();
+  const T = data.tokens.length;
+  const pos = Math.min(selectedPos, T - 1);
+  const weights = data.weights[pos];
+  const scores = data.rawScores[pos];
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Token positions (horizontal line)
+  const tokenY = 70;
+  const outputY = h - 60;
+  const padX = 60;
+  const tokenSpacing = Math.min((w - padX * 2) / (T - 1 || 1), 120);
+  const startX = (w - tokenSpacing * (T - 1)) / 2;
+
+  const tokenPos = [];
+  for (let i = 0; i < T; i++) {
+    tokenPos.push({ x: startX + i * tokenSpacing, y: tokenY });
+  }
+
+  // Animation progress
+  const now = performance.now();
+  const elapsed = now - animStart;
+  const QK_DUR = 800, SOFT_DUR = 600, V_DUR = 800;
+  let qkP = 0, softP = 0, vP = 0;
+
+  if (animPhase === "qk") {
+    qkP = Math.min(1, elapsed / QK_DUR);
+    if (qkP >= 1) { animPhase = "softmax"; animStart = now; }
+  } else if (animPhase === "softmax") {
+    qkP = 1;
+    softP = Math.min(1, elapsed / SOFT_DUR);
+    if (softP >= 1) { animPhase = "v"; animStart = now; }
+  } else if (animPhase === "v") {
+    qkP = 1; softP = 1;
+    vP = Math.min(1, elapsed / V_DUR);
+    if (vP >= 1) { animPhase = "done"; }
+  } else if (animPhase === "done") {
+    qkP = 1; softP = 1; vP = 1;
+  }
+
+  const isAnimating = animPhase !== "idle" && animPhase !== "done";
+
+  // ── Draw arcs (attention connections) ──
+  const arcMidY = (tokenY + outputY) / 2 + 20;
+
+  for (let j = 0; j <= pos; j++) {
+    const w_j = weights[j];
+    const from = tokenPos[j];
+    const to = tokenPos[pos];
+
+    // Arc control point (higher arc = stronger weight)
+    const dx = to.x - from.x;
+    const midX = (from.x + to.x) / 2;
+    const arcHeight = Math.max(30, Math.abs(dx) * 0.4 + w_j * 40);
+    const cpY = tokenY + arcHeight;
+
+    // Determine visibility based on animation phase
+    let arcAlpha = 0;
+    let arcColor = colors.purple;
+    let lineWidth = 1;
+
+    if (animPhase === "idle" || animPhase === "done") {
+      // Static: show final weights
+      arcAlpha = 0.15 + w_j * 0.7;
+      lineWidth = 1 + w_j * 5;
+      arcColor = colors.blue;
+    } else if (qkP > 0 && softP < 1) {
+      // Phase 1: Q·K — show raw score lines
+      const stagger = j / (pos + 1);
+      const localP = Math.max(0, Math.min(1, (qkP - stagger * 0.5) / 0.5));
+      arcAlpha = localP * 0.5;
+      lineWidth = 1.5;
+      arcColor = colors.purple;
+    }
+    if (softP > 0) {
+      // Phase 2: morphing to weighted arcs
+      const blendP = Math.min(1, softP);
+      arcAlpha = 0.5 * (1 - blendP) + (0.15 + w_j * 0.7) * blendP;
+      lineWidth = 1.5 * (1 - blendP) + (1 + w_j * 5) * blendP;
+      const purpleRgb = parseColor(colors.purple);
+      const blueRgb = parseColor(colors.blue);
+      const r = Math.round(purpleRgb[0] * (1 - blendP) + blueRgb[0] * blendP);
+      const g = Math.round(purpleRgb[1] * (1 - blendP) + blueRgb[1] * blendP);
+      const b = Math.round(purpleRgb[2] * (1 - blendP) + blueRgb[2] * blendP);
+      arcColor = `rgb(${r},${g},${b})`;
+    }
+
+    if (arcAlpha > 0.01) {
+      ctx.beginPath();
+      if (j === pos) {
+        // Self-attention: small loop
+        ctx.arc(from.x, from.y + 25, 15, -Math.PI * 0.8, -Math.PI * 0.2);
+      } else {
+        ctx.moveTo(from.x, from.y + 20);
+        ctx.quadraticCurveTo(midX, cpY, to.x, to.y + 20);
+      }
+      ctx.strokeStyle = arcColor;
+      ctx.globalAlpha = arcAlpha;
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // ── Score labels (during Q·K phase) ──
+    if (qkP > 0 && softP < 0.8) {
+      const stagger = j / (pos + 1);
+      const localP = Math.max(0, Math.min(1, (qkP - stagger * 0.3) / 0.7));
+      if (localP > 0.3) {
+        const labelX = j === pos ? from.x + 20 : midX;
+        const labelY = j === pos ? from.y + 50 : cpY - 5;
+        ctx.font = "bold 11px monospace";
+        ctx.fillStyle = colors.purple;
+        ctx.globalAlpha = Math.min(1, localP) * (1 - softP);
+        ctx.textAlign = "center";
+        ctx.fillText(scores[j].toFixed(1), labelX, labelY);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // ── Weight labels (after softmax) ──
+    if (softP > 0.3) {
+      const labelAlpha = Math.min(1, (softP - 0.3) / 0.5);
+      const labelX = j === pos ? from.x + 22 : (from.x + to.x) / 2;
+      const labelY = j === pos ? from.y + 50 : tokenY + Math.max(30, Math.abs(dx) * 0.4 + w_j * 40) - 8;
+      ctx.font = "bold 11px monospace";
+      ctx.fillStyle = colors.blue;
+      ctx.globalAlpha = labelAlpha;
+      ctx.textAlign = "center";
+      ctx.fillText((w_j * 100).toFixed(0) + "%", labelX, labelY);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // ── V flow arrows (phase 3) ──
+  if (vP > 0) {
+    for (let j = 0; j <= pos; j++) {
+      const w_j = weights[j];
+      if (w_j < 0.05) continue;
+      const from = tokenPos[j];
+      const to = tokenPos[pos];
+      const progress = Math.max(0, Math.min(1, (vP - j / (pos + 1) * 0.3) / 0.7));
+      if (progress < 0.01) continue;
+
+      // Arrow going UP from token j to the output area below selected token
+      const arrowStartY = tokenY + 20;
+      const arrowEndY = outputY - 10;
+      const currentY = arrowStartY + (arrowEndY - arrowStartY) * progress;
+
+      // Curved path from source to destination
+      const t = progress;
+      const cx = from.x + (to.x - from.x) * t;
+      const cy = arrowStartY + (arrowEndY - arrowStartY) * t;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3 + w_j * 6, 0, Math.PI * 2);
+      ctx.fillStyle = colors.green;
+      ctx.globalAlpha = 0.3 + w_j * 0.5;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Trail
+      for (let s = 0; s < 5; s++) {
+        const tt = Math.max(0, t - s * 0.06);
+        const tx = from.x + (to.x - from.x) * tt;
+        const ty = arrowStartY + (arrowEndY - arrowStartY) * tt;
+        ctx.beginPath();
+        ctx.arc(tx, ty, 2 + w_j * 3, 0, Math.PI * 2);
+        ctx.fillStyle = colors.green;
+        ctx.globalAlpha = (0.15 + w_j * 0.3) * (1 - s / 5);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Output node
+    const outAlpha = Math.max(0, (vP - 0.5) / 0.5);
+    if (outAlpha > 0) {
+      ctx.beginPath();
+      ctx.arc(tokenPos[pos].x, outputY, 12, 0, Math.PI * 2);
+      ctx.fillStyle = colors.green;
+      ctx.globalAlpha = outAlpha * 0.3;
+      ctx.fill();
+      ctx.strokeStyle = colors.green;
+      ctx.globalAlpha = outAlpha * 0.8;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.font = "bold 11px monospace";
+      ctx.fillStyle = colors.green;
+      ctx.textAlign = "center";
+      ctx.fillText("sortie", tokenPos[pos].x, outputY + 28);
+    }
+  }
+
+  // ── Draw tokens ──
+  for (let i = 0; i < T; i++) {
+    const tp = tokenPos[i];
+    const isBos = i === 0;
+    const isSelected = i === pos;
+    const isVisible = i <= pos;
+    const isHovered = i === hoveredToken;
+
+    // Token circle
+    const r = isSelected ? 22 : 18;
+    ctx.beginPath();
+    ctx.arc(tp.x, tp.y, r, 0, Math.PI * 2);
+
+    if (!isVisible) {
+      // Future token: masked
+      ctx.fillStyle = colors.surface2;
+      ctx.globalAlpha = 0.3;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = colors.border;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else {
+      ctx.fillStyle = isSelected ? colors.surface2 : colors.surface;
+      ctx.fill();
+      ctx.strokeStyle = isSelected ? colors.blue : (isBos ? colors.red : colors.border);
+      ctx.lineWidth = isSelected ? 2.5 : (isHovered ? 2 : 1.5);
+      ctx.stroke();
+    }
+
+    // Q label on selected token
+    if (isSelected && qkP > 0) {
+      ctx.font = "bold 10px monospace";
+      ctx.fillStyle = colors.purple;
+      ctx.globalAlpha = Math.min(1, qkP * 2);
+      ctx.textAlign = "center";
+      ctx.fillText("Q", tp.x, tp.y - r - 6);
+      ctx.globalAlpha = 1;
+    }
+
+    // K label on past tokens
+    if (isVisible && !isSelected && qkP > 0) {
+      ctx.font = "bold 10px monospace";
+      ctx.fillStyle = colors.purple;
+      ctx.globalAlpha = Math.min(1, qkP * 2) * 0.7;
+      ctx.textAlign = "center";
+      ctx.fillText("K", tp.x, tp.y - r - 6);
+      ctx.globalAlpha = 1;
+    }
+
+    // V label on past tokens (phase 3)
+    if (isVisible && vP > 0.1) {
+      ctx.font = "bold 10px monospace";
+      ctx.fillStyle = colors.green;
+      ctx.globalAlpha = Math.min(1, vP) * 0.7;
+      ctx.textAlign = "center";
+      ctx.fillText("V", tp.x, tp.y + r + 14);
+      ctx.globalAlpha = 1;
+    }
+
+    // Token label
+    if (isVisible || true) {
+      ctx.font = (isSelected ? "bold " : "") + "13px monospace";
+      ctx.fillStyle = !isVisible ? colors.textDim : (isBos ? colors.red : colors.text);
+      ctx.globalAlpha = isVisible ? 1 : 0.3;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(data.tokens[i], tp.x, tp.y);
+      ctx.globalAlpha = 1;
+    }
+
+    // Position number
+    ctx.font = "10px monospace";
+    ctx.fillStyle = colors.textDim;
+    ctx.textAlign = "center";
+    ctx.fillText("pos " + i, tp.x, tp.y + r + (vP > 0.1 ? 26 : 14));
+  }
+
+  // ── Causal mask indicator ──
+  for (let i = pos + 1; i < T; i++) {
+    const tp = tokenPos[i];
+    ctx.font = "10px monospace";
+    ctx.fillStyle = colors.textDim;
+    ctx.globalAlpha = 0.5;
+    ctx.textAlign = "center";
+    ctx.fillText("masqué", tp.x, tp.y + 32);
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Phase indicator ──
+  let phaseText = "";
+  let phaseColor = colors.textDim;
+  if (animPhase === "qk") { phaseText = "→ Q · K = scores"; phaseColor = colors.purple; }
+  else if (animPhase === "softmax") { phaseText = "→ softmax(scores) = poids"; phaseColor = colors.blue; }
+  else if (animPhase === "v") { phaseText = "→ poids × V = sortie"; phaseColor = colors.green; }
+  else if (animPhase === "done") { phaseText = "✓ Attention terminée"; phaseColor = colors.green; }
+  else { phaseText = "Clique ▶ pour animer"; phaseColor = colors.textDim; }
+
+  ctx.font = "12px monospace";
+  ctx.fillStyle = phaseColor;
+  ctx.textAlign = "center";
+  ctx.fillText(phaseText, w / 2, h - 16);
+
+  // ── Hover info ──
+  if (hoveredToken >= 0 && hoveredToken <= pos && animPhase !== "idle") {
+    const ht = hoveredToken;
+    const wt = weights[ht];
+    ctx.font = "11px monospace";
+    ctx.fillStyle = colors.text;
+    ctx.textAlign = "left";
+    ctx.fillText(
+      `${data.tokens[pos]} écoute ${data.tokens[ht]} à ${(wt * 100).toFixed(0)}%`,
+      10, h - 16
+    );
+  }
+
+  if (isAnimating) requestAnimationFrame(draw);
+}
+
+// ── Interactions ──
+
+document.querySelectorAll("[data-name]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentName = btn.dataset.name;
+    selectedPos = Math.min(selectedPos, getData().tokens.length - 1);
+    if (selectedPos === 0 && getData().tokens.length > 1) selectedPos = 1;
+    animPhase = "idle";
+    document.querySelectorAll("[data-name]").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    updatePosButtons();
+    draw();
+  });
+});
+
+document.getElementById("btn-play").addEventListener("click", () => {
+  animPhase = "qk";
+  animStart = performance.now();
+  draw();
+});
+
+document.getElementById("btn-theme").addEventListener("click", function() {
+  const html = document.documentElement;
+  const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  this.textContent = next === "dark" ? "Thème clair" : "Thème sombre";
+  draw();
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const data = getData();
+  const T = data.tokens.length;
+  const padX = 60;
+  const tokenSpacing = Math.min((canvas.clientWidth - padX * 2) / (T - 1 || 1), 120);
+  const startX = (canvas.clientWidth - tokenSpacing * (T - 1)) / 2;
+
+  let closest = -1;
+  let closestDist = 30;
+  for (let i = 0; i < T; i++) {
+    const tx = startX + i * tokenSpacing;
+    const ty = 70;
+    const d = Math.sqrt((mx - tx) ** 2 + (my - ty) ** 2);
+    if (d < closestDist) { closest = i; closestDist = d; }
+  }
+  if (closest !== hoveredToken) {
+    hoveredToken = closest;
+    if (animPhase === "idle" || animPhase === "done") draw();
+  }
+});
+
+canvas.addEventListener("mouseleave", () => {
+  hoveredToken = -1;
+  if (animPhase === "idle" || animPhase === "done") draw();
+});
+
+// ── Init ──
+window.addEventListener("resize", () => { resize(); draw(); });
+resize();
+updatePosButtons();
+draw();
+</script>
+</body>
+</html>
