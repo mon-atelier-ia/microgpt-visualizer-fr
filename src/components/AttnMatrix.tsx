@@ -1,5 +1,3 @@
-import HeatCell from "./HeatCell";
-
 interface Props {
   matrix: number[][];
   tokens: string[];
@@ -19,41 +17,55 @@ export default function AttnMatrix({
 }: Props) {
   if (matrix.length === 0) return null;
 
-  const cellClass = compact ? "heat-cell heat-cell--compact" : "heat-cell";
+  const cellClass = compact ? "attn-cell attn-cell--compact" : "attn-cell";
 
   return (
-    <div className={`attn-matrix ${compact ? "attn-matrix--compact" : ""}`}>
-      {/* En-tête colonnes */}
-      <div className="attn-matrix-row">
-        <div className="attn-matrix-label" />
-        {tokens.map((tok, c) => (
-          <div key={c} className="attn-matrix-col-label">
-            {tok}
-          </div>
-        ))}
-      </div>
-
-      {/* Lignes (une par position query) */}
-      {matrix.map((row, r) => (
-        <div
-          key={r}
-          className={`attn-matrix-row ${r === highlightRow ? "attn-matrix-row--highlight" : ""}`}
-        >
-          <div className="attn-matrix-label">{tokens[r]}</div>
-          {row.map((w, c) => {
-            const masked = c > r;
-            if (masked) {
+    <table
+      className={`attn-matrix ${compact ? "attn-matrix--compact" : ""}`}
+      aria-label={`Matrice d'attention ${tokens.length}×${tokens.length}`}
+    >
+      <thead>
+        <tr>
+          <th className="attn-matrix-label" />
+          {tokens.map((tok, c) => (
+            <th key={c} className="attn-matrix-col-label">
+              {tok}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {matrix.map((row, r) => (
+          <tr
+            key={r}
+            className={r === highlightRow ? "attn-matrix-row--highlight" : ""}
+          >
+            <td className="attn-matrix-label">{tokens[r]}</td>
+            {row.map((w, c) => {
+              const masked = c > r;
+              if (masked) {
+                return (
+                  <td key={c} className={`${cellClass} attn-cell--masked`}>
+                    &mdash;
+                  </td>
+                );
+              }
               return (
-                <div key={c} className={`${cellClass} heat-cell--masked`}>
-                  &mdash;
-                </div>
+                <td
+                  key={c}
+                  className={cellClass}
+                  style={{
+                    background: `rgba(122, 162, 247, ${w})`,
+                    color: w > 0.3 ? "#fff" : "var(--text-dim)",
+                  }}
+                >
+                  {w.toFixed(2)}
+                </td>
               );
-            }
-            return <HeatCell key={c} value={w} label={w.toFixed(2)} />;
-          })}
-        </div>
-      ))}
-      {/* ANIMATION: matrice se construit ligne par ligne (étape 3) */}
-    </div>
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
