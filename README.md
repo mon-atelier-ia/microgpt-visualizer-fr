@@ -10,6 +10,7 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 - **Tokenisation** — Observe comment un texte est découpé en tokens (caractère par caractère)
 - **Plongements** — Visualise comment les tokens deviennent des vecteurs de 16 dimensions, bar chart interactif au survol avec statistiques du dataset
 - **Propagation** — Parcours étape par étape la propagation dans le transformer
+- **Attention** — Visualise les matrices d'attention multi-token (Q, K, V, 4 têtes, masque causal)
 - **Entraînement** — Regarde le modèle apprendre en temps réel (courbe de loss, heatmaps)
 - **Inférence** — Génère des noms et observe les prédictions à chaque position
 - **Moteur autograd** — Différentiation automatique intégrée, transparente et éducative
@@ -65,11 +66,12 @@ L'application est accessible sur `http://localhost:5173`
 
 ```
 src/
-├── components/     # Composants UI réutilisables (Heatmap, LossChart, EmbeddingBarChart, Term…)
+├── components/     # Composants UI réutilisables (Heatmap, AttnMatrix, LossChart, EmbeddingBarChart, Term…)
 ├── pages/          # Pages principales
 │   ├── TokenizerPage.tsx
 │   ├── EmbeddingsPage.tsx
 │   ├── ForwardPassPage.tsx
+│   ├── AttentionPage.tsx
 │   ├── TrainingPage.tsx
 │   └── InferencePage.tsx
 ├── engine/         # Moteur ML (code upstream, read-only)
@@ -159,6 +161,7 @@ An interactive web application for visualizing and understanding how GPT (Genera
 - **Tokenizer Visualization** — See how text is broken down into tokens
 - **Embeddings Explorer** — Visualize how tokens are converted to vector representations, with interactive bar chart and dataset statistics on hover
 - **Propagation** — Step through the transformer's forward propagation
+- **Attention** — Visualize multi-token attention matrices (Q, K, V, 4 heads, causal mask)
 - **Training Process** — Watch the model learn in real-time with loss charts and heatmaps
 - **Inference Mode** — Generate text and see predictions as they happen
 - **Custom Autograd Engine** — Built-in automatic differentiation for transparency

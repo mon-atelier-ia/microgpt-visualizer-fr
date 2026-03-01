@@ -93,8 +93,8 @@
 | Landmarks sémantiques | 5/5   | `<main>`, `<aside>`, `<nav>`, `<header>`, `<section aria-labelledby>`   |
 | Récupérabilité        | 5/5   | ErrorBoundary FR, `resetModel()`, reload, rAF cleanup                   |
 | Tests                 | 4,5/5 | 104 tests, 18 fichiers. Composants + engine + pages + store + données   |
-| Glossaire pédagogique | 4,5/5 | 30 termes, Tier 1/2, analogies adaptées 10-14 ans                       |
-| Code splitting        | 4,5/5 | `React.lazy()` + `Suspense`, 5 chunks 4-7 KB chacun                     |
+| Glossaire pédagogique | 4,5/5 | 30 termes (16 Tier 1 + 14 Tier 2), analogies adaptées 10-14 ans         |
+| Code splitting        | 4,5/5 | `React.lazy()` + `Suspense`, 6 chunks 4-7 KB chacun                     |
 
 ---
 
@@ -144,7 +144,7 @@
 
 #### Comportement temporel (3,5/5)
 
-- (+) Code splitting via `React.lazy()` — 5 chunks 4-7 KB
+- (+) Code splitting via `React.lazy()` — 6 chunks 4-7 KB
 - (+) `useMemo` sur calculs coûteux (`gptForward`, tri/slice top-k)
 - (+) `requestAnimationFrame` + cleanup dans LossChart et TrainingPage
 - (i) P-1 : Bundle ~638 KB (datasets inlinés) — inhérent à l'architecture sans backend
@@ -200,7 +200,7 @@
 
 #### Adéquation à la tâche (4,5/5)
 
-- (+) 5 pages couvrent le pipeline complet (tokenization → inference)
+- (+) 6 pages couvrent le pipeline complet (tokenization → attention → inference)
 - (+) Glossaire intégré avec 30 termes et analogies pour 10-14 ans
 - (+) Visualisations interactives (heatmap navigable, training animé)
 - (+) Playgrounds réseau de neurones (Canvas 2D) : visualisation neurones/connexions, animation forward+backward
@@ -233,7 +233,7 @@
 
 #### Apprentissage (4,5/5)
 
-- (+) Progression pédagogique logique (Tokenizer → Embeddings → Forward → Training → Inference)
+- (+) Progression pédagogique logique (Tokenizer → Embeddings → Forward → Attention → Training → Inference)
 - (+) Glossaire Tier 1 (base) / Tier 2 (avancé) avec analogies adaptées
 - (-) Pas de navigation "Suivant → Page X" en bas de page
 

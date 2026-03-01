@@ -7,12 +7,12 @@
 
 ## Contexte : deux visualiseurs microGPT
 
-### enescang/microgpt-visualizer — 5 panels interactifs
+### enescang/microgpt-visualizer — 6 panels interactifs (5 upstream + Attention)
 
 - **GitHub** : https://github.com/enescang/microgpt-visualizer
 - **Demo live** : https://microgpt.enescang.dev/
 - **Stack** : React 19 + TypeScript + Vite (pas de Tailwind — CSS custom pur)
-- **Panels** : Tokenizer, Embeddings Heatmap 16D, Forward Pass, Training, Inference
+- **Panels** : Tokenizer, Embeddings Heatmap 16D, Forward Pass, Attention, Training, Inference
 - **Engine** : autograd custom en TypeScript pur (zero dependance ML)
 - **Deps runtime** : react + react-dom uniquement (zero librairie UI, zero chart lib)
 - **~2 300 lignes** de code source total
@@ -35,7 +35,7 @@
 | ------------ | ------------------------------------ | ------------------------------------ |
 | **Upstream** | dubzdubz/microgpt-ts                 | enescang/microgpt-visualizer         |
 | **Stack**    | Next.js 16 + shadcn/ui + Tailwind v4 | React 19 + Vite + CSS custom         |
-| **Nature**   | Playground (training + inference)    | Visualisation pedagogique (5 panels) |
+| **Nature**   | Playground (training + inference)    | Visualisation pedagogique (6 panels) |
 | **Focus**    | Entrainer et generer                 | Comprendre chaque etape              |
 | **Deploy**   | Vercel (Next.js natif)               | Vercel (Vite static build)           |
 
@@ -52,6 +52,7 @@ Commits : `19a3d1e`, `fd323e8`
 | Tokenizer      | Tokenisation             |
 | Embeddings     | Plongements (Embeddings) |
 | Forward Pass   | Propagation              |
+| _(new)_        | Attention                |
 | Training       | Entraînement             |
 | Inference      | Inférence                |
 
@@ -72,11 +73,11 @@ Sélecteur de dataset dans la sidebar. Modification minimale de l'engine (`creat
 
 Commits : `bdca1f2`, `a433337`, `d89a5e2`, `8e81c27`
 
-- **29 termes** définis dans `src/data/glossary.ts` (16 Tier 1 tooltip seul + 13 Tier 2 tooltip + modal)
+- **30 termes** définis dans `src/data/glossary.ts` (16 Tier 1 tooltip seul + 14 Tier 2 tooltip + modal)
 - Composant `<Term id="…" />` avec tooltip WAI-ARIA (`role="tooltip"`, `aria-describedby`, WCAG 1.4.13)
 - `TermProvider` : singleton `<dialog>` natif à la racine (focus trap, Escape, `::backdrop`)
 - `useId()` pour IDs uniques par instance, flip viewport, bridge `::before` hoverable
-- ~50 remplacements inline dans les 5 pages
+- ~50 remplacements inline dans les 6 pages
 - 20 tests (8 glossaire + 12 composant Term) avec jsdom + @testing-library/react
 - Définitions adaptées au public 10-14 ans, analogies pédagogiques dans les modals
 
@@ -115,9 +116,10 @@ microgpt-visualizer-fr          microgpt-ts-fr
 1. Tokenizer → voir a→0        1. Choisir un dataset
 2. Embeddings → heatmap 16D    2. Configurer l'architecture
 3. Forward Pass → etape/etape  3. Lancer l'entrainement live
-4. Training → loss en temps    4. Generer des noms
+4. Attention → matrices T×T    4. Generer des noms
+5. Training → loss en temps    5. Ajuster temperature/prefix
    reel + heatmaps
-5. Inference → predictions     5. Ajuster temperature/prefix
+6. Inference → predictions
    token par token
 ```
 
@@ -135,12 +137,12 @@ Ensemble, ils forment une paire pedagogique complete pour tuto-llm :
 
 ```
 src/
-├── App.tsx                        # 218 lignes — shell, routing, theme, TermProvider, lazy, ErrorBoundary
+├── App.tsx                        # 251 lignes — shell, routing, theme, TermProvider, lazy, ErrorBoundary
 ├── main.tsx                       #   5 lignes — point d'entrée React
-├── styles.css                     # ~1 590 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion, barchart
+├── styles.css                     # ~1 723 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion, barchart, attn-matrix
 ├── data/
-│   ├── glossary.ts                # 298 lignes — 29 définitions (Tier 1 + Tier 2)
-│   └── glossary.test.ts           #  82 lignes — 8 tests intégrité données
+│   ├── glossary.ts                # 314 lignes — 30 définitions (Tier 1 + Tier 2)
+│   └── glossary.test.ts           # 121 lignes — 8 tests intégrité données
 ├── datasets/
 │   ├── index.ts                   # sélecteur de datasets
 │   ├── datasets.test.ts           # 108 lignes — 19 tests intégrité
@@ -153,6 +155,7 @@ src/
 │   ├── Term.tsx                   #  88 lignes — tooltip WAI-ARIA + lien modal
 │   ├── Term.test.tsx              # 129 lignes — 12 tests composant
 │   ├── TermProvider.tsx           #  88 lignes — contexte + singleton <dialog>
+│   ├── AttnMatrix.tsx             #  71 lignes — matrice attention T×T (table sémantique, compact)
 │   ├── Heatmap.tsx                # 158 lignes — table heatmap + VectorBar (roving tabindex)
 │   ├── Heatmap.test.tsx           # 165 lignes — 10 tests roving tabindex, clavier
 │   ├── HeatCell.tsx               #  18 lignes — cellule attention weights
@@ -174,6 +177,7 @@ src/
 │   ├── EmbeddingsPage.tsx         # 154 lignes — heatmaps wte/wpe + bar chart + stats
 │   ├── ForwardPassPage.tsx        # 297 lignes — pipeline 7 étapes, attention, MLP
 │   ├── ForwardPassPage.test.tsx   #  62 lignes — 1 test a11y (select label)
+│   ├── AttentionPage.tsx          # 347 lignes — 6 panneaux attention multi-token
 │   ├── TrainingPage.tsx           # 237 lignes — boucle rAF, loss chart
 │   ├── TrainingPage.test.tsx      #  37 lignes — 2 tests (rAF cleanup, stop)
 │   ├── InferencePage.tsx          # 259 lignes — génération, trace, probas
@@ -206,7 +210,7 @@ docs/
 │ ├── 2026-03-01-embeddings-page-vivante-design.md # Design EmbeddingsPage vivante
 │ └── 2026-03-01-embeddings-page-vivante-plan.md # Plan d'implémentation
 
-**Total : ~5 200 lignes src, 31 fichiers source + 18 fichiers test. 104 tests. 2 playgrounds standalone.**
+**Total : ~4 900 lignes src (hors data blobs), 37 fichiers source + 18 fichiers test. 104 tests. 2 playgrounds standalone.**
 
 ### Constats clés
 
@@ -217,13 +221,14 @@ docs/
 - **Zero feature Vite-spécifique** : pas de `import.meta.env`, pas de `?raw`, pas de glob
 - **Thème** : hook custom `useTheme()` avec `data-theme` sur `<html>` + `localStorage`, scrollbars thématiques
 - **Training** : boucle `requestAnimationFrame` (5 steps/frame), pas de Web Worker
+- **Attention** : boucle multi-token côté page (KV cache pattern), matrice T×T `<table>` sémantique
 - **Model sharing** : `useSyncExternalStore` dans `modelStore.ts`, hook `useModel()` (A-1 corrigé)
 - **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
-- **Tests** : Vitest + jsdom + @testing-library/react (94 tests, 16 fichiers)
+- **Tests** : Vitest + jsdom + @testing-library/react (104 tests, 18 fichiers)
 - **ErrorBoundary** : class component, `window.location.reload()`, sidebar hors boundary
-- **Code splitting** : `React.lazy()` + `Suspense` → 5+ chunks JS séparés
-- **CSS** : 20 classes utilitaires + BEM + `.sr-only` + `prefers-reduced-motion`. Inline styles réduits de 64 à 7 (dynamiques uniquement)
-- **Accessibilité** : WCAG 2.1 AA ~95 %, labels sur tous inputs/selects, `:focus-visible`, `aria-label` canvas
+- **Code splitting** : `React.lazy()` + `Suspense` → 6+ chunks JS séparés
+- **CSS** : 20 classes utilitaires + BEM + `.sr-only` + `prefers-reduced-motion`. Inline styles réduits de 64 à 7 (pages originales) + 8 (AttentionPage, dont 2 dynamiques)
+- **Accessibilité** : WCAG 2.1 AA ~95 %, labels sur tous inputs/selects, `:focus-visible`, `aria-label` canvas/table
 
 ---
 
@@ -293,7 +298,7 @@ Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 
 ### 8. Phase 4 — roadmap restante
 
-- ✅ A-1 : `useSyncExternalStore` dans `modelStore.ts` + `memo()` sur 5 pages
+- ✅ A-1 : `useSyncExternalStore` dans `modelStore.ts` + `memo()` sur 6 pages
 - ✅ C-4 : Décomposer `ForwardPassPage` en 4 sous-composants (`FlowDiagram`, `VectorsPanel`, `AttentionWeightsPanel`, `MLPActivationPanel`)
 - ✅ UX-1 : `window.confirm()` avant changement dataset si `totalStep > 0`
 - ✅ MIN-8 : Hint clavier `<kbd>↑↓</kbd>` sous Heatmap interactif
@@ -321,19 +326,23 @@ Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 - ✅ 9 nouveaux tests (5 charStats + 4 EmbeddingBarChart)
 - ✅ Design doc : `docs/plans/2026-03-01-embeddings-page-vivante-design.md`
 
-### 12. Page Attention — à faire
+### 12. Page Attention — FAIT
 
-Constats et exigences pour la future page dédiée à l'attention :
+Page dédiée à l'attention multi-token, insérée comme page 4 (Entraînement → 5, Inférence → 6).
 
-1. **Page Propagation actuelle** : l'attention affiche `[1.0]` car un seul token → `softmax([x]) = [1.0]` = résultat trivial, pas un bug
-2. **Page dédiée Attention** avec séquence complète (boucle multi-token comme `trainStep`), matrice d'attention par tête (4 têtes × T×T), visualisation Q/K/V, masque causal
-3. **Prototype playground** — pas un lien externe, mais une **implémentation** Canvas 2D animé intégrée dans la page React (style validé de `playground.html` : neurones, connexions, forward/backward, thème dark/light)
-4. **Données dynamiques du modèle** — zéro donnée hardcodée, tout provient de `gptForward()` via `useModel()` (même pattern que les 5 pages existantes)
-5. **Cohérence inter-pages** — les données traversent les pages de façon pédagogique (tokenisation → plongements → propagation → attention → entraînement → inférence)
-6. **Engine read-only** sauf obligation absolue — la boucle multi-token se fait côté page (pas dans l'engine), en réutilisant le pattern KV cache de `trainStep` (model.ts:242-261)
-7. **Ref** : "Attention Is All You Need" (Vaswani et al. 2017) — la page doit rendre tangible le mécanisme d'attention pour le public 10-14 ans
-
-Données disponibles dans `ForwardTrace` : `q` (number[16]), `k` (number[16]), `v` (number[16]), `attnWeights` (number[4][T]) par position. Avec N_HEAD=4 et HEAD_DIM=4, chaque tête opère sur 4 dimensions.
+- ✅ `AttnMatrix.tsx` — composant `<table>` sémantique T×T (aria-label, masque causal, mode compact)
+- ✅ `AttentionPage.tsx` — 6 panneaux pédagogiques (347 lignes) :
+  1. Pourquoi l'attention ? (texte)
+  2. Séquence complète (input + token-flow animé + sélecteur position)
+  3. Q, K, V — trois rôles (VectorBar × 3)
+  4. Matrice d'attention (AttnMatrix + sélecteur tête)
+  5. 4 têtes, 4 regards (4× AttnMatrix compact + badge entraînement)
+  6. Récapitulatif (texte + glossaire connexion résiduelle)
+- ✅ Boucle multi-token côté page (KV cache pattern, engine read-only)
+- ✅ Données 100 % dynamiques via `gptForward()` + `useModel()`
+- ✅ Glossaire `connexion-residuelle` ajouté (30 termes total)
+- ✅ Audit : `<table>` sémantique (WCAG), `<label htmlFor>`, `type="button"`, `useMemo` allHeadMatrices, 11 inline styles → classes utilitaires `mt-8`/`mt-4`
+- ✅ App.tsx : page 4 dans PAGES, lazy import, rendu conditionnel. Pages 5-6 renumérotées
 
 ### 13. Nice-to-have : widget autograd interactif dans TrainingPage
 

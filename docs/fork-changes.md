@@ -22,7 +22,7 @@
 
 | Change                                                         | Commit    | Justification                                                                                                                            |
 | -------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Glossary data file: 28 terms (15 Tier 1 + 13 Tier 2)           | `bdca1f2` | Tier 1 = tooltip seul, Tier 2 = tooltip + modal "En savoir plus". Définitions adaptées 10-14 ans                                         |
+| Glossary data file: 30 terms (16 Tier 1 + 14 Tier 2)           | `bdca1f2` | Tier 1 = tooltip seul, Tier 2 = tooltip + modal "En savoir plus". Définitions adaptées 10-14 ans                                         |
 | `<Term>` tooltip + `<TermProvider>` singleton `<dialog>` + CSS | `a433337` | WAI-ARIA tooltip pattern, WCAG 1.4.13 (hoverable, dismissible, persistent), `useId()` pour IDs uniques, flip viewport, bridge `::before` |
 | Intégration `<Term id="…" />` dans les 5 pages                 | `d89a5e2` | ~50 remplacements inline (token, BOS, loss, softmax, attention, etc.)                                                                    |
 | Tests glossaire (8) + Term component (12) + devDeps            | `8e81c27` | jsdom + @testing-library/react. Co-located tests, 20 assertions                                                                          |
@@ -123,6 +123,20 @@
 | 9 new tests (5 charStats + 4 EmbeddingBarChart)                              | `charStats.test.ts`, `EmbeddingBarChart.test.tsx`       | Couverture : empty state, label+stats, BOS, bar count, frequency, bigrams                                  |
 | Bar chart on wpe heatmap hover + `emptyText` prop                            | `EmbeddingsPage.tsx`, `EmbeddingBarChart.tsx`           | Même pattern que wte — survol position = 16 barres. `emptyText` prop pour message contextuel               |
 | Interactive position selector (0–15) in combine panel                        | `EmbeddingsPage.tsx`                                    | Remplace `wpe[0]` codé en dur — sélection dynamique synchronise VectorBar + bar chart                      |
+
+## Page Attention (page 4)
+
+| Change                                                                   | Fichier(s)                                                                   | Justification                                                                                                       |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Glossary entry `connexion-residuelle` (Tier 2: tooltip + modal)          | `src/data/glossary.ts`                                                       | Nouveau terme pédagogique utilisé dans le récapitulatif (panneau 6)                                                 |
+| `AttnMatrix` component: semantic `<table>` T×T attention heatmap         | `src/components/AttnMatrix.tsx`, `src/styles.css`                            | `<table>` sémantique (WCAG), `aria-label`, masque causal, mode compact pour panneau multi-têtes                     |
+| `AttentionPage` with 6 pedagogical panels (347 LOC)                      | `src/pages/AttentionPage.tsx`                                                | Gap critique : attention trivialisée sur page 3 (token unique → [1.0]). Boucle multi-token côté page, KV cache      |
+| Wire AttentionPage as page 4, renumber Training→5, Inference→6           | `src/App.tsx`, `TrainingPage.tsx`, `InferencePage.tsx`, `EmbeddingsPage.tsx` | Insertion dans PAGES array, lazy import, références "étape N" mises à jour                                          |
+| Convert AttnMatrix from div grid to semantic `<table>`                   | `src/components/AttnMatrix.tsx`, `src/styles.css`                            | `.attn-cell` class (remplace `.heat-cell` pour éviter conflit `display:flex` vs `display:table-cell`)               |
+| Align AttentionPage with app UX patterns (input, animations, memo, a11y) | `src/pages/AttentionPage.tsx`, `src/styles.css`                              | TokenizerPage input pattern, `.token-flow--animated`, `useMemo` allHeadMatrices, `<label htmlFor>`, `type="button"` |
+| Replace 11 inline margins with `mt-8`/`mt-4` CSS utility classes         | `src/pages/AttentionPage.tsx`                                                | D-1 audit regression : inline `marginTop` → classes utilitaires existantes                                          |
+
+Commits: `f9e6143`, `4dd8f5a`, `c2d8f08`, `372a469`, `fc74ff3`, `657b296`, `8db49e8`
 
 ## Cohérence des sélecteurs et renommage
 
