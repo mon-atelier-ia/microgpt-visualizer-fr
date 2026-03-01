@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attention — Vue BertViz</title>
+<style>
+/* ── Theme tokens (mirror of src/styles.css) ─────────────────── */
+:root,
+[data-theme="dark"] {
+  --bg: #181816;
+  --surface: #222220;
+  --surface2: #2a2a27;
+  --border: #363632;
+  --border-hover: #4a4a44;
+  --text: #cdc8be;
+  --text-dim: #959082;
+  --blue: #c28b4e;
+  --purple: #a08cb4;
+  --cyan: #6a9f9b;
+  --green: #8aaa6b;
+  --red: #bf6a63;
+  --orange: #c4885c;
+}
+[data-theme="light"] {
+  --bg: #f5f1ea;
+  --surface: #fffdf8;
+  --surface2: #ece8e0;
+  --border: #d6d0c5;
+  --border-hover: #b8b2a6;
+  --text: #2c2a25;
+  --text-dim: #6a655d;
+  --blue: #9c6b30;
+  --purple: #7b5ea0;
+  --cyan: #3a7d78;
+  --green: #527a34;
+  --red: #a04040;
+  --orange: #a06830;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  transition: background 0.2s, color 0.2s;
+}
+
+h1 { font-size: 22px; color: var(--blue); margin-bottom: 6px; }
+
+.page-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  text-align: center;
+  max-width: 620px;
+  line-height: 1.65;
+}
+.page-desc b { color: var(--cyan); }
+
+/* ── Panel ───────────────────────────────────────────────── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  width: 100%;
+  max-width: 680px;
+  margin-bottom: 12px;
+}
+.panel-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--blue);
+  margin-bottom: 8px;
+}
+.explain {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+.explain b { color: var(--cyan); }
+
+/* ── Input ───────────────────────────────────────────────── */
+input[type="text"] {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 12px;
+  width: 100%;
+  max-width: 260px;
+  margin-bottom: 12px;
+  transition: border-color 0.15s;
+}
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+input[type="text"]::placeholder { color: var(--text-dim); opacity: 0.6; }
+
+/* ── Controls ────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.label-dim { font-size: 11px; color: var(--text-dim); }
+
+.btn-toggle {
+  padding: 5px 12px;
+  background: var(--surface2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-toggle:hover { background: var(--border); color: var(--text); }
+.btn-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.btn-toggle.active {
+  background: var(--blue);
+  color: var(--bg);
+  border-color: var(--blue);
+  font-weight: bold;
+}
+
+/* ── Head color dots ─────────────────────────────────────── */
+.head-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── BertViz layout ──────────────────────────────────────── */
+.bertviz {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  margin: 16px 0 8px;
+  user-select: none;
+}
+
+.token-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 2;
+}
+
+/* ── Column headers ──────────────────────────────────────── */
+.col-header {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+.col-header--src { color: var(--orange); }
+.col-header--dst { color: var(--cyan); }
+
+.svg-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+  height: 16px;
+}
+.svg-header .arrow-hint {
+  font-size: 13px;
+  color: var(--text-dim);
+  opacity: 0.7;
+}
+
+/* ── Token boxes ─────────────────────────────────────────── */
+.token-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 44px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.token-box:hover {
+  border-color: var(--border-hover);
+  background: var(--border);
+}
+.token-box.selected {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--blue) 40%, transparent);
+}
+.token-box.bos {
+  border-style: dashed;
+  border-color: var(--text-dim);
+}
+.token-box .char {
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--text);
+  line-height: 1;
+}
+.token-box .id {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+
+/* ── SVG area ────────────────────────────────────────────── */
+.svg-area { z-index: 1; line-height: 0; }
+.svg-area svg { display: block; }
+
+.attn-line {
+  fill: none;
+  stroke-linecap: round;
+  pointer-events: none;
+  transition: opacity 0.25s ease, stroke-width 0.15s ease;
+}
+
+/* ── Hover dimming ───────────────────────────────────────── */
+.bertviz.dim .token-box { opacity: 0.25; transition: opacity 0.2s; }
+.bertviz.dim .token-box.lit { opacity: 1; }
+.bertviz.dim .attn-line { opacity: 0.04; }
+/* .lit lines get opacity restored via inline style (higher specificity than class) */
+
+/* ── Detail panel ────────────────────────────────────────── */
+.detail {
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.detail-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--blue);
+  margin-bottom: 8px;
+}
+
+.weight-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+}
+.weight-label {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text);
+  width: 36px;
+  text-align: right;
+}
+.weight-track {
+  flex: 1;
+  height: 16px;
+  background: var(--surface);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.weight-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.35s ease;
+  min-width: 2px;
+}
+.weight-pct {
+  font-size: 11px;
+  color: var(--text-dim);
+  width: 44px;
+  text-align: right;
+}
+
+/* ── Legend ───────────────────────────────────────────────── */
+.legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.legend-line {
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+/* ── Theme toggle ────────────────────────────────────────── */
+.theme-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  padding: 5px 12px;
+  background: var(--surface2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  z-index: 10;
+}
+.theme-btn:hover { background: var(--border); color: var(--text); }
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes line-draw {
+  from { stroke-dashoffset: 300; }
+  to   { stroke-dashoffset: 0; }
+}
+.attn-line.animate {
+  stroke-dasharray: 300;
+  animation: line-draw 0.6s ease forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.token-box.animate {
+  animation: fade-in 0.25s ease forwards;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<h1>Attention — Qui regarde qui ?</h1>
+<p class="page-desc">
+  Chaque ligne relie un token (à gauche) au token qu'il <b>regarde</b> (à droite).
+  Plus la ligne est <b>épaisse</b>, plus l'attention est forte.
+  Clique sur un token pour voir ses poids en détail.
+</p>
+
+<div class="panel" id="main-panel">
+  <div class="panel-title">Tape un nom</div>
+  <div class="explain">
+    Change le nom pour voir comment l'attention se redistribue.
+    Un token ne peut <b>jamais regarder le futur</b> — c'est le masque causal.
+  </div>
+  <div class="explain" style="font-style:italic;opacity:0.85">
+    Les noms des têtes (Ancrage, Contexte…) décrivent des comportements observés
+    après un entraînement. Mais <b>un autre entraînement pourrait assigner ces
+    rôles à des têtes différentes</b> — c'est le hasard de l'initialisation.
+    Ce qui est stable, c'est que ces types de comportements émergent toujours.
+  </div>
+
+  <input type="text" id="name-input" value="emma" placeholder="Tape un nom..." maxlength="14">
+
+  <div class="controls">
+    <span class="label-dim">Tête :</span>
+    <button class="btn-toggle active" data-head="all" type="button">Toutes</button>
+    <button class="btn-toggle" data-head="0" type="button">
+      <span class="head-dot" style="background:var(--blue)"></span>0
+    </button>
+    <button class="btn-toggle" data-head="1" type="button">
+      <span class="head-dot" style="background:var(--purple)"></span>1
+    </button>
+    <button class="btn-toggle" data-head="2" type="button">
+      <span class="head-dot" style="background:var(--cyan)"></span>2
+    </button>
+    <button class="btn-toggle" data-head="3" type="button">
+      <span class="head-dot" style="background:var(--green)"></span>3
+    </button>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="bertviz" id="bertviz"></div>
+
+  <div class="detail" id="detail" style="display:none">
+    <div class="detail-title" id="detail-title"></div>
+    <div id="detail-bars"></div>
+  </div>
+</div>
+
+<button class="theme-btn" id="btn-theme" type="button">Thème clair</button>
+
+<script>
+// ── Constants ───────────────────────────────────────────
+const BOS = 26;
+const N_HEAD = 4;
+const HEAD_CSS_VARS = ['--blue', '--purple', '--cyan', '--green'];
+
+// ── Simple seeded PRNG (mulberry32) ─────────────────────
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h;
+}
+
+// ── Tokenization ────────────────────────────────────────
+function tokenize(name) {
+  const clean = name.toLowerCase().replace(/[^a-z]/g, '').slice(0, 14);
+  const ids = [BOS];
+  for (const ch of clean) ids.push(ch.charCodeAt(0) - 97);
+  ids.push(BOS);
+  return ids;
+}
+function tokenLabel(id) {
+  return id === BOS ? 'BOS' : String.fromCharCode(97 + id);
+}
+
+// ── Fake attention weights (deterministic per name) ─────
+function generateWeights(n, name) {
+  const rng = mulberry32(hashStr(name + '_attn'));
+  const heads = [];
+  for (let h = 0; h < N_HEAD; h++) {
+    const matrix = [];
+    for (let i = 0; i < n; i++) {
+      const row = new Array(n).fill(0);
+      if (i === 0) {
+        row[0] = 1.0;
+      } else {
+        const raw = [];
+        for (let j = 0; j <= i; j++) {
+          let s;
+          switch (h) {
+            case 0: // Ancrage — BOS anchor + self-reference
+              s = j === 0 ? 2.8 : j === i ? 2.5 : 0.2;
+              break;
+            case 1: // Contexte — mixed, moderate on everything
+              s = j === 0 ? 1.2 : j === i ? 1.4 : 0.6 + (j / i) * 0.6;
+              break;
+            case 2: // Écho — earlier/similar tokens, some recency
+              s = j === i ? 0.9 : 0.5 + ((i - j) <= 2 ? 1.8 : 0.3);
+              break;
+            case 3: // Précédent — strong on i-1
+              s = j === i - 1 ? 3.2 : j === i ? 0.7 : 0.2;
+              break;
+          }
+          raw.push(s + rng() * 0.5);
+        }
+        const mx = Math.max(...raw);
+        const exp = raw.map(r => Math.exp(r - mx));
+        const sum = exp.reduce((a, b) => a + b, 0);
+        for (let j = 0; j <= i; j++) row[j] = exp[j] / sum;
+      }
+      matrix.push(row);
+    }
+    heads.push(matrix);
+  }
+  return heads;
+}
+
+// ── Head classifier (util — reusable in React component) ─
+// Analyzes a T×T attention matrix and returns a personality label.
+// See docs/attention-head-behaviors.md for methodology and sources.
+const HEAD_PERSONALITIES = ['Ancrage', 'Précédent', 'Écho', 'Contexte'];
+const HEAD_EXPLANATIONS_MAP = {
+  'Ancrage':   (tok) => `Cette tête revient souvent vers le <b>début</b> du nom (BOS) et vers <b>elle-même</b>. Elle garde un repère fixe : « d'où je viens et qui je suis. »`,
+  'Précédent': (tok) => `Cette tête s'intéresse surtout au token <b>juste avant</b> « ${tok} ». C'est comme lire une syllabe : la lettre précédente influence fortement la suivante.`,
+  'Écho':      (tok) => `Cette tête cherche des <b>tokens proches</b> vus récemment. Elle regarde les 2-3 dernières lettres avant « ${tok} » pour trouver des motifs.`,
+  'Contexte':  (tok) => `Cette tête <b>regarde un peu partout</b>. Au lieu de se focaliser sur un seul token, elle capte le contexte général — toutes les lettres déjà vues comptent.`,
+};
+
+function classifyHead(matrix) {
+  const T = matrix.length;
+  if (T <= 1) return 'Contexte';
+
+  let bosTotal = 0, selfTotal = 0, prevTotal = 0, nearTotal = 0, entropy = 0;
+  let count = 0;
+
+  for (let i = 1; i < T; i++) {
+    bosTotal  += matrix[i][0];
+    selfTotal += matrix[i][i];
+    prevTotal += matrix[i][i - 1];
+    let near = matrix[i][i - 1];
+    if (i >= 2) near += matrix[i][i - 2];
+    nearTotal += near;
+    let h = 0;
+    for (let j = 0; j <= i; j++) {
+      const w = matrix[i][j];
+      if (w > 1e-9) h -= w * Math.log2(w);
+    }
+    entropy += h;
+    count++;
+  }
+
+  const avgBos  = bosTotal  / count;
+  const avgSelf = selfTotal / count;
+  const avgPrev = prevTotal / count;
+  const avgNear = nearTotal / count;
+
+  if (avgPrev > 0.45)                       return 'Précédent';
+  if (avgBos > 0.25 && avgSelf > 0.15)      return 'Ancrage';
+  if (avgBos > 0.35)                         return 'Ancrage';
+  if (avgNear > 0.50 && avgPrev < 0.45)      return 'Écho';
+  if (avgSelf > 0.40)                        return 'Ancrage';
+  return 'Contexte';
+}
+
+// ── State ───────────────────────────────────────────────
+let activeHead = 'all';
+let selectedPos = -1;
+let cachedName = '';
+let cachedWeights = null;
+let headNames = ['?', '?', '?', '?']; // filled by classifyHeads()
+
+function getWeights(name, n) {
+  if (name !== cachedName) {
+    cachedName = name;
+    cachedWeights = generateWeights(n, name);
+    // Classify each head from real (or fake) data
+    headNames = cachedWeights.map(m => classifyHead(m));
+  }
+  return cachedWeights;
+}
+
+// ── DOM ─────────────────────────────────────────────────
+const nameInput = document.getElementById('name-input');
+const bertvizEl = document.getElementById('bertviz');
+const detailEl  = document.getElementById('detail');
+const detailTitle = document.getElementById('detail-title');
+const detailBars  = document.getElementById('detail-bars');
+const legendEl = document.getElementById('legend');
+
+// ── Get CSS color ───────────────────────────────────────
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+// ── Head buttons ────────────────────────────────────────
+document.querySelectorAll('[data-head]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-head]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeHead = btn.dataset.head;
+    renderLines();
+    renderDetail();
+    renderLegend();
+  });
+});
+
+// ── Theme toggle ────────────────────────────────────────
+document.getElementById('btn-theme').addEventListener('click', function() {
+  const d = document.documentElement;
+  const isDark = d.getAttribute('data-theme') === 'dark';
+  d.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  this.textContent = isDark ? 'Thème sombre' : 'Thème clair';
+  renderLines();
+  renderLegend();
+});
+
+// ── Input ───────────────────────────────────────────────
+nameInput.addEventListener('input', () => {
+  selectedPos = -1;
+  cachedName = '';
+  fullRender(true);
+});
+
+// ── Geometry ────────────────────────────────────────────
+const BOX_W = 52, BOX_H = 44, GAP = 6;
+const SVG_W = 180;
+
+function yCenter(i) { return i * (BOX_H + GAP) + BOX_H / 2; }
+
+// ── Full render (tokens + lines) ────────────────────────
+function fullRender(animate) {
+  const name = nameInput.value.toLowerCase().replace(/[^a-z]/g, '').slice(0, 14);
+  const tokens = tokenize(name);
+  const n = Math.min(16, tokens.length - 1);
+
+  if (n < 1) {
+    bertvizEl.innerHTML = '<div class="label-dim" style="padding:20px 0">Tape au moins une lettre.</div>';
+    detailEl.style.display = 'none';
+    legendEl.innerHTML = '';
+    return;
+  }
+
+  const display = tokens.slice(0, n);
+  const labels = display.map(id => tokenLabel(id));
+  const colH = n * BOX_H + (n - 1) * GAP;
+
+  // ── Build columns ──
+  let html = '';
+
+  // Left column (source = "qui regarde")
+  html += '<div class="token-column" id="col-src">';
+  html += '<div class="col-header col-header--src">Qui regarde ?</div>';
+  for (let i = 0; i < n; i++) {
+    const bos = display[i] === BOS ? ' bos' : '';
+    const sel = i === selectedPos ? ' selected' : '';
+    const anim = animate ? ' animate' : '';
+    const delay = animate ? ` style="animation-delay:${i * 40}ms"` : '';
+    html += `<div class="token-box${bos}${sel}${anim}" data-src="${i}"${delay}>` +
+            `<span class="char">${labels[i]}</span>` +
+            `<span class="id">id: ${display[i]}</span></div>`;
+  }
+  html += '</div>';
+
+  // SVG area with directional header
+  html += `<div class="svg-area">` +
+    `<div class="svg-header"><span class="arrow-hint">→</span> regarde</div>` +
+    `<svg id="attn-svg" width="${SVG_W}" height="${colH}"></svg></div>`;
+
+  // Right column (destination = "qui est regardé")
+  html += '<div class="token-column" id="col-dst">';
+  html += '<div class="col-header col-header--dst">Vu avant ?</div>';
+  for (let j = 0; j < n; j++) {
+    const bos = display[j] === BOS ? ' bos' : '';
+    const anim = animate ? ' animate' : '';
+    const delay = animate ? ` style="animation-delay:${j * 40}ms"` : '';
+    html += `<div class="token-box${bos}${anim}" data-dst="${j}"${delay}>` +
+            `<span class="char">${labels[j]}</span>` +
+            `<span class="id">id: ${display[j]}</span></div>`;
+  }
+  html += '</div>';
+
+  bertvizEl.innerHTML = html;
+  bindHover();
+  renderLines(animate);
+  renderDetail();
+  renderLegend();
+}
+
+// ── Render SVG lines only ───────────────────────────────
+function renderLines(animate) {
+  const name = nameInput.value.toLowerCase().replace(/[^a-z]/g, '').slice(0, 14);
+  const tokens = tokenize(name);
+  const n = Math.min(16, tokens.length - 1);
+  if (n < 1) return;
+
+  const weights = getWeights(name, n);
+  const svg = document.getElementById('attn-svg');
+  if (!svg) return;
+  svg.innerHTML = '';
+
+  const colors = HEAD_CSS_VARS.map(v => css(v));
+  const heads = activeHead === 'all' ? [0, 1, 2, 3] : [parseInt(activeHead)];
+  const isAll = activeHead === 'all';
+
+  // Collect all lines, sort by weight (lowest first → strongest on top)
+  const lines = [];
+  for (const h of heads) {
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j <= i; j++) {
+        const w = weights[h][i][j];
+        if (w < 0.005) continue;
+        lines.push({ h, i, j, w });
+      }
+    }
+  }
+  lines.sort((a, b) => a.w - b.w);
+
+  for (const { h, i, j, w } of lines) {
+    const y1 = yCenter(i);
+    const y2 = yCenter(j);
+    const thick = isAll ? (0.8 + w * 5) : (1 + w * 7);
+    const alpha = isAll ? (0.15 + w * 0.55) : (0.1 + w * 0.9);
+
+    // Bézier: smooth S-curve
+    const cx1 = SVG_W * 0.32;
+    const cx2 = SVG_W * 0.68;
+    const d = `M 0 ${y1} C ${cx1} ${y1}, ${cx2} ${y2}, ${SVG_W} ${y2}`;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', colors[h]);
+    path.setAttribute('stroke-width', thick.toFixed(1));
+    path.setAttribute('opacity', alpha.toFixed(2));
+    path.classList.add('attn-line');
+    path.dataset.src = i;
+    path.dataset.dst = j;
+    path.dataset.head = h;
+    if (animate) {
+      path.classList.add('animate');
+      path.style.animationDelay = `${(i * 3 + j) * 30 + 100}ms`;
+    }
+    svg.appendChild(path);
+  }
+}
+
+// ── Hover interaction ───────────────────────────────────
+function bindHover() {
+  // Source tokens (left)
+  bertvizEl.querySelectorAll('[data-src]').forEach(el => {
+    const idx = +el.dataset.src;
+
+    el.addEventListener('mouseenter', () => {
+      bertvizEl.classList.add('dim');
+      el.classList.add('lit');
+      // Light up matching lines + dest tokens
+      bertvizEl.querySelectorAll('.attn-line').forEach(line => {
+        if (+line.dataset.src === idx) {
+          line.classList.add('lit');
+          // Restore the line's original opacity
+          line.style.opacity = line.getAttribute('opacity');
+          const dst = bertvizEl.querySelector(`[data-dst="${line.dataset.dst}"]`);
+          if (dst) dst.classList.add('lit');
+        }
+      });
+    });
+
+    el.addEventListener('mouseleave', clearDim);
+
+    el.addEventListener('click', () => {
+      selectedPos = selectedPos === idx ? -1 : idx;
+      // Update selected class without full re-render
+      bertvizEl.querySelectorAll('[data-src]').forEach(b => b.classList.toggle('selected', +b.dataset.src === selectedPos));
+      renderDetail();
+    });
+  });
+
+  // Dest tokens (right)
+  bertvizEl.querySelectorAll('[data-dst]').forEach(el => {
+    const idx = +el.dataset.dst;
+
+    el.addEventListener('mouseenter', () => {
+      bertvizEl.classList.add('dim');
+      el.classList.add('lit');
+      bertvizEl.querySelectorAll('.attn-line').forEach(line => {
+        if (+line.dataset.dst === idx) {
+          line.classList.add('lit');
+          line.style.opacity = line.getAttribute('opacity');
+          const src = bertvizEl.querySelector(`[data-src="${line.dataset.src}"]`);
+          if (src) src.classList.add('lit');
+        }
+      });
+    });
+
+    el.addEventListener('mouseleave', clearDim);
+  });
+}
+
+function clearDim() {
+  bertvizEl.classList.remove('dim');
+  bertvizEl.querySelectorAll('.lit').forEach(e => {
+    e.classList.remove('lit');
+    // Reset inline opacity overrides on lines
+    if (e.classList.contains('attn-line')) e.style.opacity = '';
+  });
+}
+
+// ── Detail panel ────────────────────────────────────────
+function renderDetail() {
+  const name = nameInput.value.toLowerCase().replace(/[^a-z]/g, '').slice(0, 14);
+  const tokens = tokenize(name);
+  const n = Math.min(16, tokens.length - 1);
+  if (selectedPos < 0 || selectedPos >= n) {
+    detailEl.style.display = 'none';
+    return;
+  }
+
+  const weights = getWeights(name, n);
+  const display = tokens.slice(0, n);
+  const labels = display.map(id => tokenLabel(id));
+  const pos = selectedPos;
+  const isAll = activeHead === 'all';
+  const colors = HEAD_CSS_VARS.map(v => css(v));
+
+  detailEl.style.display = 'block';
+
+  const tokenName = labels[pos];
+  if (isAll) {
+    detailTitle.textContent = `Position ${pos} « ${tokenName} » — moyenne des 4 têtes`;
+  } else {
+    const h = parseInt(activeHead);
+    detailTitle.textContent = `Position ${pos} « ${tokenName} » — Tête ${h} (${headNames[h]})`;
+  }
+
+  // ── Phrase pédagogique contextuelle (dynamique via classifieur) ──
+  let explainHtml;
+  if (isAll) {
+    explainHtml = `Chaque barre montre <b>combien « ${tokenName} » regarde</b> ce token (en %). ` +
+      `C'est la moyenne des 4 têtes — chacune regarde des choses différentes, le modèle combine leurs points de vue.`;
+  } else {
+    const h = parseInt(activeHead);
+    const personality = headNames[h];
+    explainHtml = HEAD_EXPLANATIONS_MAP[personality](tokenName);
+  }
+
+  let html = `<div class="explain" style="margin-bottom:10px">${explainHtml}</div>`;
+  for (let j = 0; j <= pos; j++) {
+    let w;
+    if (isAll) {
+      w = weights.reduce((s, hw) => s + hw[pos][j], 0) / N_HEAD;
+    } else {
+      w = weights[parseInt(activeHead)][pos][j];
+    }
+    const pct = (w * 100).toFixed(1);
+    const color = isAll ? css('--cyan') : colors[parseInt(activeHead)];
+    html += `<div class="weight-row">` +
+      `<span class="weight-label">${labels[j]}</span>` +
+      `<div class="weight-track"><div class="weight-fill" style="width:${pct}%;background:${color}"></div></div>` +
+      `<span class="weight-pct">${pct} %</span>` +
+      `</div>`;
+  }
+  detailBars.innerHTML = html;
+}
+
+// ── Legend ───────────────────────────────────────────────
+function renderLegend() {
+  const isAll = activeHead === 'all';
+  if (!isAll) {
+    const h = parseInt(activeHead);
+    legendEl.innerHTML = `<div class="legend-item">` +
+      `<span class="legend-line" style="background:${css(HEAD_CSS_VARS[h])}"></span>` +
+      `Tête ${h} : ${headNames[h]}</div>`;
+    return;
+  }
+  let html = '';
+  for (let h = 0; h < N_HEAD; h++) {
+    html += `<div class="legend-item">` +
+      `<span class="legend-line" style="background:${css(HEAD_CSS_VARS[h])}"></span>` +
+      `${h} : ${headNames[h]}</div>`;
+  }
+  legendEl.innerHTML = html;
+}
+
+// ── Boot ────────────────────────────────────────────────
+fullRender(true);
+</script>
+</body>
+</html>
