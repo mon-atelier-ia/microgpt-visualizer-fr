@@ -115,8 +115,10 @@ export default memo(function EmbeddingsPage() {
           <br />
           <br />
           Sans cela, le modèle ne pourrait pas distinguer « ab » de « ba » — les
-          deux ont les mêmes caractères ! Le <Term id="plongement" /> de
-          position est <b>additionné</b> au <Term id="plongement" /> de token.{" "}
+          deux ont les mêmes caractères ! Contrairement à <Term id="wte" /> (qui
+          dépend du caractère), le plongement de position est{" "}
+          <b>le même quel que soit le token</b> — seule la position compte. Il
+          est ensuite <b>additionné</b> au <Term id="plongement" /> de token.{" "}
           <b>Survole une ligne</b> pour voir ses dimensions.
         </div>
         <div className="heatmap-with-bars">
