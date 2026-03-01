@@ -160,7 +160,7 @@ export default memo(function AttentionPage() {
         {/* Sélecteur de position (comme ForwardPassPage) */}
         <div className="controls mt-8">
           <span className="label-dim">Position :</span>
-          {displayLabels.map((lbl, i) => (
+          {displayLabels.map((_, i) => (
             <button
               key={i}
               type="button"
@@ -267,7 +267,8 @@ export default memo(function AttentionPage() {
           <div className="explain mt-8">
             💡 Le masque causal rend la génération possible — tu le verras en
             action à l'étape 6 (
-            <Term id="generation-autoregressive">Inférence</Term>).
+            <Term id="generation-autoregressive" />
+            ).
           </div>
         </div>
       )}
