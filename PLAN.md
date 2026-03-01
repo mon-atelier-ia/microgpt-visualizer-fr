@@ -204,13 +204,18 @@ docs/
 
 playground.html # Visualisation réseau de neurones 5 colonnes, forward+backward animation
 playground-full.html # Visualisation réseau de neurones 13 colonnes fidèle architecture
+playground-attention.html # Prototype attention animé (Q·K, softmax, V) — remplacé par BertViz
+playground-bertviz.html # Visualisation BertViz — lignes token↔token, classifieur dynamique de têtes
+
+scripts/
+└── investigate-heads.ts # Investigation empirique des personnalités de têtes (10 seeds × 1000 steps)
 
 docs/
 ├── plans/
 │ ├── 2026-03-01-embeddings-page-vivante-design.md # Design EmbeddingsPage vivante
 │ └── 2026-03-01-embeddings-page-vivante-plan.md # Plan d'implémentation
 
-**Total : ~4 900 lignes src (hors data blobs), 37 fichiers source + 18 fichiers test. 104 tests. 2 playgrounds standalone.**
+**Total : ~4 900 lignes src (hors data blobs), 37 fichiers source + 18 fichiers test. 104 tests. 4 playgrounds standalone.**
 
 ### Constats clés
 
@@ -394,6 +399,29 @@ Page dédiée à l'attention multi-token, insérée comme page 4 (Entraînement 
 - La notation mathématique
 
 **Référence** : guide Karpathy section "Autograd" — exemple `a=2, b=3, c=a*b, L=c+a` + analogie voiture/vélo/piéton. Voir `docs/reference-microgpt-karpathy.md` section 4.
+
+### 14. Playground BertViz + classifieur de têtes — FAIT
+
+Visualisation BertViz-style (token↔token, lignes SVG) + classifieur dynamique des personnalités de têtes d'attention.
+
+- ✅ `playground-bertviz.html` — prototype standalone HTML+CSS+JS :
+  - Input dynamique ("Tape un nom..."), tokenisation BOS + lettres
+  - 2 colonnes verticales face-à-face (source → destination)
+  - Lignes SVG Bézier (épaisseur = poids, couleur = tête)
+  - Sélecteur de tête (Toutes / 0-3), hover dim/highlight, clic détail
+  - Masque causal (pas de lignes vers le futur)
+  - Thème dark/light, CSS variables de l'app
+- ✅ `classifyHead(matrix)` — classifieur heuristique intégré comme util réutilisable :
+  - Analyse matrice T×T → personnalité parmi {Ancrage, Précédent, Écho, Contexte}
+  - Labels dynamiques dans légende et panneau de détail (s'adaptent au nom tapé)
+  - Phrases pédagogiques par personnalité via `HEAD_EXPLANATIONS_MAP`
+  - Seuils : avg(prev) > 0.45 → Précédent, avg(BOS) > 0.25 + avg(self) > 0.15 → Ancrage, etc.
+- ✅ `docs/attention-head-behaviors.md` — documentation des comportements observés :
+  - Résultats empiriques : 10 seeds × 1000 steps, noms courts vs longs
+  - Littérature : Attention Sink (ICLR 2025), Previous Token Heads, impossibilité Induction Heads en 1 couche
+  - Conclusion : Ancrage + Contexte dominent, Précédent rare, Écho quasi absent
+- ✅ `scripts/investigate-heads.ts` — script d'investigation reproductible (non inclus dans l'app)
+- ✅ Note pédagogique sur la variabilité des personnalités entre entraînements
 
 ### 10. Polish CSS — FAIT
 
