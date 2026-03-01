@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { DATASETS, DEFAULT_DATASET_ID } from "./datasets";
 import { resetModel, getModelTotalStep } from "./modelStore";
 import TermProvider from "./components/TermProvider";
@@ -40,20 +40,33 @@ export default function App() {
   // its own currentDatasetId for resetModel(). Both are set together in
   // handleDatasetChange to keep them in sync.
   const [datasetId, setDatasetId] = useState(DEFAULT_DATASET_ID);
+  const [pendingDatasetId, setPendingDatasetId] = useState<string | null>(null);
+  const confirmRef = useRef<HTMLDialogElement>(null);
   const { theme, toggle: toggleTheme } = useTheme();
 
   const handleDatasetChange = (id: string) => {
     if (id === datasetId) return;
-    if (
-      getModelTotalStep() > 0 &&
-      !window.confirm(
-        "L'entraînement est en cours.\nChanger de jeu de données réinitialisera le modèle.\n\nContinuer ?",
-      )
-    ) {
+    if (getModelTotalStep() > 0) {
+      setPendingDatasetId(id);
+      confirmRef.current?.showModal();
       return;
     }
     setDatasetId(id);
     resetModel(id);
+  };
+
+  const confirmDatasetChange = () => {
+    if (pendingDatasetId) {
+      setDatasetId(pendingDatasetId);
+      resetModel(pendingDatasetId);
+    }
+    setPendingDatasetId(null);
+    confirmRef.current?.close();
+  };
+
+  const cancelDatasetChange = () => {
+    setPendingDatasetId(null);
+    confirmRef.current?.close();
   };
 
   const handlePageChange = (pageId: string) => {
@@ -202,6 +215,34 @@ export default function App() {
           </ErrorBoundary>
         </main>
       </div>
+      <dialog
+        ref={confirmRef}
+        className="confirm-dialog"
+        onCancel={cancelDatasetChange}
+      >
+        <div className="confirm-dialog__content">
+          <p className="confirm-dialog__title">Changer de jeu de données ?</p>
+          <p className="confirm-dialog__message">
+            L'entraînement sera réinitialisé. Les poids appris seront perdus.
+          </p>
+          <div className="confirm-dialog__actions">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={cancelDatasetChange}
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              className="btn btn--danger"
+              onClick={confirmDatasetChange}
+            >
+              Réinitialiser
+            </button>
+          </div>
+        </div>
+      </dialog>
     </TermProvider>
   );
 }
