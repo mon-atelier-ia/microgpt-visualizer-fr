@@ -5,6 +5,7 @@ import {
   charToId,
   tokenLabel,
   N_LAYER,
+  BLOCK_SIZE,
 } from "../engine/model";
 import type { Value } from "../engine/autograd";
 import Term from "../components/Term";
@@ -42,7 +43,7 @@ export default memo(function ForwardPassPage() {
   const maxProb = Math.max(...top5.map((t) => t.prob), 0.01);
 
   return (
-    <PageSection id="forward" title="3. Propagation avant">
+    <PageSection id="forward" title="3. Propagation">
       <p className="page-desc">
         Observe un <Term id="token" /> traverser tout le modèle. Chaque étape
         transforme le <Term id="vecteur" /> de 16 nombres jusqu'à obtenir 27{" "}
@@ -55,32 +56,27 @@ export default memo(function ForwardPassPage() {
         <div className="panel-title">Choisis l'entrée</div>
         <div className="controls">
           <span className="label-dim">Token :</span>
-          <div className="controls controls--tight">
-            {uchars.slice(0, 10).map((ch) => (
-              <button
-                key={ch}
-                className={`btn btn-toggle--sm ${ch === char ? "" : "btn-secondary"}`}
-                onClick={() => setChar(ch)}
-              >
-                {ch}
-              </button>
-            ))}
-          </div>
-          <label htmlFor="forward-pos" className="label-dim ml-12">
-            Position :
-          </label>
-          <select
-            id="forward-pos"
-            className="select-native"
-            value={pos}
-            onChange={(e) => setPos(Number(e.target.value))}
-          >
-            {Array.from({ length: 8 }, (_, i) => (
-              <option key={i} value={i}>
-                pos {i}
-              </option>
-            ))}
-          </select>
+          {uchars.map((ch) => (
+            <button
+              key={ch}
+              className={`btn btn-toggle btn-toggle--char ${ch === char ? "" : "btn-secondary"}`}
+              onClick={() => setChar(ch)}
+            >
+              {ch}
+            </button>
+          ))}
+        </div>
+        <div className="controls" style={{ marginTop: 8 }}>
+          <span className="label-dim">Position :</span>
+          {Array.from({ length: BLOCK_SIZE }, (_, i) => (
+            <button
+              key={i}
+              className={`btn btn-toggle btn-toggle--char ${i === pos ? "" : "btn-secondary"}`}
+              onClick={() => setPos(i)}
+            >
+              {i}
+            </button>
+          ))}
         </div>
       </div>
 

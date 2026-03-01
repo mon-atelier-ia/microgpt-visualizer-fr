@@ -13,7 +13,7 @@ const InferencePage = lazy(() => import("./pages/InferencePage"));
 const PAGES = [
   { id: "tokenizer", num: 1, label: "Tokenisation" },
   { id: "embeddings", num: 2, label: "Plongements (wte/wpe)" },
-  { id: "forward", num: 3, label: "Propagation avant" },
+  { id: "forward", num: 3, label: "Propagation" },
   { id: "training", num: 4, label: "Entraînement" },
   { id: "inference", num: 5, label: "Inférence" },
 ];

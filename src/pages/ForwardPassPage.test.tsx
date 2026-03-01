@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, afterEach, vi } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import ForwardPassPage from "./ForwardPassPage";
 
 vi.mock("../modelStore", () => ({
@@ -46,14 +46,25 @@ vi.mock("../engine/model", async (importOriginal) => {
 
 afterEach(() => cleanup());
 
-describe("ForwardPassPage — accessibilité", () => {
-  it("le select de position est associé à un <label> via htmlFor/id", () => {
+describe("ForwardPassPage — sélecteurs", () => {
+  it("affiche les 26 boutons de tokens (a-z)", () => {
     render(<ForwardPassPage />);
-    const label = document.querySelector('label[for="forward-pos"]');
-    expect(label).toBeTruthy();
-    expect(label!.textContent).toContain("Position");
-    const select = document.getElementById("forward-pos");
-    expect(select).toBeTruthy();
-    expect(select!.tagName).toBe("SELECT");
+    const buttons = screen.getAllByRole("button");
+    const tokenButtons = buttons.filter(
+      (b) => b.textContent?.length === 1 && /^[a-z]$/.test(b.textContent),
+    );
+    expect(tokenButtons.length).toBe(26);
+  });
+
+  it("affiche les 16 boutons de positions (0-15)", () => {
+    render(<ForwardPassPage />);
+    const buttons = screen.getAllByRole("button");
+    const posButtons = buttons.filter(
+      (b) =>
+        b.textContent !== null &&
+        /^\d+$/.test(b.textContent) &&
+        Number(b.textContent) < 16,
+    );
+    expect(posButtons.length).toBe(16);
   });
 });
