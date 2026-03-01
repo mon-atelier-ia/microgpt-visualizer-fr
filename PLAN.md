@@ -321,6 +321,20 @@ Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 - ✅ 9 nouveaux tests (5 charStats + 4 EmbeddingBarChart)
 - ✅ Design doc : `docs/plans/2026-03-01-embeddings-page-vivante-design.md`
 
+### 12. Page Attention — à faire
+
+Constats et exigences pour la future page dédiée à l'attention :
+
+1. **Page Propagation actuelle** : l'attention affiche `[1.0]` car un seul token → `softmax([x]) = [1.0]` = résultat trivial, pas un bug
+2. **Page dédiée Attention** avec séquence complète (boucle multi-token comme `trainStep`), matrice d'attention par tête (4 têtes × T×T), visualisation Q/K/V, masque causal
+3. **Prototype playground** — pas un lien externe, mais une **implémentation** Canvas 2D animé intégrée dans la page React (style validé de `playground.html` : neurones, connexions, forward/backward, thème dark/light)
+4. **Données dynamiques du modèle** — zéro donnée hardcodée, tout provient de `gptForward()` via `useModel()` (même pattern que les 5 pages existantes)
+5. **Cohérence inter-pages** — les données traversent les pages de façon pédagogique (tokenisation → plongements → propagation → attention → entraînement → inférence)
+6. **Engine read-only** sauf obligation absolue — la boucle multi-token se fait côté page (pas dans l'engine), en réutilisant le pattern KV cache de `trainStep` (model.ts:242-261)
+7. **Ref** : "Attention Is All You Need" (Vaswani et al. 2017) — la page doit rendre tangible le mécanisme d'attention pour le public 10-14 ans
+
+Données disponibles dans `ForwardTrace` : `q` (number[16]), `k` (number[16]), `v` (number[16]), `attnWeights` (number[4][T]) par position. Avec N_HEAD=4 et HEAD_DIM=4, chaque tête opère sur 4 dimensions.
+
 ### 10. Polish CSS — FAIT
 
 - ✅ Scrollbars thématiques (webkit + standard `scrollbar-color`) — `86ef089`
