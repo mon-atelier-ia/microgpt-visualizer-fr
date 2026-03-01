@@ -9,7 +9,7 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 
 - **Tokenisation** — Observe comment un texte est découpé en tokens (caractère par caractère)
 - **Plongements** — Visualise comment les tokens deviennent des vecteurs de 16 dimensions, bar chart interactif au survol avec statistiques du dataset
-- **Propagation avant** — Parcours étape par étape la propagation dans le transformer
+- **Propagation** — Parcours étape par étape la propagation dans le transformer
 - **Entraînement** — Regarde le modèle apprendre en temps réel (courbe de loss, heatmaps)
 - **Inférence** — Génère des noms et observe les prédictions à chaque position
 - **Moteur autograd** — Différentiation automatique intégrée, transparente et éducative
@@ -21,7 +21,7 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 - Glossaire pédagogique intégré (30 termes avec analogies pour 10-14 ans)
 - 6 jeux de données dont 5 francophones (prénoms simples, prénoms top 1K, prénoms INSEE 14K, pokémon, dinosaures)
 - Accessibilité WCAG 2.1 AA (navigation clavier, contrastes, labels, `prefers-reduced-motion`)
-- 103 tests (composants, engine, accessibilité, store, intégrité des données)
+- 104 tests (composants, engine, accessibilité, store, intégrité des données)
 - ErrorBoundary avec message français et bouton de rechargement
 - Code splitting (`React.lazy` + `Suspense`)
 - Documentation architecture réseau de neurones ([`docs/architecture-nn.md`](docs/architecture-nn.md))
@@ -59,7 +59,7 @@ L'application est accessible sur `http://localhost:5173`
 | `pnpm build`   | Build de production                                |
 | `pnpm preview` | Aperçu local du build de production                |
 | `pnpm lint`    | ESLint                                             |
-| `pnpm test`    | Vitest (103 tests)                                 |
+| `pnpm test`    | Vitest (104 tests)                                 |
 
 ## Structure du projet
 
@@ -158,7 +158,7 @@ An interactive web application for visualizing and understanding how GPT (Genera
 
 - **Tokenizer Visualization** — See how text is broken down into tokens
 - **Embeddings Explorer** — Visualize how tokens are converted to vector representations, with interactive bar chart and dataset statistics on hover
-- **Forward Pass Breakdown** — Step through the transformer's forward propagation
+- **Propagation** — Step through the transformer's forward propagation
 - **Training Process** — Watch the model learn in real-time with loss charts and heatmaps
 - **Inference Mode** — Generate text and see predictions as they happen
 - **Custom Autograd Engine** — Built-in automatic differentiation for transparency

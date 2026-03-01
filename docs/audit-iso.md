@@ -92,7 +92,7 @@
 | Navigation clavier    | 5/5   | Roving tabindex, 9 `:focus-visible`, Escape dismiss, `<dialog>` natif   |
 | Landmarks sémantiques | 5/5   | `<main>`, `<aside>`, `<nav>`, `<header>`, `<section aria-labelledby>`   |
 | Récupérabilité        | 5/5   | ErrorBoundary FR, `resetModel()`, reload, rAF cleanup                   |
-| Tests                 | 4,5/5 | 103 tests, 18 fichiers. Composants + engine + pages + store + données   |
+| Tests                 | 4,5/5 | 104 tests, 18 fichiers. Composants + engine + pages + store + données   |
 | Glossaire pédagogique | 4,5/5 | 30 termes, Tier 1/2, analogies adaptées 10-14 ans                       |
 | Code splitting        | 4,5/5 | `React.lazy()` + `Suspense`, 5 chunks 4-7 KB chacun                     |
 
@@ -112,7 +112,7 @@
 
 #### Testabilité (4/5)
 
-- (+) 103 tests, 18 fichiers de tests
+- (+) 104 tests, 18 fichiers de tests
 - (+) Composants isolés testables (Term, Heatmap, ProbabilityBar)
 - (+) Engine : 11 smoke tests (autograd, model, random) ajoutés
 - (-) Pages à couverture variable (TrainingPage : 2 tests, InferencePage : 6 tests)

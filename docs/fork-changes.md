@@ -124,6 +124,15 @@
 | Bar chart on wpe heatmap hover + `emptyText` prop                            | `EmbeddingsPage.tsx`, `EmbeddingBarChart.tsx`           | Même pattern que wte — survol position = 16 barres. `emptyText` prop pour message contextuel               |
 | Interactive position selector (0–15) in combine panel                        | `EmbeddingsPage.tsx`                                    | Remplace `wpe[0]` codé en dur — sélection dynamique synchronise VectorBar + bar chart                      |
 
+## Cohérence des sélecteurs et renommage
+
+| Change                                                              | Fichier(s)                       | Justification                                                                                               |
+| ------------------------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Rename "Propagation avant" → "Propagation" (sidebar + page title)   | `App.tsx`, `ForwardPassPage.tsx` | La page couvre forward et backward — le titre "avant" était réducteur                                       |
+| Full token selector: 26 buttons (a-z) replacing upstream's 10 (a-j) | `ForwardPassPage.tsx`            | `uchars.slice(0,10)` upstream arbitraire. Pattern `.btn-toggle--char` unifié avec EmbeddingsPage            |
+| Position selector: 16 buttons replacing `<select>` dropdown         | `ForwardPassPage.tsx`            | Pattern `.btn-toggle--char` cohérent avec EmbeddingsPage — remplace le `<select>` natif incohérent          |
+| Token-box display (page 1) preserved as-is                          | —                                | Différenciation sélecteur (`.btn-toggle--char`) / affichage (`.token-box`) — juste milieu qualité/cohérence |
+
 ## Deployment
 
 | Change                                                                     | Justification                                  |

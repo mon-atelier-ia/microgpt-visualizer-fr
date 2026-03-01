@@ -51,7 +51,7 @@ Commits : `19a3d1e`, `fd323e8`
 | -------------- | ------------------------ |
 | Tokenizer      | Tokenisation             |
 | Embeddings     | Plongements (Embeddings) |
-| Forward Pass   | Propagation avant        |
+| Forward Pass   | Propagation              |
 | Training       | Entraînement             |
 | Inference      | Inférence                |
 
@@ -206,7 +206,7 @@ docs/
 │ ├── 2026-03-01-embeddings-page-vivante-design.md # Design EmbeddingsPage vivante
 │ └── 2026-03-01-embeddings-page-vivante-plan.md # Plan d'implémentation
 
-**Total : ~5 200 lignes src, 31 fichiers source + 18 fichiers test. 103 tests. 2 playgrounds standalone.**
+**Total : ~5 200 lignes src, 31 fichiers source + 18 fichiers test. 104 tests. 2 playgrounds standalone.**
 
 ### Constats clés
 
