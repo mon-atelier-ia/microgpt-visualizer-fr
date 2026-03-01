@@ -56,7 +56,7 @@ export default memo(function EmbeddingsPage() {
         <div className="panel-title">wte — Plongements de tokens</div>
         <div className="label-dim" style={{ marginBottom: 8 }}>
           {model.totalStep === 0
-            ? "Valeurs aléatoires — reviens après avoir entraîné le modèle à l'étape 4 pour voir des motifs apparaître"
+            ? "Valeurs aléatoires — reviens après avoir entraîné le modèle à l'étape 5 pour voir des motifs apparaître"
             : `Entraîné (${model.totalStep} étapes) — les lettres similaires développent des motifs proches`}
         </div>
         <div className="explain">

@@ -49,7 +49,7 @@ export default memo(function InferencePage() {
   const maxProb = Math.max(...top10.map((t) => t.prob), 0.01);
 
   return (
-    <PageSection id="inference" title="5. Inférence">
+    <PageSection id="inference" title="6. Inférence">
       <p className="page-desc">
         Après l'entraînement, le modèle génère de nouveaux noms qu'il n'a jamais
         vus. En partant de <Term id="bos" />, il prédit le caractère suivant, en

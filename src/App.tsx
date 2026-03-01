@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 const TokenizerPage = lazy(() => import("./pages/TokenizerPage"));
 const EmbeddingsPage = lazy(() => import("./pages/EmbeddingsPage"));
 const ForwardPassPage = lazy(() => import("./pages/ForwardPassPage"));
+const AttentionPage = lazy(() => import("./pages/AttentionPage"));
 const TrainingPage = lazy(() => import("./pages/TrainingPage"));
 const InferencePage = lazy(() => import("./pages/InferencePage"));
 
@@ -14,8 +15,9 @@ const PAGES = [
   { id: "tokenizer", num: 1, label: "Tokenisation" },
   { id: "embeddings", num: 2, label: "Plongements (wte/wpe)" },
   { id: "forward", num: 3, label: "Propagation" },
-  { id: "training", num: 4, label: "Entraînement" },
-  { id: "inference", num: 5, label: "Inférence" },
+  { id: "attention", num: 4, label: "Attention" },
+  { id: "training", num: 5, label: "Entraînement" },
+  { id: "inference", num: 6, label: "Inférence" },
 ];
 
 function useTheme() {
@@ -209,6 +211,7 @@ export default function App() {
               {page === "tokenizer" && <TokenizerPage />}
               {page === "embeddings" && <EmbeddingsPage />}
               {page === "forward" && <ForwardPassPage />}
+              {page === "attention" && <AttentionPage />}
               {page === "training" && <TrainingPage />}
               {page === "inference" && <InferencePage />}
             </Suspense>

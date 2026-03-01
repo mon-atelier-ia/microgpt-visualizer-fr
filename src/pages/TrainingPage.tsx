@@ -59,7 +59,7 @@ export default memo(function TrainingPage() {
   };
 
   return (
-    <PageSection id="training" title="4. Entraînement">
+    <PageSection id="training" title="5. Entraînement">
       <p className="page-desc">
         À chaque étape : choisir un nom, envoyer ses caractères un par un,
         mesurer à quel point les prédictions sont fausses (<Term id="loss" />
