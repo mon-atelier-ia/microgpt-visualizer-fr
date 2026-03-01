@@ -3,6 +3,7 @@ import {
   gptForward,
   tokenize,
   tokenLabel,
+  BOS,
   N_LAYER,
   N_HEAD,
   HEAD_DIM,
@@ -15,8 +16,6 @@ import PageSection from "../components/PageSection";
 import Term from "../components/Term";
 import { VectorBar } from "../components/Heatmap";
 import AttnMatrix from "../components/AttnMatrix";
-
-const PRESET_NAMES = ["emma", "lea", "hugo", "ali"];
 
 function buildAttnMatrix(traces: ForwardTrace[], head: number): number[][] {
   const T = traces.length;
@@ -32,16 +31,16 @@ function buildAttnMatrix(traces: ForwardTrace[], head: number): number[][] {
 
 export default memo(function AttentionPage() {
   const model = useModel();
-  const [name, setName] = useState("emma");
-  const [inputValue, setInputValue] = useState("");
+  const [input, setInput] = useState("emma");
   const [selectedPos, setSelectedPos] = useState(0);
   const [selectedHead, setSelectedHead] = useState(0);
 
-  const tokens = useMemo(() => tokenize(name), [name]);
-  const tokenLabels = useMemo(
-    () => tokens.map((id) => tokenLabel(id)),
-    [tokens],
-  );
+  const name = input
+    .toLowerCase()
+    .replace(/[^a-z]/g, "")
+    .slice(0, 14);
+  const tokens = useMemo(() => (name ? tokenize(name) : []), [name]);
+  const tokenLabels = tokens.map((id) => tokenLabel(id));
 
   const n = Math.min(BLOCK_SIZE, tokens.length - 1);
 
@@ -62,23 +61,14 @@ export default memo(function AttentionPage() {
     [traces, selectedHead],
   );
 
+  const allHeadMatrices = useMemo(
+    () => Array.from({ length: N_HEAD }, (_, h) => buildAttnMatrix(traces, h)),
+    [traces],
+  );
+
   const displayLabels = tokenLabels.slice(0, n);
   const safePos = Math.min(selectedPos, n - 1);
   const trace = traces[safePos];
-
-  const handleNamePreset = (preset: string) => {
-    setName(preset);
-    setInputValue("");
-    setSelectedPos(0);
-  };
-
-  const handleInputSubmit = () => {
-    const cleaned = inputValue.toLowerCase().replace(/[^a-z]/g, "");
-    if (cleaned.length >= 2) {
-      setName(cleaned);
-      setSelectedPos(0);
-    }
-  };
 
   return (
     <PageSection id="attention" title="4. Attention">
@@ -126,54 +116,63 @@ export default memo(function AttentionPage() {
           observer l'attention.
         </div>
 
-        {/* Sélecteur de nom */}
-        <div className="controls">
-          <span className="label-dim">Nom :</span>
-          {PRESET_NAMES.map((preset) => (
-            <button
-              key={preset}
-              className={`btn btn-toggle btn-toggle--char ${preset === name ? "" : "btn-secondary"}`}
-              onClick={() => handleNamePreset(preset)}
-            >
-              {preset}
-            </button>
-          ))}
-          <input
-            type="text"
-            className="btn btn-secondary"
-            style={{ width: 80, textAlign: "center" }}
-            placeholder="autre…"
-            aria-label="Nom personnalisé (a-z)"
-            maxLength={14}
-            value={inputValue}
-            onChange={(e) =>
-              setInputValue(e.target.value.toLowerCase().replace(/[^a-z]/g, ""))
-            }
-            onKeyDown={(e) => e.key === "Enter" && handleInputSubmit()}
-            onBlur={handleInputSubmit}
-          />
+        <label htmlFor="attention-name-input" className="sr-only">
+          Nom à analyser
+        </label>
+        <input
+          id="attention-name-input"
+          type="text"
+          value={input}
+          onChange={(e) => {
+            setInput(e.target.value);
+            setSelectedPos(0);
+          }}
+          placeholder="Tape un nom..."
+          maxLength={14}
+        />
+
+        <div className="token-flow token-flow--animated">
+          {tokens.slice(0, n).map((t, i) => {
+            const label = tokenLabel(t);
+            const isBos = t === BOS;
+            return (
+              <span key={i} className="d-contents">
+                {i > 0 && (
+                  <span
+                    className="arrow-sym"
+                    style={{ animationDelay: `${i * 80 + 60}ms` }}
+                  >
+                    →
+                  </span>
+                )}
+                <div
+                  className={`token-box ${isBos ? "bos" : ""} ${i === safePos ? "token-box--selected" : ""}`}
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
+                  <span className="char">{label}</span>
+                  <span className="id">id: {t}</span>
+                </div>
+              </span>
+            );
+          })}
         </div>
 
-        {/* Affichage tokens */}
+        {/* Sélecteur de position (comme ForwardPassPage) */}
         <div className="controls" style={{ marginTop: 8 }}>
-          <span className="label-dim">Tokens :</span>
-          {/* ANIMATION: tokens apparaissent un à un (étape 3) */}
+          <span className="label-dim">Position :</span>
           {displayLabels.map((lbl, i) => (
             <button
               key={i}
+              type="button"
               className={`btn btn-toggle btn-toggle--char ${i === safePos ? "" : "btn-secondary"}`}
               onClick={() => setSelectedPos(i)}
-              style={{
-                opacity: i <= safePos ? 1 : 0.4,
-              }}
             >
-              {lbl}
+              {i}
             </button>
           ))}
         </div>
         <div className="label-dim" style={{ marginTop: 4 }}>
-          Position {safePos} sur {n - 1} — le token « {tokenLabels[safePos]} »
-          voit{" "}
+          Position {safePos} — le token « {displayLabels[safePos]} » voit{" "}
           {safePos === 0
             ? "uniquement lui-même"
             : `les ${safePos + 1} tokens de 0 à ${safePos}`}
@@ -184,8 +183,8 @@ export default memo(function AttentionPage() {
       {trace && (
         <div className="panel">
           <div className="panel-title">
-            Q, K, V — trois rôles (position {safePos} : « {tokenLabels[safePos]}{" "}
-            »)
+            Q, K, V — trois rôles (position {safePos} : «{" "}
+            {displayLabels[safePos]} »)
           </div>
           <div className="explain">
             À chaque position, le token courant est projeté en trois vecteurs de{" "}
@@ -250,6 +249,7 @@ export default memo(function AttentionPage() {
             {Array.from({ length: N_HEAD }, (_, h) => (
               <button
                 key={h}
+                type="button"
                 className={`btn btn-toggle ${h === selectedHead ? "" : "btn-secondary"}`}
                 onClick={() => setSelectedHead(h)}
               >
@@ -295,7 +295,7 @@ export default memo(function AttentionPage() {
                   Tête {h}
                 </div>
                 <AttnMatrix
-                  matrix={buildAttnMatrix(traces, h)}
+                  matrix={allHeadMatrices[h]}
                   tokens={displayLabels}
                   highlightRow={safePos}
                   compact

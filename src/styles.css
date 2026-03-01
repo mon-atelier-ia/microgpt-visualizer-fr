@@ -415,6 +415,10 @@ input[type="range"]:focus-visible {
   color: var(--red);
   font-size: 12px;
 }
+.token-box--selected {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue);
+}
 
 /* Tokenisation slide+fade animation (TokenizerPage only) */
 @keyframes tokenSlideIn {
