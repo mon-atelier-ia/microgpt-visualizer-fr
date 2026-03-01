@@ -95,8 +95,7 @@ export const GLOSSARY: Record<string, TermDef> = {
 
   plongement: {
     label: "plongement",
-    short:
-      "La représentation d'un token sous forme de vecteur de nombres.",
+    short: "La représentation d'un token sous forme de vecteur de nombres.",
     long: `Imagine que chaque lettre a une adresse GPS secrète — pas dans le monde réel, mais dans un espace mathématique à 16 dimensions.
 
 Le plongement (embedding en anglais) transforme un simple numéro de token (par exemple a = 0) en une liste de 16 nombres décimaux. Ces nombres ne sont pas choisis à l'avance : le modèle les apprend pendant l'entraînement.
@@ -294,5 +293,22 @@ Résultat : « emma »
 C'est exactement comme ça que ChatGPT fonctionne ! Quand tu lui poses une question, il génère sa réponse un token à la fois, de gauche à droite. La différence : ChatGPT a des milliards de paramètres et un vocabulaire de ~100 000 tokens, là où notre micro-modèle a 4 192 paramètres et 27 tokens.
 
 La limite de cette approche : le modèle ne peut pas « revenir en arrière » — chaque choix est définitif.`,
+  },
+  "connexion-residuelle": {
+    label: "connexion résiduelle",
+    short:
+      "Additionner la sortie d'un bloc à son entrée. Même si le bloc n'apprend rien, l'information passe quand même.",
+    long: `Imagine un trapéziste qui fait des acrobaties au-dessus d'un filet de sécurité.
+
+Le filet, c'est la connexion résiduelle : même si l'acrobatie (l'attention ou le MLP) rate complètement, le trapéziste (l'information) retombe dans le filet et continue son chemin.
+
+Techniquement, c'est une simple addition :
+- Entrée du bloc : x
+- Sortie du bloc : f(x)
+- Résultat : x + f(x)
+
+Si le bloc n'apprend rien d'utile (f(x) ≈ 0), le signal original x passe quand même. C'est ce qui permet d'empiler beaucoup de couches sans que l'information se perde.
+
+Notre micro-modèle a 2 connexions résiduelles : une après l'attention et une après le MLP. Les grands modèles (GPT-4, Claude) en ont des centaines !`,
   },
 };

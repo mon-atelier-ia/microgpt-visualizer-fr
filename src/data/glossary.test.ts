@@ -4,19 +4,53 @@ import { GLOSSARY, type TermDef } from "./glossary";
 /** Clés attendues (plan Tier 1 + Tier 2 + ajouts). */
 const EXPECTED_KEYS = [
   // Tier 1
-  "token", "bos", "vocabulaire", "identifiant", "vecteur", "dimension",
-  "parametre", "logits", "neurone", "taux-apprentissage", "moyenne-mobile",
-  "distribution", "tokeniseur", "wte", "wpe",
+  "token",
+  "bos",
+  "vocabulaire",
+  "identifiant",
+  "vecteur",
+  "dimension",
+  "parametre",
+  "logits",
+  "neurone",
+  "taux-apprentissage",
+  "moyenne-mobile",
+  "distribution",
+  "tokeniseur",
+  "wte",
+  "wpe",
   // Tier 2
-  "plongement", "attention", "softmax", "relu", "mlp", "rmsnorm", "loss",
-  "gradient", "retropropagation", "adam", "temperature", "echantillonnage",
+  "plongement",
+  "attention",
+  "softmax",
+  "relu",
+  "mlp",
+  "rmsnorm",
+  "loss",
+  "gradient",
+  "retropropagation",
+  "adam",
+  "temperature",
+  "echantillonnage",
   "generation-autoregressive",
+  "connexion-residuelle",
 ];
 
 const TIER2_KEYS = [
-  "plongement", "attention", "softmax", "relu", "mlp", "rmsnorm", "loss",
-  "gradient", "retropropagation", "adam", "temperature", "echantillonnage",
+  "plongement",
+  "attention",
+  "softmax",
+  "relu",
+  "mlp",
+  "rmsnorm",
+  "loss",
+  "gradient",
+  "retropropagation",
+  "adam",
+  "temperature",
+  "echantillonnage",
   "generation-autoregressive",
+  "connexion-residuelle",
 ];
 
 describe("GLOSSARY — intégrité des données", () => {
@@ -67,7 +101,10 @@ describe("GLOSSARY — intégrité des données", () => {
   it("les termes Tier 1 n'ont pas de long", () => {
     const tier1Keys = EXPECTED_KEYS.filter((k) => !TIER2_KEYS.includes(k));
     for (const key of tier1Keys) {
-      expect(GLOSSARY[key].long, `${key} ne devrait pas avoir de long`).toBeUndefined();
+      expect(
+        GLOSSARY[key].long,
+        `${key} ne devrait pas avoir de long`,
+      ).toBeUndefined();
     }
   });
 
@@ -76,7 +113,9 @@ describe("GLOSSARY — intégrité des données", () => {
     expect(GLOSSARY.retropropagation.label).toBe("rétropropagation");
     expect(GLOSSARY.temperature.label).toBe("température");
     expect(GLOSSARY.echantillonnage.label).toBe("échantillonnage");
-    expect(GLOSSARY["generation-autoregressive"].label).toBe("génération autorégressive");
+    expect(GLOSSARY["generation-autoregressive"].label).toBe(
+      "génération autorégressive",
+    );
     expect(GLOSSARY["taux-apprentissage"].label).toBe("taux d'apprentissage");
   });
 });
