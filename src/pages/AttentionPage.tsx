@@ -16,7 +16,9 @@ import PageSection from "../components/PageSection";
 import Term from "../components/Term";
 import { VectorBar } from "../components/Heatmap";
 import AttnMatrix from "../components/AttnMatrix";
-import BertVizView from "../components/BertVizView";
+import BertVizView, { HEAD_COLORS } from "../components/BertVizView";
+import { classifyHead } from "../utils/classifyHead";
+import { headExplanation } from "../utils/headExplanation";
 
 function buildAttnMatrix(traces: ForwardTrace[], head: number): number[][] {
   const T = traces.length;
@@ -35,6 +37,8 @@ export default memo(function AttentionPage() {
   const [input, setInput] = useState("emma");
   const [selectedPos, setSelectedPos] = useState(0);
   const [selectedHead, setSelectedHead] = useState(0);
+  const [activeHead, setActiveHead] = useState<number | "all">("all");
+  const [hoverSrc, setHoverSrc] = useState<number | null>(null);
 
   const name = input
     .toLowerCase()
@@ -274,27 +278,81 @@ export default memo(function AttentionPage() {
         </div>
       )}
 
-      {/* ── Panneau 5 : 4 têtes, 4 regards ── */}
+      {/* ── Panneau 5 : 4 têtes, 4 regards — deux boîtes côte à côte ── */}
       {traces.length > 0 && (
-        <div className="panel">
-          <div className="panel-title">4 têtes, 4 regards différents</div>
-          <div className="explain">
-            Le modèle a <b>{N_HEAD} têtes</b> d'attention qui travaillent en
-            parallèle. Chacune pose une question différente. Après
-            l'entraînement (étape 5), elles se spécialisent : l'une regarde
-            peut-être le token juste avant, une autre cherche les voyelles, une
-            autre le début du nom…
+        <div className="panel-row">
+          <div className="panel">
+            <div className="panel-title">4 têtes, 4 regards différents</div>
+            <div className="explain">
+              Le modèle a <b>{N_HEAD} têtes</b> d'attention qui travaillent en
+              parallèle. Chacune pose une question différente. Après
+              l'entraînement (étape 5), elles se spécialisent : l'une regarde
+              peut-être le token juste avant, une autre cherche les voyelles,
+              une autre le début du nom…
+            </div>
+            <div className="label-dim mt-4">
+              {model.totalStep === 0
+                ? "Poids aléatoires — les têtes se ressemblent. Reviens après avoir entraîné le modèle à l'étape 5 pour voir des motifs apparaître."
+                : `Entraîné (${model.totalStep} étapes) — observe comment les têtes ont appris des motifs différents.`}
+            </div>
+            <BertVizView
+              matrices={allHeadMatrices}
+              tokens={displayLabels}
+              tokenIds={tokens.slice(0, n)}
+              activeHead={activeHead}
+              onActiveHeadChange={setActiveHead}
+              selectedSrc={safePos}
+              onClickSrc={setSelectedPos}
+              hoverSrc={hoverSrc}
+              onHoverSrc={setHoverSrc}
+            />
           </div>
-          <div className="label-dim mt-4">
-            {model.totalStep === 0
-              ? "Poids aléatoires — les têtes se ressemblent. Reviens après avoir entraîné le modèle à l'étape 5 pour voir des motifs apparaître."
-              : `Entraîné (${model.totalStep} étapes) — observe comment les têtes ont appris des motifs différents.`}
+
+          <div className="panel">
+            <div className="panel-title">
+              {activeHead === "all"
+                ? `Poids d'attention — position ${safePos} « ${displayLabels[safePos]} »`
+                : `Poids — Tête ${activeHead} (${classifyHead(allHeadMatrices[activeHead as number])})`}
+            </div>
+            <div className="explain">
+              {activeHead === "all" ? (
+                <>
+                  Chaque barre montre{" "}
+                  <b>combien « {displayLabels[safePos]} » regarde</b> ce token
+                  (en %). C'est la moyenne des {N_HEAD} têtes — chacune regarde
+                  des choses différentes, le modèle combine leurs points de vue.
+                </>
+              ) : (
+                headExplanation(
+                  classifyHead(allHeadMatrices[activeHead as number]),
+                  displayLabels[safePos],
+                )
+              )}
+            </div>
+            {Array.from({ length: safePos + 1 }, (_, j) => {
+              const isAll = activeHead === "all";
+              const w = isAll
+                ? allHeadMatrices.reduce((s, hw) => s + hw[safePos][j], 0) /
+                  N_HEAD
+                : allHeadMatrices[activeHead as number][safePos][j];
+              const pct = (w * 100).toFixed(1);
+              const color = isAll
+                ? "var(--cyan)"
+                : HEAD_COLORS[activeHead as number];
+              return (
+                <div key={j} className="bv-weight-row">
+                  <span className="bv-weight-label">{displayLabels[j]}</span>
+                  <div className="bv-weight-track">
+                    <div
+                      className="bv-weight-fill"
+                      style={{ width: `${pct}%`, background: color }}
+                    />
+                  </div>
+                  <span className="bv-weight-pct">{pct} %</span>
+                </div>
+              );
+            })}
           </div>
-          <BertVizView
-            matrices={allHeadMatrices}
-            tokens={displayLabels}
-            tokenIds={tokens.slice(0, n)}
-          />
         </div>
       )}
 

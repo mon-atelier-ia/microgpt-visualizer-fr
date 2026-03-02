@@ -864,12 +864,6 @@ button.gen-name:focus-visible {
 }
 
 /* ── BertViz visualization ── */
-.bv-row {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  margin-top: 12px;
-}
 .bv-container {
   display: flex;
   align-items: flex-start;
@@ -945,21 +939,6 @@ button.gen-name:focus-visible {
   width: 16px;
   height: 3px;
   border-radius: 2px;
-}
-.bv-detail {
-  flex: 1;
-  min-width: 0;
-  padding: 12px 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  align-self: stretch;
-}
-.bv-detail-title {
-  font-size: 12px;
-  font-weight: bold;
-  color: var(--blue);
-  margin-bottom: 8px;
 }
 .bv-weight-row {
   display: flex;
@@ -1369,8 +1348,7 @@ button.gen-name:focus-visible {
   .main {
     padding: 20px;
   }
-  .panel-row,
-  .bv-row {
+  .panel-row {
     flex-direction: column;
   }
   .heatmap-with-bars {
