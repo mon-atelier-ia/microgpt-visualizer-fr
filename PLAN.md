@@ -176,7 +176,7 @@ src/
 │   ├── ErrorBoundary.test.tsx     #  52 lignes — 3 tests (render, catch, reload)
 │   ├── FlowDiagram.tsx            # 123 lignes — sous-composant ForwardPassPage (C-4)
 │   ├── VectorsPanel.tsx           #  41 lignes — sous-composant ForwardPassPage (C-4)
-│   ├── AttentionWeightsPanel.tsx  #  36 lignes — sous-composant ForwardPassPage (C-4)
+│   ├── NNDiagram.tsx              # ~300 lignes — Canvas 2D réseau de neurones interactif (section 16)
 │   └── MLPActivationPanel.tsx     #  46 lignes — sous-composant ForwardPassPage (C-4)
 ├── pages/
 │   ├── TokenizerPage.tsx          # 162 lignes — mapping char→id, tokenisation
@@ -225,7 +225,7 @@ docs/
 │ ├── 2026-03-01-embeddings-page-vivante-design.md # Design EmbeddingsPage vivante
 │ └── 2026-03-01-embeddings-page-vivante-plan.md # Plan d'implémentation
 
-**Total : ~5 700 lignes src (hors data blobs), 41 fichiers source + 19 fichiers test. 108 tests. 4 playgrounds standalone.**
+**Total : ~6 000 lignes src (hors data blobs), 41 fichiers source + 20 fichiers test. 111 tests. 4 playgrounds standalone.**
 
 ### Constats clés
 
@@ -239,7 +239,7 @@ docs/
 - **Attention** : boucle multi-token côté page (KV cache pattern), matrice T×T `<table>` sémantique
 - **Model sharing** : `useSyncExternalStore` dans `modelStore.ts`, hook `useModel()` (A-1 corrigé)
 - **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
-- **Tests** : Vitest + jsdom + @testing-library/react (108 tests, 19 fichiers)
+- **Tests** : Vitest + jsdom + @testing-library/react (111 tests, 20 fichiers)
 - **ErrorBoundary** : class component, `window.location.reload()`, sidebar hors boundary
 - **Code splitting** : `React.lazy()` + `Suspense` → 6+ chunks JS séparés
 - **CSS** : 20 classes utilitaires + BEM + `.sr-only` + `prefers-reduced-motion`. Inline styles réduits de 64 à 7 (pages originales) + 8 (AttentionPage, dont 2 dynamiques)
@@ -314,7 +314,7 @@ Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 ### 8. Phase 4 — roadmap restante
 
 - ✅ A-1 : `useSyncExternalStore` dans `modelStore.ts` + `memo()` sur 6 pages
-- ✅ C-4 : Décomposer `ForwardPassPage` en 4 sous-composants (`FlowDiagram`, `VectorsPanel`, `AttentionWeightsPanel`, `MLPActivationPanel`)
+- ✅ C-4 : Décomposer `ForwardPassPage` en sous-composants (`FlowDiagram`, `VectorsPanel`, `MLPActivationPanel`, `NNDiagram`)
 - ✅ UX-1 : `window.confirm()` avant changement dataset si `totalStep > 0`
 - ✅ MIN-8 : Hint clavier `<kbd>↑↓</kbd>` sous Heatmap interactif
 - ✅ MIN-1 : Retiré (faux positif — `.push()` in-place, `.length` = seul trigger)
@@ -459,35 +459,33 @@ Amélioration pédagogique : rapprocher les contrôles du feedback visuel (proxi
 - ✅ **AttentionPage** (page 4) : BertViz + barres de poids (panneau 3) remonté juste après l'input (panneau 2). Q/K/V et matrice descendent comme sections détail. L'élève tape un nom → voit immédiatement les lignes SVG réagir.
 - Trade-off assumé : FlowDiagram (page 3) est dynamique (`topChar`, `topProbPct`) mais maintenant au-dessus des contrôles — son feedback sera hors écran au changement de token. Acceptable car le feedback principal (barres de probabilités) reste en dessous.
 
-### 16. Intégration visualisation NN dans page 3 (Propagation) — À FAIRE
+### 16. Intégration visualisation NN dans page 3 (Propagation) — FAIT
 
-**Constat** : `playground.html` montre un réseau de neurones 5 colonnes [16, 16, 64, 16, 27] avec animation forward (vert) + backward (orange). C'est un prototype Canvas 2D standalone. La page 3 actuelle a `FlowDiagram` (texte dans des boîtes → → →), des panneaux VectorBar, et des détails attention/MLP.
+**Composant** : `NNDiagram.tsx` (~300 lignes) — Canvas 2D interactif montrant le réseau de neurones complet en 5 colonnes [Embedding(16), Attention(4×4 têtes), MLP caché(64), MLP sortie(16), Probabilités(27)].
 
-**Plan** :
+**Réalisé** :
 
-- Intégrer la visualisation NN comme composant React Canvas dans la page 3
-- Prévoir légendes et textes pédagogiques adaptés à la story de la page
-- Le FlowDiagram actuel (texte) pourrait rester comme vue complémentaire ou être remplacé
+- ✅ Port de `playground.html` en composant React TypeScript avec données réelles du modèle
+- ✅ Canvas 2D avec IntersectionObserver (scroll reveal), ResizeObserver (responsive), MutationObserver (thème)
+- ✅ Machine d'état animation : dormant → forward (350ms/couche) → idle avec hover interactif
+- ✅ Neurones colorés par activations réelles (vert=positif, rouge=négatif, via CSS variables)
+- ✅ Connexions pondérées par les poids réels du modèle (alpha normalisée par couche)
+- ✅ Brackets H0-H3 sur la colonne Attention, labels par colonne
+- ✅ Bouton « Rejouer » pour relancer l'animation
+- ✅ Support `prefers-reduced-motion` (skip animation, état final immédiat)
+- ✅ Réordonnancement page 3 : Contrôles → Vecteurs+Probabilités → FlowDiagram → NNDiagram → MLP
+- ✅ Suppression `AttentionWeightsPanel` (redondant avec page 4)
+- ✅ Continuité pédagogique : poids lus via `model.stateDict` + `[model, model.totalStep]` — si l'élève entraîne page 5 et revient page 3, le NNDiagram reflète les poids entraînés
+- ✅ Forward only (backward réservé à page 5 avec `playground-full.html`)
+- ✅ 2 tests (canvas role/aria-label, bouton Rejouer) + 1 test intégration dans ForwardPassPage
+- ✅ Vérifié : dark/light theme, responsive 480px/1280px, animation replay, changement de token
 
-**Questions ouvertes** :
+**Décisions** :
 
-- Canvas 2D (comme le playground) ou migration vers SVG React ? Canvas = plus performant pour les animations, SVG = plus React-idiomatique
-- Le playground anime forward ET backward — la page 3 s'appelle "Propagation" (couvre les deux). Montrer les deux phases ou seulement forward (backward → plutôt page 5 Entraînement) ?
-- Quelles données réelles du modèle connecter ? Poids des connexions, activations, gradients ?
-- Comment articuler avec les panneaux existants (VectorsPanel, AttentionWeightsPanel, MLPActivationPanel) ?
-
-**Pré-requis** : audit de la story pédagogique des 6 pages pour éviter oublis et répétitions. Chaque page a un rôle dans le parcours — vérifier la cohérence narrative avant d'intégrer.
-
-**Story pédagogique à auditer** :
-
-1. Tokenisation : char → id (entrée)
-2. Plongements : id → vecteur 16D (table de lookup)
-3. Propagation : le vecteur traverse le modèle (forward, et backward ?)
-4. Attention : les tokens communiquent (multi-token, matrices, BertViz)
-5. Entraînement : ajuster les poids (loss, backward, gradient descent)
-6. Inférence : générer un nom (autorégressif)
-
-→ Vérifier que chaque concept est introduit UNE fois et référencé (pas réexpliqué) ensuite.
+- Canvas 2D (pas SVG) — performance (~2700 connexions), pattern existant `LossChart.tsx`
+- Forward only — backward = page 5 (Entraînement)
+- `probs.length` dynamique — support vocabulaire variable (27-101)
+- Poids extraits dans ForwardPassPage (props primitives), pas dans NNDiagram (principe C-4)
 
 ### 10. Polish CSS — FAIT
 

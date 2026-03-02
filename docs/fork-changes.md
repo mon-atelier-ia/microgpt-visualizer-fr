@@ -151,11 +151,24 @@ Commits: `f9e6143`, `4dd8f5a`, `c2d8f08`, `372a469`, `fc74ff3`, `657b296`, `8db4
 
 Commits: `4ea6c80`, `226e502`, `8c63af0`, `441b85b`, `e13fcdc`, `c6e7c2c`, `8baa777`
 
+## NNDiagram — visualisation Canvas du réseau (page 3)
+
+| Change                                                                    | Fichier(s)                                           | Justification                                                                                                         |
+| ------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `NNDiagram.tsx` Canvas 2D component (~300 lines)                          | `src/components/NNDiagram.tsx`                       | Port de `playground.html` en React : 5 colonnes [16,16,64,16,27], neurones colorés, connexions pondérées, hover, a11y |
+| IntersectionObserver + ResizeObserver + MutationObserver                  | `src/components/NNDiagram.tsx`                       | Scroll reveal, responsive canvas, thème réactif — waow effect complet                                                 |
+| Forward-only animation (dormant→forward→idle, 350ms/couche)               | `src/components/NNDiagram.tsx`                       | Forward only (backward réservé à page 5 Entraînement avec `playground-full.html`)                                     |
+| Weights extracted via `model.stateDict` + `[model, model.totalStep]` deps | `src/pages/ForwardPassPage.tsx`                      | Continuité pédagogique : si l'élève entraîne page 5 et revient page 3, le NNDiagram reflète les poids entraînés       |
+| Page 3 reorder: Controls → Vectors+Probs → FlowDiagram → NNDiagram → MLP  | `src/pages/ForwardPassPage.tsx`                      | Flux pédagogique : contrôles en premier, waow effect après les détails abstraits, MLP en dernier                      |
+| Delete `AttentionWeightsPanel` (36 lines)                                 | `src/components/AttentionWeightsPanel.tsx` (deleted) | Redondant avec page 4 Attention. N'affichait que [1.0] en mode single-token                                           |
+| CSS `.nn-canvas-wrap` (25 lines) + responsive breakpoints                 | `src/styles.css`                                     | Scoped CSS, inset box-shadow observatory effect, 400px→300px→220px responsive                                         |
+| 3 new tests (2 NNDiagram + 1 ForwardPassPage canvas)                      | `NNDiagram.test.tsx`, `ForwardPassPage.test.tsx`     | Canvas role/aria-label, bouton Rejouer, intégration dans page parent                                                  |
+
 ## Layout pédagogique — réordonnancement pages 3 et 4
 
 | Change                                                                         | Fichier(s)            | Justification                                                                                                             |
 | ------------------------------------------------------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| ForwardPassPage: FlowDiagram before controls (was: controls first)             | `ForwardPassPage.tsx` | Proximité cause→effet : contrôles adjacents aux panneaux dynamiques (VectorsPanel, ProbabilityBar) en dessous             |
+| ForwardPassPage: Controls → Vectors → FlowDiagram → NNDiagram → MLP            | `ForwardPassPage.tsx` | Contrôles en tête, détails abstraits au milieu, waow effect Canvas, MLP en dernier                                        |
 | AttentionPage: BertViz panel moved from position 5 to position 3 (after input) | `AttentionPage.tsx`   | L'élève tape un nom → voit immédiatement les lignes SVG BertViz réagir. Q/K/V et matrice descendent comme sections détail |
 
 ## Cohérence des sélecteurs et renommage
