@@ -16,6 +16,7 @@ import PageSection from "../components/PageSection";
 import Term from "../components/Term";
 import { VectorBar } from "../components/Heatmap";
 import AttnMatrix from "../components/AttnMatrix";
+import BertVizView from "../components/BertVizView";
 
 function buildAttnMatrix(traces: ForwardTrace[], head: number): number[][] {
   const T = traces.length;
@@ -289,21 +290,11 @@ export default memo(function AttentionPage() {
               ? "Poids aléatoires — les têtes se ressemblent. Reviens après avoir entraîné le modèle à l'étape 5 pour voir des motifs apparaître."
               : `Entraîné (${model.totalStep} étapes) — observe comment les têtes ont appris des motifs différents.`}
           </div>
-          <div className="attn-heads-grid" style={{ marginTop: 12 }}>
-            {Array.from({ length: N_HEAD }, (_, h) => (
-              <div key={h}>
-                <div className="label-dim" style={{ marginBottom: 4 }}>
-                  Tête {h}
-                </div>
-                <AttnMatrix
-                  matrix={allHeadMatrices[h]}
-                  tokens={displayLabels}
-                  highlightRow={safePos}
-                  compact
-                />
-              </div>
-            ))}
-          </div>
+          <BertVizView
+            matrices={allHeadMatrices}
+            tokens={displayLabels}
+            selectedPos={safePos}
+          />
         </div>
       )}
 
