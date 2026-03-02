@@ -151,6 +151,13 @@ Commits: `f9e6143`, `4dd8f5a`, `c2d8f08`, `372a469`, `fc74ff3`, `657b296`, `8db4
 
 Commits: `4ea6c80`, `226e502`, `8c63af0`, `441b85b`, `e13fcdc`, `c6e7c2c`, `8baa777`
 
+## Layout pédagogique — réordonnancement pages 3 et 4
+
+| Change                                                                         | Fichier(s)            | Justification                                                                                                             |
+| ------------------------------------------------------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| ForwardPassPage: FlowDiagram before controls (was: controls first)             | `ForwardPassPage.tsx` | Proximité cause→effet : contrôles adjacents aux panneaux dynamiques (VectorsPanel, ProbabilityBar) en dessous             |
+| AttentionPage: BertViz panel moved from position 5 to position 3 (after input) | `AttentionPage.tsx`   | L'élève tape un nom → voit immédiatement les lignes SVG BertViz réagir. Q/K/V et matrice descendent comme sections détail |
+
 ## Cohérence des sélecteurs et renommage
 
 | Change                                                              | Fichier(s)                       | Justification                                                                                               |

@@ -235,6 +235,7 @@
 
 - (+) Progression pédagogique logique (Tokenizer → Embeddings → Forward → Attention → Training → Inference)
 - (+) Glossaire Tier 1 (base) / Tier 2 (avancé) avec analogies adaptées
+- (+) Layout réordonné (pages 3+4) : feedback visuel immédiat après les contrôles (proximité cause→effet)
 - (-) Pas de navigation "Suivant → Page X" en bas de page
 
 ---

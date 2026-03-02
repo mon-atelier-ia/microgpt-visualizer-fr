@@ -346,12 +346,12 @@ Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 Page dédiée à l'attention multi-token, insérée comme page 4 (Entraînement → 5, Inférence → 6).
 
 - ✅ `AttnMatrix.tsx` — composant `<table>` sémantique T×T (aria-label, masque causal, mode compact)
-- ✅ `AttentionPage.tsx` — 6 panneaux pédagogiques (397 lignes) :
+- ✅ `AttentionPage.tsx` — 6 panneaux pédagogiques (405 lignes), réordonnés pour proximité cause→effet :
   1. Pourquoi l'attention ? (texte)
   2. Séquence complète (input + token-flow animé + sélecteur position)
-  3. Q, K, V — trois rôles (VectorBar × 3)
-  4. Matrice d'attention (AttnMatrix + sélecteur tête)
-  5. 4 têtes, 4 regards — `.panel-row` deux boîtes (BertViz SVG + barres de poids toujours visibles)
+  3. 4 têtes, 4 regards — `.panel-row` deux boîtes (BertViz SVG + barres de poids toujours visibles)
+  4. Q, K, V — trois rôles (VectorBar × 3)
+  5. Matrice d'attention (AttnMatrix + sélecteur tête)
   6. Récapitulatif (texte + glossaire connexion résiduelle)
 - ✅ Boucle multi-token côté page (KV cache pattern, engine read-only)
 - ✅ Données 100 % dynamiques via `gptForward()` + `useModel()`
@@ -450,6 +450,14 @@ Visualisation BertViz-style (token↔token, lignes SVG) + classifieur dynamique 
   - Droite : barres de poids toujours visibles (moyenne N_HEAD ou tête unique), données liées
   - Responsive : stacking vertical <640px via `.panel-row` existant
 - ✅ CSS scopé `.bv-*` (~115 lignes, 17 sélecteurs), thème dark + light validé visuellement
+
+### 15b. Réordonnancement layout pages 3 et 4 — FAIT
+
+Amélioration pédagogique : rapprocher les contrôles du feedback visuel (proximité cause→effet).
+
+- ✅ **ForwardPassPage** (page 3) : FlowDiagram (référence) avant les contrôles token/position. Les contrôles sont maintenant adjacents aux panneaux dynamiques (VectorsPanel, ProbabilityBar, MLP) en dessous.
+- ✅ **AttentionPage** (page 4) : BertViz + barres de poids (panneau 3) remonté juste après l'input (panneau 2). Q/K/V et matrice descendent comme sections détail. L'élève tape un nom → voit immédiatement les lignes SVG réagir.
+- Trade-off assumé : FlowDiagram (page 3) est dynamique (`topChar`, `topProbPct`) mais maintenant au-dessus des contrôles — son feedback sera hors écran au changement de token. Acceptable car le feedback principal (barres de probabilités) reste en dessous.
 
 ### 16. Intégration visualisation NN dans page 3 (Propagation) — À FAIRE
 
