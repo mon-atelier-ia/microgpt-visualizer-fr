@@ -263,6 +263,11 @@ input[type="text"] {
 input[type="text"]:focus {
   border-color: var(--blue);
 }
+.input--name {
+  width: auto;
+  min-width: 180px;
+  max-width: 240px;
+}
 input[type="text"]:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
@@ -416,8 +421,8 @@ input[type="range"]:focus-visible {
   font-size: 12px;
 }
 .token-box--selected {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 2px var(--blue);
+  border-color: var(--orange);
+  transform: translateY(-2px);
 }
 
 /* Tokenisation slide+fade animation (TokenizerPage only) */

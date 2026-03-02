@@ -113,19 +113,13 @@ export default memo(function AttentionPage() {
       {/* ── Panneau 2 : Une séquence complète ── */}
       <div className="panel">
         <div className="panel-title">Une séquence complète</div>
-        <div className="explain">
-          Quand le modèle lit un nom, il traite les tokens{" "}
-          <b>un par un, de gauche à droite</b>. À chaque nouvelle position, il
-          garde en mémoire les tokens déjà vus (leur clé K et leur valeur V)
-          dans un <b>cache</b>. Choisis un nom et sélectionne une position pour
-          observer l'attention.
-        </div>
 
         <label htmlFor="attention-name-input" className="sr-only">
           Nom à analyser
         </label>
         <input
           id="attention-name-input"
+          className="input--name"
           type="text"
           value={input}
           onChange={(e) => {
@@ -137,9 +131,10 @@ export default memo(function AttentionPage() {
         />
 
         <div className="token-flow token-flow--animated">
-          {tokens.slice(0, n).map((t, i) => {
+          {tokens.map((t, i) => {
             const label = tokenLabel(t);
             const isBos = t === BOS;
+            const hasTrace = i < n;
             return (
               <span key={i} className="d-contents">
                 {i > 0 && (
@@ -151,8 +146,12 @@ export default memo(function AttentionPage() {
                   </span>
                 )}
                 <div
-                  className={`token-box ${isBos ? "bos" : ""} ${i === safePos ? "token-box--selected" : ""}`}
-                  style={{ animationDelay: `${i * 80}ms` }}
+                  className={`token-box ${isBos ? "bos" : ""} ${hasTrace && i === safePos ? "token-box--selected" : ""}`}
+                  style={{
+                    animationDelay: `${i * 80}ms`,
+                    cursor: hasTrace ? "pointer" : undefined,
+                  }}
+                  onClick={hasTrace ? () => setSelectedPos(i) : undefined}
                 >
                   <span className="char">{label}</span>
                   <span className="id">id: {t}</span>
@@ -181,6 +180,14 @@ export default memo(function AttentionPage() {
           {safePos === 0
             ? "uniquement lui-même"
             : `les ${safePos + 1} tokens de 0 à ${safePos}`}
+        </div>
+
+        <div className="explain mt-8">
+          Quand le modèle lit un nom, il traite les tokens{" "}
+          <b>un par un, de gauche à droite</b>. À chaque nouvelle position, il
+          garde en mémoire les tokens déjà vus (leur clé K et leur valeur V)
+          dans un <b>cache</b>. Clique un token ou une position pour observer
+          l'attention.
         </div>
       </div>
 
