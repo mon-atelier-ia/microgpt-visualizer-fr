@@ -423,6 +423,48 @@ Visualisation BertViz-style (token↔token, lignes SVG) + classifieur dynamique 
 - ✅ `scripts/investigate-heads.ts` — script d'investigation reproductible (non inclus dans l'app)
 - ✅ Note pédagogique sur la variabilité des personnalités entre entraînements
 
+### 15. Intégration BertViz dans page 4 (Attention) — FAIT
+
+- ✅ `src/utils/classifyHead.ts` — classifieur heuristique (Ancrage/Précédent/Écho/Contexte)
+- ✅ `src/utils/classifyHead.test.ts` — 4 tests (T=1, Précédent, Ancrage, Contexte uniforme)
+- ✅ `src/utils/headExplanation.tsx` — phrases explicatives FR par personnalité
+- ✅ `src/components/BertVizView.tsx` — composant SVG Bézier (186 lignes)
+  - Sélecteur Toutes/tête unique, légende dynamique, hover dim/highlight
+  - Accessibilité clavier (tabIndex + onFocus sur tokens source)
+  - `aria-hidden="true"` sur SVG décoratif, transition opacity sur paths
+- ✅ Panneau 5 AttentionPage : texte + badge préservés, 4× AttnMatrix compact → BertVizView
+- ✅ CSS scopé `.bv-*` (~35 lignes), thème dark + light validé visuellement
+
+### 16. Intégration visualisation NN dans page 3 (Propagation) — À FAIRE
+
+**Constat** : `playground.html` montre un réseau de neurones 5 colonnes [16, 16, 64, 16, 27] avec animation forward (vert) + backward (orange). C'est un prototype Canvas 2D standalone. La page 3 actuelle a `FlowDiagram` (texte dans des boîtes → → →), des panneaux VectorBar, et des détails attention/MLP.
+
+**Plan** :
+
+- Intégrer la visualisation NN comme composant React Canvas dans la page 3
+- Prévoir légendes et textes pédagogiques adaptés à la story de la page
+- Le FlowDiagram actuel (texte) pourrait rester comme vue complémentaire ou être remplacé
+
+**Questions ouvertes** :
+
+- Canvas 2D (comme le playground) ou migration vers SVG React ? Canvas = plus performant pour les animations, SVG = plus React-idiomatique
+- Le playground anime forward ET backward — la page 3 s'appelle "Propagation" (couvre les deux). Montrer les deux phases ou seulement forward (backward → plutôt page 5 Entraînement) ?
+- Quelles données réelles du modèle connecter ? Poids des connexions, activations, gradients ?
+- Comment articuler avec les panneaux existants (VectorsPanel, AttentionWeightsPanel, MLPActivationPanel) ?
+
+**Pré-requis** : audit de la story pédagogique des 6 pages pour éviter oublis et répétitions. Chaque page a un rôle dans le parcours — vérifier la cohérence narrative avant d'intégrer.
+
+**Story pédagogique à auditer** :
+
+1. Tokenisation : char → id (entrée)
+2. Plongements : id → vecteur 16D (table de lookup)
+3. Propagation : le vecteur traverse le modèle (forward, et backward ?)
+4. Attention : les tokens communiquent (multi-token, matrices, BertViz)
+5. Entraînement : ajuster les poids (loss, backward, gradient descent)
+6. Inférence : générer un nom (autorégressif)
+
+→ Vérifier que chaque concept est introduit UNE fois et référencé (pas réexpliqué) ensuite.
+
 ### 10. Polish CSS — FAIT
 
 - ✅ Scrollbars thématiques (webkit + standard `scrollbar-color`) — `86ef089`
