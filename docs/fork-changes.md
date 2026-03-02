@@ -144,12 +144,12 @@ Commits: `f9e6143`, `4dd8f5a`, `c2d8f08`, `372a469`, `fc74ff3`, `657b296`, `8db4
 | --------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `classifyHead(matrix)` heuristic classifier for head personalities          | `src/utils/classifyHead.ts`, `src/utils/classifyHead.test.ts` | Labels dynamiques (Ancrage/Précédent/Écho/Contexte) basés sur les poids — pas hardcodés par index de tête            |
 | `headExplanation()` French pedagogical phrases per personality              | `src/utils/headExplanation.tsx`                               | Textes adaptés 10-14 ans, retournent du JSX (pas de `dangerouslySetInnerHTML`)                                       |
-| `BertVizView` SVG Bézier component with interactive detail panel            | `src/components/BertVizView.tsx`                              | Remplace 4× AttnMatrix compact par lignes token↔token (BertViz-style). Clic source → barres de poids par destination |
+| `BertVizView` controlled SVG Bézier component (state lifted to parent)      | `src/components/BertVizView.tsx`                              | Composant contrôlé — activeHead, hoverSrc, selectedSrc levés vers AttentionPage. Clic source → cascade tous panneaux |
+| Two-panel `.panel-row` layout (BertViz + weight bars always visible)        | `src/pages/AttentionPage.tsx`, `src/styles.css`               | Pattern identique à ForwardPassPage (page 3). Barres toujours visibles, données liées                                |
 | Reuse `.token-box` pattern with char + token ID in BertViz                  | `src/components/BertVizView.tsx`, `src/styles.css`            | Cohérence visuelle avec TokenizerPage/AttentionPage token boxes. `.token-box--bv` modifier pour sizing               |
-| Side-by-side layout `.bv-row` (BertViz + detail panel), responsive stacking | `src/styles.css`                                              | Utilise l'espace horizontal. Passe en colonne <640px (même pattern que `.panel-row`)                                 |
-| CSS scoped `.bv-*` (~134 lines, 20 selectors), dark + light theme validated | `src/styles.css`                                              | Isolation complète, CSS variables pour couleurs → auto theme-reactive                                                |
+| CSS scoped `.bv-*` (~115 lines, 17 selectors), dark + light theme validated | `src/styles.css`                                              | Isolation complète, CSS variables pour couleurs → auto theme-reactive                                                |
 
-Commits: `4ea6c80`, `226e502`, `8c63af0`, `441b85b`, `e13fcdc`, `c6e7c2c`
+Commits: `4ea6c80`, `226e502`, `8c63af0`, `441b85b`, `e13fcdc`, `c6e7c2c`, `8baa777`
 
 ## Cohérence des sélecteurs et renommage
 

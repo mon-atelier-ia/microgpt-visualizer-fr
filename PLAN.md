@@ -169,7 +169,7 @@ src/
 │   ├── ProbabilityBar.test.tsx    #  82 lignes — 7 tests
 │   ├── PageSection.tsx            #  20 lignes — DRY landmarks (section + h1)
 │   ├── PageSection.test.tsx       #  39 lignes — 3 tests aria-labelledby
-│   ├── BertVizView.tsx            # 226 lignes — SVG Bézier token↔token + panneau détail interactif
+│   ├── BertVizView.tsx            # 187 lignes — SVG Bézier token↔token (composant contrôlé)
 │   ├── EmbeddingBarChart.tsx      #  45 lignes — bar chart 16 dimensions au hover wte
 │   ├── EmbeddingBarChart.test.tsx #  42 lignes — 4 tests (empty, stats, BOS, bars)
 │   ├── ErrorBoundary.tsx          #  40 lignes — class component, French fallback
@@ -184,7 +184,7 @@ src/
 │   ├── EmbeddingsPage.tsx         # 154 lignes — heatmaps wte/wpe + bar chart + stats
 │   ├── ForwardPassPage.tsx        # 136 lignes — pipeline 7 étapes, délègue à 4 sous-composants (C-4)
 │   ├── ForwardPassPage.test.tsx   #  62 lignes — 1 test a11y (select label)
-│   ├── AttentionPage.tsx          # 339 lignes — 6 panneaux attention multi-token + BertViz
+│   ├── AttentionPage.tsx          # 397 lignes — 6 panneaux attention multi-token + BertViz deux-panneaux
 │   ├── TrainingPage.tsx           # 237 lignes — boucle rAF, loss chart
 │   ├── TrainingPage.test.tsx      #  37 lignes — 2 tests (rAF cleanup, stop)
 │   ├── InferencePage.tsx          # 259 lignes — génération, trace, probas
@@ -346,12 +346,12 @@ Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 Page dédiée à l'attention multi-token, insérée comme page 4 (Entraînement → 5, Inférence → 6).
 
 - ✅ `AttnMatrix.tsx` — composant `<table>` sémantique T×T (aria-label, masque causal, mode compact)
-- ✅ `AttentionPage.tsx` — 6 panneaux pédagogiques (339 lignes) :
+- ✅ `AttentionPage.tsx` — 6 panneaux pédagogiques (397 lignes) :
   1. Pourquoi l'attention ? (texte)
   2. Séquence complète (input + token-flow animé + sélecteur position)
   3. Q, K, V — trois rôles (VectorBar × 3)
   4. Matrice d'attention (AttnMatrix + sélecteur tête)
-  5. 4 têtes, 4 regards (BertVizView SVG + panneau détail interactif + badge entraînement)
+  5. 4 têtes, 4 regards — `.panel-row` deux boîtes (BertViz SVG + barres de poids toujours visibles)
   6. Récapitulatif (texte + glossaire connexion résiduelle)
 - ✅ Boucle multi-token côté page (KV cache pattern, engine read-only)
 - ✅ Données 100 % dynamiques via `gptForward()` + `useModel()`
@@ -438,15 +438,18 @@ Visualisation BertViz-style (token↔token, lignes SVG) + classifieur dynamique 
 - ✅ `src/utils/classifyHead.ts` — classifieur heuristique (Ancrage/Précédent/Écho/Contexte)
 - ✅ `src/utils/classifyHead.test.ts` — 4 tests (T=1, Précédent, Ancrage, Contexte uniforme)
 - ✅ `src/utils/headExplanation.tsx` — phrases explicatives FR par personnalité
-- ✅ `src/components/BertVizView.tsx` — composant SVG Bézier + panneau de détail interactif (226 lignes)
+- ✅ `src/components/BertVizView.tsx` — composant contrôlé SVG Bézier (187 lignes)
   - Sélecteur Toutes/tête unique, légende dynamique, hover dim/highlight
-  - Clic sur token source → panneau latéral avec barres de poids par destination (moyenne ou par tête)
+  - State levé vers AttentionPage (activeHead, hoverSrc, selectedSrc) — composant contrôlé
+  - Clic sur token source → `onClickSrc` met à jour `selectedPos` (cascade tous panneaux)
   - Réutilisation `.token-box` avec char + token ID (cohérence avec TokenizerPage/AttentionPage)
-  - Layout side-by-side `.bv-row` (BertViz + détail), responsive mobile stacking (<640px)
   - Accessibilité clavier (tabIndex + onFocus sur tokens source)
   - `aria-hidden="true"` sur SVG décoratif, transition opacity sur paths
-- ✅ Panneau 5 AttentionPage : texte + badge préservés, 4× AttnMatrix compact → BertVizView
-- ✅ CSS scopé `.bv-*` (~134 lignes, 20 sélecteurs), thème dark + light validé visuellement
+- ✅ Panneau 5 AttentionPage : `.panel-row` deux boîtes côte à côte (pattern page 3)
+  - Gauche : BertVizView SVG + texte + badge entraînement
+  - Droite : barres de poids toujours visibles (moyenne N_HEAD ou tête unique), données liées
+  - Responsive : stacking vertical <640px via `.panel-row` existant
+- ✅ CSS scopé `.bv-*` (~115 lignes, 17 sélecteurs), thème dark + light validé visuellement
 
 ### 16. Intégration visualisation NN dans page 3 (Propagation) — À FAIRE
 
