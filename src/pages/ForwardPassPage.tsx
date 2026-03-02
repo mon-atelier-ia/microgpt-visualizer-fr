@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import {
   gptForward,
   uchars,
@@ -13,10 +13,9 @@ import PageSection from "../components/PageSection";
 import ProbabilityBar from "../components/ProbabilityBar";
 import FlowDiagram from "../components/FlowDiagram";
 import VectorsPanel from "../components/VectorsPanel";
-import AttentionWeightsPanel from "../components/AttentionWeightsPanel";
+import NNDiagram from "../components/NNDiagram";
 import MLPActivationPanel from "../components/MLPActivationPanel";
 import { useModel } from "../modelStore";
-import { memo } from "react";
 
 export default memo(function ForwardPassPage() {
   const model = useModel();
@@ -42,6 +41,19 @@ export default memo(function ForwardPassPage() {
   );
   const maxProb = Math.max(...top5.map((t) => t.prob), 0.01);
 
+  const weights = useMemo(() => {
+    const sd = model.stateDict;
+    const extract = (key: string) =>
+      sd[key].map((row: Value[]) => row.map((v: Value) => v.data));
+    return {
+      attnWo: extract("layer0.attn_wo"),
+      mlpFc1: extract("layer0.mlp_fc1"),
+      mlpFc2: extract("layer0.mlp_fc2"),
+      lmHead: extract("lm_head"),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- model is mutable: identity detects reset, totalStep detects training
+  }, [model, model.totalStep]);
+
   return (
     <PageSection id="forward" title="3. Propagation">
       <p className="page-desc">
@@ -51,16 +63,7 @@ export default memo(function ForwardPassPage() {
         caractère suivant possible.
       </p>
 
-      <FlowDiagram
-        char={char}
-        pos={pos}
-        tokenId={tokenId}
-        mlpActiveCount={trace.mlpActiveMask?.filter(Boolean).length ?? 0}
-        topChar={top5[0]?.char ?? "?"}
-        topProbPct={(top5[0]?.prob * 100).toFixed(0)}
-      />
-
-      {/* Contrôles */}
+      {/* 1. Contrôles */}
       <div className="panel">
         <div className="panel-title">Choisis l'entrée</div>
         <div className="controls">
@@ -89,7 +92,7 @@ export default memo(function ForwardPassPage() {
         </div>
       </div>
 
-      {/* Vecteurs détaillés + probabilités */}
+      {/* 2. Vecteurs détaillés + probabilités */}
       <div className="panel-row">
         <VectorsPanel
           char={char}
@@ -121,10 +124,40 @@ export default memo(function ForwardPassPage() {
         </div>
       </div>
 
-      {trace.attnWeights && (
-        <AttentionWeightsPanel attnWeights={trace.attnWeights} />
-      )}
+      {/* 3. Diagramme de flux (boîtes abstraites) */}
+      <FlowDiagram
+        char={char}
+        pos={pos}
+        tokenId={tokenId}
+        mlpActiveCount={trace.mlpActiveMask?.filter(Boolean).length ?? 0}
+        topChar={top5[0]?.char ?? "?"}
+        topProbPct={(top5[0]?.prob * 100).toFixed(0)}
+      />
 
+      {/* 4. NNDiagram — le réseau en action */}
+      <div className="panel">
+        <div className="panel-title">Le réseau en action</div>
+        <div className="explain">
+          Voici le modèle complet. Chaque cercle est un neurone, chaque trait
+          une connexion pondérée. Les couleurs montrent les activations réelles
+          : vert = positif, rouge = négatif. Survole un neurone pour voir ses
+          connexions. Change le token ou la position ci-dessus pour observer
+          comment les activations changent.
+        </div>
+        <div className="nn-canvas-wrap">
+          <NNDiagram
+            combined={trace.combined}
+            afterAttn={trace.afterAttn || []}
+            mlpHidden={trace.mlpHidden || []}
+            mlpActiveMask={trace.mlpActiveMask || []}
+            afterMlp={trace.afterMlp || []}
+            probs={trace.probs}
+            weights={weights}
+          />
+        </div>
+      </div>
+
+      {/* 5. Détail MLP */}
       {trace.mlpHidden && (
         <MLPActivationPanel
           mlpHidden={trace.mlpHidden}

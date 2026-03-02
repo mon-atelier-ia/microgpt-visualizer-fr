@@ -3,9 +3,22 @@ import { describe, expect, it, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import ForwardPassPage from "./ForwardPassPage";
 
+function makeWeightMatrix(rows: number, cols: number) {
+  return Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => ({ data: 0, grad: 0 })),
+  );
+}
+
 vi.mock("../modelStore", () => ({
   useModel: () => ({
-    stateDict: { wte: [], wpe: [] },
+    stateDict: {
+      wte: [],
+      wpe: [],
+      "layer0.attn_wo": makeWeightMatrix(16, 16),
+      "layer0.mlp_fc1": makeWeightMatrix(64, 16),
+      "layer0.mlp_fc2": makeWeightMatrix(16, 64),
+      lm_head: makeWeightMatrix(27, 16),
+    },
     params: [],
     adamM: new Float64Array(0),
     adamV: new Float64Array(0),
@@ -66,5 +79,11 @@ describe("ForwardPassPage — sélecteurs", () => {
         Number(b.textContent) < 16,
     );
     expect(posButtons.length).toBe(16);
+  });
+
+  it("affiche le canvas du diagramme NN", () => {
+    const { container } = render(<ForwardPassPage />);
+    const canvas = container.querySelector('canvas[role="img"]');
+    expect(canvas).toBeTruthy();
   });
 });
