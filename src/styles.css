@@ -897,10 +897,13 @@ button.gen-name:focus-visible {
   font-weight: bold;
   font-family: var(--mono);
   color: var(--text);
-  cursor: pointer;
   transition: opacity 0.15s;
 }
-.bv-token:hover {
+.bv-token--src {
+  cursor: default;
+}
+.bv-token--src:hover,
+.bv-token--src:focus-visible {
   border-color: var(--border-hover);
 }
 .bv-token--bos {
@@ -913,6 +916,9 @@ button.gen-name:focus-visible {
 }
 .bv-svg {
   display: block;
+}
+.bv-svg path {
+  transition: opacity 0.15s;
 }
 .bv-dot {
   display: inline-block;

@@ -106,11 +106,13 @@ export default function BertVizView({ matrices, tokens, selectedPos }: Props) {
           {tokens.map((tok, i) => (
             <div
               key={i}
-              className={`bv-token${tok === "BOS" ? " bv-token--bos" : ""}${
+              tabIndex={0}
+              className={`bv-token bv-token--src${tok === "BOS" ? " bv-token--bos" : ""}${
                 i === selectedPos ? " bv-token--selected" : ""
               }`}
               style={{ opacity: isDim && hoverSrc !== i ? 0.25 : 1 }}
               onMouseEnter={() => setHoverSrc(i)}
+              onFocus={() => setHoverSrc(i)}
             >
               {tok}
             </div>
