@@ -139,7 +139,9 @@ Ensemble, ils forment une paire pedagogique complete pour tuto-llm :
 src/
 ├── App.tsx                        # 251 lignes — shell, routing, theme, TermProvider, lazy, ErrorBoundary
 ├── main.tsx                       #   5 lignes — point d'entrée React
-├── styles.css                     # ~1 723 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion, barchart, attn-matrix
+├── modelStore.ts                  #  49 lignes — useSyncExternalStore + useModel() hook (A-1)
+├── modelStore.test.ts             #  72 lignes — 6 tests (useModel shape, reset, dataset switch, notify, unsubscribe, getModelTotalStep)
+├── styles.css                     # ~1 857 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion, barchart, attn-matrix, bv-*
 ├── data/
 │   ├── glossary.ts                # 314 lignes — 30 définitions (Tier 1 + Tier 2)
 │   └── glossary.test.ts           # 121 lignes — 8 tests intégrité données
@@ -167,24 +169,32 @@ src/
 │   ├── ProbabilityBar.test.tsx    #  82 lignes — 7 tests
 │   ├── PageSection.tsx            #  20 lignes — DRY landmarks (section + h1)
 │   ├── PageSection.test.tsx       #  39 lignes — 3 tests aria-labelledby
+│   ├── BertVizView.tsx            # 226 lignes — SVG Bézier token↔token + panneau détail interactif
 │   ├── EmbeddingBarChart.tsx      #  45 lignes — bar chart 16 dimensions au hover wte
 │   ├── EmbeddingBarChart.test.tsx #  42 lignes — 4 tests (empty, stats, BOS, bars)
 │   ├── ErrorBoundary.tsx          #  40 lignes — class component, French fallback
-│   └── ErrorBoundary.test.tsx     #  52 lignes — 3 tests (render, catch, reload)
+│   ├── ErrorBoundary.test.tsx     #  52 lignes — 3 tests (render, catch, reload)
+│   ├── FlowDiagram.tsx            # 123 lignes — sous-composant ForwardPassPage (C-4)
+│   ├── VectorsPanel.tsx           #  41 lignes — sous-composant ForwardPassPage (C-4)
+│   ├── AttentionWeightsPanel.tsx  #  36 lignes — sous-composant ForwardPassPage (C-4)
+│   └── MLPActivationPanel.tsx     #  46 lignes — sous-composant ForwardPassPage (C-4)
 ├── pages/
 │   ├── TokenizerPage.tsx          # 162 lignes — mapping char→id, tokenisation
 │   ├── TokenizerPage.test.tsx     #  19 lignes — 2 tests a11y (label sr-only)
 │   ├── EmbeddingsPage.tsx         # 154 lignes — heatmaps wte/wpe + bar chart + stats
-│   ├── ForwardPassPage.tsx        # 297 lignes — pipeline 7 étapes, attention, MLP
+│   ├── ForwardPassPage.tsx        # 136 lignes — pipeline 7 étapes, délègue à 4 sous-composants (C-4)
 │   ├── ForwardPassPage.test.tsx   #  62 lignes — 1 test a11y (select label)
-│   ├── AttentionPage.tsx          # 347 lignes — 6 panneaux attention multi-token
+│   ├── AttentionPage.tsx          # 339 lignes — 6 panneaux attention multi-token + BertViz
 │   ├── TrainingPage.tsx           # 237 lignes — boucle rAF, loss chart
 │   ├── TrainingPage.test.tsx      #  37 lignes — 2 tests (rAF cleanup, stop)
 │   ├── InferencePage.tsx          # 259 lignes — génération, trace, probas
 │   └── InferencePage.test.tsx     #  95 lignes — 6 tests (W-2, W-4, R-3)
 ├── utils/
 │   ├── charStats.ts               #  59 lignes — statistiques dataset (fréquence, bigrammes)
-│   └── charStats.test.ts          #  30 lignes — 5 tests
+│   ├── charStats.test.ts          #  30 lignes — 5 tests
+│   ├── classifyHead.ts            #  38 lignes — classifieur heuristique personnalités de têtes
+│   ├── classifyHead.test.ts       #  55 lignes — 4 tests (T=1, Précédent, Ancrage, Contexte)
+│   └── headExplanation.tsx        #  37 lignes — phrases explicatives FR par personnalité
 ├── engine/                        # 464 lignes — LECTURE SEULE (upstream)
 │   ├── autograd.ts                #  98 lignes — classe Value, backward
 │   ├── autograd.test.ts           #  48 lignes — 5 tests (arithmétique, backward, diamond)
@@ -215,7 +225,7 @@ docs/
 │ ├── 2026-03-01-embeddings-page-vivante-design.md # Design EmbeddingsPage vivante
 │ └── 2026-03-01-embeddings-page-vivante-plan.md # Plan d'implémentation
 
-**Total : ~4 900 lignes src (hors data blobs), 37 fichiers source + 18 fichiers test. 104 tests. 4 playgrounds standalone.**
+**Total : ~5 700 lignes src (hors data blobs), 41 fichiers source + 19 fichiers test. 108 tests. 4 playgrounds standalone.**
 
 ### Constats clés
 
@@ -229,7 +239,7 @@ docs/
 - **Attention** : boucle multi-token côté page (KV cache pattern), matrice T×T `<table>` sémantique
 - **Model sharing** : `useSyncExternalStore` dans `modelStore.ts`, hook `useModel()` (A-1 corrigé)
 - **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
-- **Tests** : Vitest + jsdom + @testing-library/react (104 tests, 18 fichiers)
+- **Tests** : Vitest + jsdom + @testing-library/react (108 tests, 19 fichiers)
 - **ErrorBoundary** : class component, `window.location.reload()`, sidebar hors boundary
 - **Code splitting** : `React.lazy()` + `Suspense` → 6+ chunks JS séparés
 - **CSS** : 20 classes utilitaires + BEM + `.sr-only` + `prefers-reduced-motion`. Inline styles réduits de 64 à 7 (pages originales) + 8 (AttentionPage, dont 2 dynamiques)
@@ -336,12 +346,12 @@ Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 Page dédiée à l'attention multi-token, insérée comme page 4 (Entraînement → 5, Inférence → 6).
 
 - ✅ `AttnMatrix.tsx` — composant `<table>` sémantique T×T (aria-label, masque causal, mode compact)
-- ✅ `AttentionPage.tsx` — 6 panneaux pédagogiques (347 lignes) :
+- ✅ `AttentionPage.tsx` — 6 panneaux pédagogiques (339 lignes) :
   1. Pourquoi l'attention ? (texte)
   2. Séquence complète (input + token-flow animé + sélecteur position)
   3. Q, K, V — trois rôles (VectorBar × 3)
   4. Matrice d'attention (AttnMatrix + sélecteur tête)
-  5. 4 têtes, 4 regards (4× AttnMatrix compact + badge entraînement)
+  5. 4 têtes, 4 regards (BertVizView SVG + panneau détail interactif + badge entraînement)
   6. Récapitulatif (texte + glossaire connexion résiduelle)
 - ✅ Boucle multi-token côté page (KV cache pattern, engine read-only)
 - ✅ Données 100 % dynamiques via `gptForward()` + `useModel()`
@@ -428,12 +438,15 @@ Visualisation BertViz-style (token↔token, lignes SVG) + classifieur dynamique 
 - ✅ `src/utils/classifyHead.ts` — classifieur heuristique (Ancrage/Précédent/Écho/Contexte)
 - ✅ `src/utils/classifyHead.test.ts` — 4 tests (T=1, Précédent, Ancrage, Contexte uniforme)
 - ✅ `src/utils/headExplanation.tsx` — phrases explicatives FR par personnalité
-- ✅ `src/components/BertVizView.tsx` — composant SVG Bézier (186 lignes)
+- ✅ `src/components/BertVizView.tsx` — composant SVG Bézier + panneau de détail interactif (226 lignes)
   - Sélecteur Toutes/tête unique, légende dynamique, hover dim/highlight
+  - Clic sur token source → panneau latéral avec barres de poids par destination (moyenne ou par tête)
+  - Réutilisation `.token-box` avec char + token ID (cohérence avec TokenizerPage/AttentionPage)
+  - Layout side-by-side `.bv-row` (BertViz + détail), responsive mobile stacking (<640px)
   - Accessibilité clavier (tabIndex + onFocus sur tokens source)
   - `aria-hidden="true"` sur SVG décoratif, transition opacity sur paths
 - ✅ Panneau 5 AttentionPage : texte + badge préservés, 4× AttnMatrix compact → BertVizView
-- ✅ CSS scopé `.bv-*` (~35 lignes), thème dark + light validé visuellement
+- ✅ CSS scopé `.bv-*` (~134 lignes, 20 sélecteurs), thème dark + light validé visuellement
 
 ### 16. Intégration visualisation NN dans page 3 (Propagation) — À FAIRE
 

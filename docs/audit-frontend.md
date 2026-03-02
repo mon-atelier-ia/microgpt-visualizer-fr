@@ -31,16 +31,17 @@
 
 24 styles inline statiques extraits en 20 classes CSS utilitaires (`b0b3ad9`). Ne restent que 7 styles dynamiques (couleurs/opacité calculés au runtime) dans les 5 pages originales. AttentionPage (ajoutée après l'audit) a 8 inline styles : 2 dynamiques (`animationDelay`), 6 statiques sans classe CSS existante (`marginTop: 12`, `paddingLeft: 24`, `marginBottom: 4`) — 11 autres inline styles initiaux ont été convertis en `mt-8`/`mt-4` (`8db49e8`).
 
-| Fichier              | Dynamiques | Raison                                                          |
-| -------------------- | ---------- | --------------------------------------------------------------- |
-| `Heatmap.tsx`        | 3          | `valToColor()` background/color, highlight row                  |
-| `HeatCell.tsx`       | 1          | Background conditionnel sur valeur                              |
-| `NeuronCell.tsx`     | 1          | Background conditionnel sur valeur                              |
-| `LossCell.tsx`       | 1          | Background conditionnel sur loss                                |
-| `ProbabilityBar.tsx` | 1          | Width proportionnel + background                                |
-| `InferencePage.tsx`  | 1          | Opacity conditionnelle sur étape active                         |
-| **Total (5 pages)**  | **7**      | Tous calculés au runtime — inline = seule option                |
-| `AttentionPage.tsx`  | 2 + 6      | 2 animationDelay dynamiques + 6 statiques sans classe existante |
+| Fichier              | Dynamiques | Raison                                                                               |
+| -------------------- | ---------- | ------------------------------------------------------------------------------------ |
+| `Heatmap.tsx`        | 3          | `valToColor()` background/color, highlight row                                       |
+| `HeatCell.tsx`       | 1          | Background conditionnel sur valeur                                                   |
+| `NeuronCell.tsx`     | 1          | Background conditionnel sur valeur                                                   |
+| `LossCell.tsx`       | 1          | Background conditionnel sur loss                                                     |
+| `ProbabilityBar.tsx` | 1          | Width proportionnel + background                                                     |
+| `InferencePage.tsx`  | 1          | Opacity conditionnelle sur étape active                                              |
+| **Total (5 pages)**  | **7**      | Tous calculés au runtime — inline = seule option                                     |
+| `AttentionPage.tsx`  | 2 + 4      | 2 animationDelay dynamiques + 4 statiques sans classe existante                      |
+| `BertVizView.tsx`    | 4 + 1      | 4 dynamiques (opacity tokens, SVG stroke/width, bar fill) + 1 static (SVG marginTop) |
 
 ### 2.2 Patterns dupliqués
 
