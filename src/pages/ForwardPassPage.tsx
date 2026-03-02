@@ -51,6 +51,15 @@ export default memo(function ForwardPassPage() {
         caractère suivant possible.
       </p>
 
+      <FlowDiagram
+        char={char}
+        pos={pos}
+        tokenId={tokenId}
+        mlpActiveCount={trace.mlpActiveMask?.filter(Boolean).length ?? 0}
+        topChar={top5[0]?.char ?? "?"}
+        topProbPct={(top5[0]?.prob * 100).toFixed(0)}
+      />
+
       {/* Contrôles */}
       <div className="panel">
         <div className="panel-title">Choisis l'entrée</div>
@@ -79,15 +88,6 @@ export default memo(function ForwardPassPage() {
           ))}
         </div>
       </div>
-
-      <FlowDiagram
-        char={char}
-        pos={pos}
-        tokenId={tokenId}
-        mlpActiveCount={trace.mlpActiveMask?.filter(Boolean).length ?? 0}
-        topChar={top5[0]?.char ?? "?"}
-        topProbPct={(top5[0]?.prob * 100).toFixed(0)}
-      />
 
       {/* Vecteurs détaillés + probabilités */}
       <div className="panel-row">

@@ -191,101 +191,7 @@ export default memo(function AttentionPage() {
         </div>
       </div>
 
-      {/* ── Panneau 3 : Q, K, V ── */}
-      {trace && (
-        <div className="panel">
-          <div className="panel-title">
-            Q, K, V — trois rôles (position {safePos} : «{" "}
-            {displayLabels[safePos]} »)
-          </div>
-          <div className="explain">
-            À chaque position, le token courant est projeté en trois vecteurs de{" "}
-            {N_HEAD * HEAD_DIM} nombres :
-          </div>
-          <ul className="explain" style={{ marginTop: 0, paddingLeft: 24 }}>
-            <li>
-              <b>Q (Query = question)</b> : « Qu'est-ce que je cherche ? »
-            </li>
-            <li>
-              <b>K (Key = clé)</b> : « Qu'est-ce que je contiens ? »
-            </li>
-            <li>
-              <b>V (Value = valeur)</b> : « Qu'est-ce que j'ai à offrir si on me
-              sélectionne ? »
-            </li>
-          </ul>
-          <div className="explain mt-8">
-            Imagine une salle de classe. Chaque élève (token) a une{" "}
-            <b>question</b> qu'il veut poser (Q), une <b>étiquette</b> qui dit
-            ce qu'il sait (K) et un <b>cahier</b> avec l'info à partager (V). L'
-            <Term id="attention" /> calcule : « à quel point ma question (Q)
-            correspond-elle à l'étiquette (K) de chaque token passé ? » Plus ça
-            correspond, plus j'écoute son cahier (V).
-          </div>
-          {/* ANIMATION: highlight séquentiel Q → K → V (étape 3) */}
-          <div
-            style={{
-              marginTop: 12,
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-            }}
-          >
-            <VectorBar values={trace.q} label="Q (query)" />
-            <VectorBar values={trace.k} label="K (key)" />
-            <VectorBar values={trace.v} label="V (value)" />
-          </div>
-          <div className="label-dim mt-4">
-            Ces {N_HEAD * HEAD_DIM} nombres viennent des matrices wq, wk, wv que
-            tu as vues à l'étape 3 dans le diagramme de flux.
-          </div>
-        </div>
-      )}
-
-      {/* ── Panneau 4 : La matrice d'attention ── */}
-      {traces.length > 0 && (
-        <div className="panel">
-          <div className="panel-title">
-            La matrice d'attention (tête {selectedHead})
-          </div>
-          <div className="explain">
-            Voici ce que le modèle « voit » à travers la tête {selectedHead}.
-            Chaque cellule indique <b>combien il écoute</b> le token de cette
-            colonne. Les poids totalisent toujours 100 % sur chaque ligne (grâce
-            au <Term id="softmax" />
-            ). Le tiret « — » en haut à droite, c'est le <b>masque causal</b> :
-            le modèle ne peut pas regarder le futur.
-          </div>
-          <div className="controls mt-8">
-            <span className="label-dim">Tête :</span>
-            {Array.from({ length: N_HEAD }, (_, h) => (
-              <button
-                key={h}
-                type="button"
-                className={`btn btn-toggle ${h === selectedHead ? "" : "btn-secondary"}`}
-                onClick={() => setSelectedHead(h)}
-              >
-                {h}
-              </button>
-            ))}
-          </div>
-          <div style={{ marginTop: 12, overflowX: "auto" }}>
-            <AttnMatrix
-              matrix={matrix}
-              tokens={displayLabels}
-              highlightRow={safePos}
-            />
-          </div>
-          <div className="explain mt-8">
-            💡 Le masque causal rend la génération possible — tu le verras en
-            action à l'étape 6 (
-            <Term id="generation-autoregressive" />
-            ).
-          </div>
-        </div>
-      )}
-
-      {/* ── Panneau 5 : 4 têtes, 4 regards — deux boîtes côte à côte ── */}
+      {/* ── Panneau 3 : 4 têtes, 4 regards — deux boîtes côte à côte ── */}
       {traces.length > 0 && (
         <div className="panel-row">
           <div className="panel">
@@ -359,6 +265,100 @@ export default memo(function AttentionPage() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Panneau 4 : Q, K, V ── */}
+      {trace && (
+        <div className="panel">
+          <div className="panel-title">
+            Q, K, V — trois rôles (position {safePos} : «{" "}
+            {displayLabels[safePos]} »)
+          </div>
+          <div className="explain">
+            À chaque position, le token courant est projeté en trois vecteurs de{" "}
+            {N_HEAD * HEAD_DIM} nombres :
+          </div>
+          <ul className="explain" style={{ marginTop: 0, paddingLeft: 24 }}>
+            <li>
+              <b>Q (Query = question)</b> : « Qu'est-ce que je cherche ? »
+            </li>
+            <li>
+              <b>K (Key = clé)</b> : « Qu'est-ce que je contiens ? »
+            </li>
+            <li>
+              <b>V (Value = valeur)</b> : « Qu'est-ce que j'ai à offrir si on me
+              sélectionne ? »
+            </li>
+          </ul>
+          <div className="explain mt-8">
+            Imagine une salle de classe. Chaque élève (token) a une{" "}
+            <b>question</b> qu'il veut poser (Q), une <b>étiquette</b> qui dit
+            ce qu'il sait (K) et un <b>cahier</b> avec l'info à partager (V). L'
+            <Term id="attention" /> calcule : « à quel point ma question (Q)
+            correspond-elle à l'étiquette (K) de chaque token passé ? » Plus ça
+            correspond, plus j'écoute son cahier (V).
+          </div>
+          {/* ANIMATION: highlight séquentiel Q → K → V (étape 3) */}
+          <div
+            style={{
+              marginTop: 12,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <VectorBar values={trace.q} label="Q (query)" />
+            <VectorBar values={trace.k} label="K (key)" />
+            <VectorBar values={trace.v} label="V (value)" />
+          </div>
+          <div className="label-dim mt-4">
+            Ces {N_HEAD * HEAD_DIM} nombres viennent des matrices wq, wk, wv que
+            tu as vues à l'étape 3 dans le diagramme de flux.
+          </div>
+        </div>
+      )}
+
+      {/* ── Panneau 5 : La matrice d'attention ── */}
+      {traces.length > 0 && (
+        <div className="panel">
+          <div className="panel-title">
+            La matrice d'attention (tête {selectedHead})
+          </div>
+          <div className="explain">
+            Voici ce que le modèle « voit » à travers la tête {selectedHead}.
+            Chaque cellule indique <b>combien il écoute</b> le token de cette
+            colonne. Les poids totalisent toujours 100 % sur chaque ligne (grâce
+            au <Term id="softmax" />
+            ). Le tiret « — » en haut à droite, c'est le <b>masque causal</b> :
+            le modèle ne peut pas regarder le futur.
+          </div>
+          <div className="controls mt-8">
+            <span className="label-dim">Tête :</span>
+            {Array.from({ length: N_HEAD }, (_, h) => (
+              <button
+                key={h}
+                type="button"
+                className={`btn btn-toggle ${h === selectedHead ? "" : "btn-secondary"}`}
+                onClick={() => setSelectedHead(h)}
+              >
+                {h}
+              </button>
+            ))}
+          </div>
+          <div style={{ marginTop: 12, overflowX: "auto" }}>
+            <AttnMatrix
+              matrix={matrix}
+              tokens={displayLabels}
+              highlightRow={safePos}
+            />
+          </div>
+          <div className="explain mt-8">
+            💡 Le masque causal rend la génération possible — tu le verras en
+            action à l'étape 6 (
+            <Term id="generation-autoregressive" />
+            ).
           </div>
         </div>
       )}
