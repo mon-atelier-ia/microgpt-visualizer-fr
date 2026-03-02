@@ -864,11 +864,16 @@ button.gen-name:focus-visible {
 }
 
 /* ── BertViz visualization ── */
+.bv-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 12px;
+}
 .bv-container {
   display: flex;
   align-items: flex-start;
-  justify-content: center;
-  margin-top: 12px;
+  flex-shrink: 0;
   user-select: none;
 }
 .bv-column {
@@ -884,35 +889,31 @@ button.gen-name:focus-visible {
   height: 22px;
   line-height: 22px;
 }
-.bv-token {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.token-box--bv {
   width: 52px;
   height: 44px;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: bold;
-  font-family: var(--mono);
-  color: var(--text);
+  padding: 2px;
+  justify-content: center;
   transition: opacity 0.15s;
 }
-.bv-token--src {
-  cursor: default;
+.token-box--bv:hover {
+  transform: none;
 }
-.bv-token--src:hover,
-.bv-token--src:focus-visible {
+.token-box--bv .char {
+  font-size: 15px;
+  color: var(--text);
+}
+.token-box--bv.bos .char {
+  font-size: 13px;
+}
+.bv-src {
+  cursor: pointer;
+}
+.bv-src:hover,
+.bv-src:focus-visible {
   border-color: var(--border-hover);
-}
-.bv-token--bos {
-  border-style: dashed;
-  border-color: var(--red);
-}
-.bv-token--selected {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 2px var(--blue);
+  background: var(--border);
+  transform: none;
 }
 .bv-svg {
   display: block;
@@ -944,6 +945,55 @@ button.gen-name:focus-visible {
   width: 16px;
   height: 3px;
   border-radius: 2px;
+}
+.bv-detail {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  align-self: stretch;
+}
+.bv-detail-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--blue);
+  margin-bottom: 8px;
+}
+.bv-weight-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+}
+.bv-weight-label {
+  font-size: 13px;
+  font-weight: bold;
+  font-family: var(--mono);
+  color: var(--text);
+  width: 36px;
+  text-align: right;
+}
+.bv-weight-track {
+  flex: 1;
+  height: 16px;
+  background: var(--surface);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bv-weight-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.35s ease;
+  min-width: 2px;
+}
+.bv-weight-pct {
+  font-size: 11px;
+  color: var(--text-dim);
+  width: 44px;
+  text-align: right;
+  font-family: var(--mono);
 }
 
 /* MLP neuron cells */
@@ -1319,7 +1369,8 @@ button.gen-name:focus-visible {
   .main {
     padding: 20px;
   }
-  .panel-row {
+  .panel-row,
+  .bv-row {
     flex-direction: column;
   }
   .heatmap-with-bars {

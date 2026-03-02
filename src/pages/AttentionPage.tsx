@@ -293,7 +293,7 @@ export default memo(function AttentionPage() {
           <BertVizView
             matrices={allHeadMatrices}
             tokens={displayLabels}
-            selectedPos={safePos}
+            tokenIds={tokens.slice(0, n)}
           />
         </div>
       )}
