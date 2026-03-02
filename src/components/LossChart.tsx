@@ -1,13 +1,8 @@
 import { useEffect, useRef } from "react";
+import { getCssVar } from "../utils/getCssVar";
 
 interface Props {
   lossHistory: number[];
-}
-
-function getCssVar(name: string): string {
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
 }
 
 export default function LossChart({ lossHistory }: Props) {
