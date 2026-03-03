@@ -18,6 +18,7 @@ export default function Term({ id }: TermProps) {
   const { openModal } = useTermModal();
   const [showTooltip, setShowTooltip] = useState(false);
   const [flipBelow, setFlipBelow] = useState(false);
+  const [offsetX, setOffsetX] = useState(0);
   const uniqueId = useId();
   const tooltipId = `${uniqueId}-tip`;
   const hideTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -30,6 +31,23 @@ export default function Term({ id }: TermProps) {
     if (termRef.current) {
       const rect = termRef.current.getBoundingClientRect();
       setFlipBelow(rect.top < 140);
+      // Clamp tooltip to viewport on desktop only.
+      // On mobile (≤768px), CSS switches to position:fixed full-width —
+      // an inline transform would override transform:none and break layout.
+      if (window.innerWidth > 768) {
+        const tooltipW = 300; // max-width from CSS
+        const center = rect.left + rect.width / 2;
+        const margin = 8;
+        if (center - tooltipW / 2 < margin) {
+          setOffsetX(margin - (center - tooltipW / 2));
+        } else if (center + tooltipW / 2 > window.innerWidth - margin) {
+          setOffsetX(window.innerWidth - margin - (center + tooltipW / 2));
+        } else {
+          setOffsetX(0);
+        }
+      } else {
+        setOffsetX(0);
+      }
     }
     setShowTooltip(true);
   }, []);
@@ -59,6 +77,7 @@ export default function Term({ id }: TermProps) {
       onMouseLeave={hide}
       onFocus={show}
       onBlur={hide}
+      onClick={show}
       onKeyDown={handleKeyDown}
     >
       {def.label}
@@ -68,6 +87,11 @@ export default function Term({ id }: TermProps) {
           className={`term-tooltip${flipBelow ? " term-tooltip--below" : ""}`}
           id={tooltipId}
           role="tooltip"
+          style={
+            offsetX
+              ? { transform: `translateX(calc(-50% + ${offsetX}px))` }
+              : undefined
+          }
           onMouseEnter={show}
           onMouseLeave={hide}
         >
