@@ -54,6 +54,35 @@ export default memo(function ForwardPassPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- model is mutable: identity detects reset, totalStep detects training
   }, [model, model.totalStep]);
 
+  const selectorControls = (
+    <>
+      <div className="controls">
+        <span className="label-dim">Token :</span>
+        {uchars.map((ch) => (
+          <button
+            key={ch}
+            className={`btn btn-toggle btn-toggle--char ${ch === char ? "" : "btn-secondary"}`}
+            onClick={() => setChar(ch)}
+          >
+            {ch}
+          </button>
+        ))}
+      </div>
+      <div className="controls" style={{ marginTop: 8 }}>
+        <span className="label-dim">Position :</span>
+        {Array.from({ length: BLOCK_SIZE }, (_, i) => (
+          <button
+            key={i}
+            className={`btn btn-toggle btn-toggle--char ${i === pos ? "" : "btn-secondary"}`}
+            onClick={() => setPos(i)}
+          >
+            {i}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+
   return (
     <PageSection id="forward" title="3. Propagation">
       <p className="page-desc">
@@ -66,30 +95,7 @@ export default memo(function ForwardPassPage() {
       {/* 1. Contrôles */}
       <div className="panel">
         <div className="panel-title">Choisis l'entrée</div>
-        <div className="controls">
-          <span className="label-dim">Token :</span>
-          {uchars.map((ch) => (
-            <button
-              key={ch}
-              className={`btn btn-toggle btn-toggle--char ${ch === char ? "" : "btn-secondary"}`}
-              onClick={() => setChar(ch)}
-            >
-              {ch}
-            </button>
-          ))}
-        </div>
-        <div className="controls" style={{ marginTop: 8 }}>
-          <span className="label-dim">Position :</span>
-          {Array.from({ length: BLOCK_SIZE }, (_, i) => (
-            <button
-              key={i}
-              className={`btn btn-toggle btn-toggle--char ${i === pos ? "" : "btn-secondary"}`}
-              onClick={() => setPos(i)}
-            >
-              {i}
-            </button>
-          ))}
-        </div>
+        {selectorControls}
       </div>
 
       {/* 2. Vecteurs détaillés + probabilités */}
@@ -134,15 +140,18 @@ export default memo(function ForwardPassPage() {
         topProbPct={(top5[0]?.prob * 100).toFixed(0)}
       />
 
-      {/* 4. NNDiagram — le réseau en action */}
+      {/* 4. Sélecteur dupliqué (proximité avec le diagramme NN) */}
+      <div className="panel">{selectorControls}</div>
+
+      {/* 5. NNDiagram — le réseau en action */}
       <div className="panel">
         <div className="panel-title">Le réseau en action</div>
         <div className="explain">
           Voici le modèle complet. Chaque cercle est un neurone, chaque trait
           une connexion pondérée. Les couleurs montrent les activations réelles
           : vert = positif, rouge = négatif. Survole un neurone pour voir ses
-          connexions. Change le token ou la position ci-dessus pour observer
-          comment les activations changent.
+          connexions. Change le token ou la position pour observer comment les
+          activations changent.
         </div>
         <div className="nn-canvas-wrap">
           <NNDiagram
@@ -157,7 +166,7 @@ export default memo(function ForwardPassPage() {
         </div>
       </div>
 
-      {/* 5. Détail MLP */}
+      {/* 6. Détail MLP */}
       {trace.mlpHidden && (
         <MLPActivationPanel
           mlpHidden={trace.mlpHidden}

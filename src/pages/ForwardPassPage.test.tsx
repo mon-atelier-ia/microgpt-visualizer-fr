@@ -60,16 +60,16 @@ vi.mock("../engine/model", async (importOriginal) => {
 afterEach(() => cleanup());
 
 describe("ForwardPassPage — sélecteurs", () => {
-  it("affiche les 26 boutons de tokens (a-z)", () => {
+  it("affiche les 26 boutons de tokens (a-z) × 2 sélecteurs", () => {
     render(<ForwardPassPage />);
     const buttons = screen.getAllByRole("button");
     const tokenButtons = buttons.filter(
       (b) => b.textContent?.length === 1 && /^[a-z]$/.test(b.textContent),
     );
-    expect(tokenButtons.length).toBe(26);
+    expect(tokenButtons.length).toBe(52);
   });
 
-  it("affiche les 16 boutons de positions (0-15)", () => {
+  it("affiche les 16 boutons de positions (0-15) × 2 sélecteurs", () => {
     render(<ForwardPassPage />);
     const buttons = screen.getAllByRole("button");
     const posButtons = buttons.filter(
@@ -78,7 +78,7 @@ describe("ForwardPassPage — sélecteurs", () => {
         /^\d+$/.test(b.textContent) &&
         Number(b.textContent) < 16,
     );
-    expect(posButtons.length).toBe(16);
+    expect(posButtons.length).toBe(32);
   });
 
   it("affiche le canvas du diagramme NN", () => {
