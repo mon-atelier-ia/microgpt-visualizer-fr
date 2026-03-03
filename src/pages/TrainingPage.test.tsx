@@ -15,6 +15,9 @@ vi.mock("../modelStore", () => ({
   }),
   notifyModelUpdate: vi.fn(),
   resetModel: vi.fn(),
+  pushWteSnapshot: vi.fn(),
+  getWteSnapshots: () => [],
+  SNAPSHOT_INTERVAL: 50,
 }));
 
 // Mock trainStep pour éviter d'exécuter le vrai modèle

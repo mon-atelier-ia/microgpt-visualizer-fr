@@ -4,8 +4,9 @@ import Heatmap, { VectorBar } from "../components/Heatmap";
 import EmbeddingBarChart from "../components/EmbeddingBarChart";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
-import { useModel } from "../modelStore";
+import { useModel, getWteSnapshots } from "../modelStore";
 import { computeCharStats } from "../utils/charStats";
+import PCAScatterPlot from "../components/PCAScatterPlot";
 
 export default memo(function EmbeddingsPage() {
   const model = useModel();
@@ -26,6 +27,18 @@ export default memo(function EmbeddingsPage() {
 
   // Dataset stats (recalculated when dataset changes)
   const charStats = useMemo(() => computeCharStats(model.docs), [model.docs]);
+
+  // PCA scatter data (current embeddings as plain numbers)
+  const wteData = useMemo(
+    () => model.stateDict.wte.map((row) => row.map((v) => v.data)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- model mutable: identity=reset, totalStep=training
+    [model, model.totalStep],
+  );
+   
+  const wteSnapshots = useMemo(
+    () => getWteSnapshots(),
+    [model, model.totalStep],
+  );
 
   // Bar chart data for hovered row
   const hoveredValues =
@@ -192,6 +205,49 @@ export default memo(function EmbeddingsPage() {
         />
         <div className="vector-divider">=</div>
         <VectorBar values={combined} label="combiné (entrée du modèle)" />
+      </div>
+      {/* Carte PCA — les plongements en 2D */}
+      <div className="panel">
+        <div className="panel-title">
+          Carte PCA — les <Term id="plongement" />s en 2D
+        </div>
+        <div className="label-dim" style={{ marginBottom: 8 }}>
+          {model.totalStep === 0
+            ? "Poids aléatoires — les lettres sont éparpillées au hasard"
+            : `Entraîné (${model.totalStep} étapes) — les lettres similaires se regroupent`}
+        </div>
+        <div className="explain">
+          Chaque lettre est un point dans un espace à 16 <Term id="dimension" />
+          s — impossible à visualiser ! On utilise une technique appelée{" "}
+          <b>PCA</b> pour condenser ces 16 nombres en 2, en gardant les 2
+          directions les plus informatives. C'est comme projeter l'ombre d'un
+          objet 3D sur un mur : on perd du détail, mais la forme générale reste
+          visible.
+          <br />
+          <br />
+          Chaque point correspond à une ligne du tableau wte ci-dessus. Couleurs
+          : <span className="text-cyan">voyelles</span>,{" "}
+          <span className="text-orange">consonnes</span>,{" "}
+          <span className="label-purple">BOS</span>. <b>Survole</b> une lettre
+          pour voir ses coordonnées — la ligne correspondante s'éclaire aussi
+          dans le tableau.
+          {wteSnapshots.length >= 3 && (
+            <>
+              {" "}
+              Clique <b>Rejouer</b> pour voir le chemin réel de chaque lettre
+              pendant l'entraînement.
+            </>
+          )}
+        </div>
+        <div className="pca-canvas-wrap">
+          <PCAScatterPlot
+            wteData={wteData}
+            totalStep={model.totalStep}
+            snapshots={wteSnapshots}
+            highlightLetter={hoverRow}
+            onHoverLetter={setHoverRow}
+          />
+        </div>
       </div>
     </PageSection>
   );

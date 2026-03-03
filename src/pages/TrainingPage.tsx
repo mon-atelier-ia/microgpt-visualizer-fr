@@ -4,7 +4,14 @@ import LossChart from "../components/LossChart";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 import LossCell from "../components/LossCell";
-import { useModel, notifyModelUpdate, resetModel } from "../modelStore";
+import {
+  useModel,
+  notifyModelUpdate,
+  resetModel,
+  pushWteSnapshot,
+  getWteSnapshots,
+  SNAPSHOT_INTERVAL,
+} from "../modelStore";
 import { memo } from "react";
 
 export default memo(function TrainingPage() {
@@ -27,6 +34,11 @@ export default memo(function TrainingPage() {
     setTraining(true);
     stopRef.current = false;
 
+    // Capture initial state before first training
+    if (getWteSnapshots().length === 0) {
+      pushWteSnapshot(model);
+    }
+
     // model is mutable (engine constraint) — reads inside tick() see current state,
     // not a stale closure, because trainStep mutates the same object in-place.
     const targetSteps = model.totalStep + steps;
@@ -43,6 +55,9 @@ export default memo(function TrainingPage() {
       let result: TrainStepResult | null = null;
       for (let i = 0; i < batch; i++) {
         result = trainStep(model, targetSteps);
+        if (model.totalStep % SNAPSHOT_INTERVAL === 0) {
+          pushWteSnapshot(model);
+        }
         done++;
       }
       if (result) setLastResult(result);
@@ -73,6 +88,7 @@ export default memo(function TrainingPage() {
         <div className="panel-title">Contrôles</div>
         <div className="controls">
           <button
+            type="button"
             className="btn"
             onClick={() => runTraining(200)}
             disabled={training}
@@ -80,6 +96,7 @@ export default memo(function TrainingPage() {
             Entraîner 200 étapes
           </button>
           <button
+            type="button"
             className="btn btn-secondary"
             onClick={() => runTraining(500)}
             disabled={training}
@@ -87,6 +104,7 @@ export default memo(function TrainingPage() {
             Entraîner 500
           </button>
           <button
+            type="button"
             className="btn btn-secondary"
             onClick={() => runTraining(1000)}
             disabled={training}
@@ -94,11 +112,12 @@ export default memo(function TrainingPage() {
             Entraîner 1000
           </button>
           {training && (
-            <button className="btn btn--danger" onClick={stop}>
+            <button type="button" className="btn btn--danger" onClick={stop}>
               Arrêter
             </button>
           )}
           <button
+            type="button"
             className="btn btn-secondary"
             onClick={() => resetModel()}
             disabled={training}
