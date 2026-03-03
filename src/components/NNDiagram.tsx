@@ -75,7 +75,7 @@ function computePositions(
   h: number,
   layers: number[],
 ): NeuronPos[][] {
-  const padX = 70;
+  const padX = Math.min(70, w * 0.08);
   const padY = 36;
   const usableW = w - padX * 2;
   const usableH = h - padY * 2 - 30;
@@ -542,6 +542,19 @@ export default function NNDiagram({
         aria-label="Diagramme du réseau de neurones — 5 couches avec activations et connexions"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          handleMouseMove(
+            e.touches[0] as unknown as React.MouseEvent<HTMLCanvasElement>,
+          );
+        }}
+        onTouchMove={(e) => {
+          e.preventDefault();
+          handleMouseMove(
+            e.touches[0] as unknown as React.MouseEvent<HTMLCanvasElement>,
+          );
+        }}
+        onTouchEnd={handleMouseLeave}
       />
       <button
         type="button"

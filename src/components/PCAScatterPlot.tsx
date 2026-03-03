@@ -626,6 +626,19 @@ export default function PCAScatterPlot({
         aria-label="Carte PCA des plongements — projection 2D des 27 vecteurs"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          handleMouseMove(
+            e.touches[0] as unknown as React.MouseEvent<HTMLCanvasElement>,
+          );
+        }}
+        onTouchMove={(e) => {
+          e.preventDefault();
+          handleMouseMove(
+            e.touches[0] as unknown as React.MouseEvent<HTMLCanvasElement>,
+          );
+        }}
+        onTouchEnd={handleMouseLeave}
       />
       {snapshots.length >= 3 && (
         <button
