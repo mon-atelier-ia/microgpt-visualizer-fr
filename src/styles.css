@@ -333,6 +333,9 @@ input[type="range"]:focus-visible {
 .text-cyan {
   color: var(--cyan);
 }
+.text-orange {
+  color: var(--orange);
+}
 .text-dim {
   color: var(--text-dim);
 }
@@ -648,6 +651,30 @@ canvas.chart {
 }
 
 .nn-canvas-wrap .nn-replay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+}
+
+/* ── PCA Scatter Plot ── */
+.pca-canvas-wrap {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.2);
+}
+
+.pca-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 400px;
+  cursor: crosshair;
+  background: var(--surface);
+  border-radius: 8px;
+}
+
+.pca-canvas-wrap .pca-replay {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -1517,6 +1544,10 @@ button.gen-name:focus-visible {
     height: 300px;
   }
 
+  .pca-canvas-wrap canvas {
+    height: 300px;
+  }
+
   /* Flow steps */
   .flow {
     gap: 3px;
@@ -1723,6 +1754,10 @@ button.gen-name:focus-visible {
   }
 
   .nn-canvas-wrap canvas {
+    height: 220px;
+  }
+
+  .pca-canvas-wrap canvas {
     height: 220px;
   }
 
