@@ -256,7 +256,7 @@ export default function NNDiagram({
             const wVal =
               wMat[ti] && wMat[ti][fi] !== undefined ? wMat[ti][fi] : 0;
             const wNorm = Math.abs(wVal) / maxW;
-            let alpha = (0.02 + wNorm * 0.25) * fwdConn;
+            let alpha = (0.02 + wNorm * 0.08) * fwdConn;
             let lineWidth = 0.5 + wNorm * 1.5;
 
             // Hover highlight
@@ -281,7 +281,24 @@ export default function NNDiagram({
             }
 
             if (alpha > 0.01) {
-              ctx.strokeStyle = `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${alpha})`;
+              // Hovered connections: color by activation (green/red)
+              const isHoverConn =
+                hover &&
+                ((hover.layer === li && hover.index === fi) ||
+                  (hover.layer === li + 1 && hover.index === ti));
+              if (isHoverConn) {
+                const fromVal = activations[li]?.[fi] ?? 0;
+                const toVal = activations[li + 1]?.[ti] ?? 0;
+                ctx.strokeStyle = valToColor(
+                  (fromVal + toVal) / 2,
+                  alpha,
+                  greenRgb,
+                  redRgb,
+                  neutralRgb,
+                );
+              } else {
+                ctx.strokeStyle = `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${alpha})`;
+              }
               ctx.lineWidth = lineWidth;
               ctx.beginPath();
               ctx.moveTo(from.x, from.y);
