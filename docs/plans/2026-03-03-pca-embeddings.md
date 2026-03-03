@@ -26,20 +26,22 @@ Le `useModel()` hook + `[model, model.totalStep]` deps garantit que le scatter P
 
 ### Réutilisation des patterns existants
 
-| Pattern existant                  | Où                    | Réutilisé                             |
-| --------------------------------- | --------------------- | ------------------------------------- |
-| `useModel()` hook                 | `modelStore.ts`       | EmbeddingsPage lit wte via model      |
-| `[model, model.totalStep]` deps   | ForwardPassPage:33    | useMemo pour wteData                  |
-| `getCssVar()`                     | `utils/getCssVar.ts`  | Couleurs Canvas (cyan/orange/purple)  |
-| `useRef<HTMLCanvasElement>` + DPR | `LossChart.tsx:14-24` | Pattern Canvas identique              |
-| `if (!ctx) return` guard          | `LossChart.tsx:20`    | jsdom safety                          |
-| `role="img"` + `aria-label`       | `LossChart.tsx:138`   | Accessibilité canvas                  |
-| `notifyModelUpdate()`             | `modelStore.ts`       | Snapshots visibles au prochain render |
-| `resetModel()` clears state       | `modelStore.ts`       | Clear snapshots on reset              |
-| `.nn-canvas-wrap` pattern         | NNDiagram CSS         | Réutilisé pour `.pca-canvas-wrap`     |
+| Pattern existant                  | Où                    | Réutilisé                                                                |
+| --------------------------------- | --------------------- | ------------------------------------------------------------------------ |
+| `useModel()` hook                 | `modelStore.ts`       | EmbeddingsPage lit wte via model                                         |
+| `[model, model.totalStep]` deps   | ForwardPassPage:33    | useMemo pour wteData                                                     |
+| `getCssVar()`                     | `utils/getCssVar.ts`  | Couleurs Canvas (cyan/orange/purple)                                     |
+| `useRef<HTMLCanvasElement>` + DPR | `LossChart.tsx:14-24` | Pattern Canvas identique                                                 |
+| `if (!ctx) return` guard          | `LossChart.tsx:20`    | jsdom safety                                                             |
+| `role="img"` + `aria-label`       | `LossChart.tsx:138`   | Accessibilité canvas                                                     |
+| `notifyModelUpdate()`             | `modelStore.ts`       | Snapshots visibles au prochain render                                    |
+| `resetModel()` clears state       | `modelStore.ts`       | Clear snapshots on reset                                                 |
+| `.nn-canvas-wrap` pattern         | NNDiagram CSS         | Réutilisé pour `.pca-canvas-wrap`                                        |
+| `parseColor()`                    | NNDiagram.tsx:56-69   | Extrait vers `src/utils/parseColor.ts` (Task 0), partagé NNDiagram + PCA |
 
 ### Ce qui est nouveau
 
+- `src/utils/parseColor.ts` — extraction DRY de NNDiagram (~13 lignes, 0 nouveau code)
 - `src/utils/pca.ts` — utilitaire pur PCA 16D→2D + `cosineSim` + `topSimilarPairs` (~75 lignes)
 - Snapshots wte dans `modelStore.ts` — ~20 lignes ajoutées
 - `PCAScatterPlot.tsx` — composant Canvas 2D (~350 lignes, inclut enrichissements visuels)
@@ -202,6 +204,8 @@ Le panneau PCA doit s'inscrire dans le réseau de renvois existants :
 
 | Fichier                                  | Action   | Lignes estimées                           |
 | ---------------------------------------- | -------- | ----------------------------------------- |
+| `src/utils/parseColor.ts`                | Créer    | ~13 (extraction DRY de NNDiagram)         |
+| `src/components/NNDiagram.tsx`           | Modifier | -13 +1 (import parseColor)                |
 | `src/utils/pca.ts`                       | Créer    | ~75 (pca2d + cosineSim + topSimilarPairs) |
 | `src/utils/pca.test.ts`                  | Créer    | ~60                                       |
 | `src/components/PCAScatterPlot.tsx`      | Créer    | ~350                                      |
@@ -213,6 +217,52 @@ Le panneau PCA doit s'inscrire dans le réseau de renvois existants :
 | `src/styles.css`                         | Modifier | +35 lignes (incl. `.text-orange`)         |
 
 Net : +560 lignes. Tests : 111 → ~123.
+
+---
+
+## Task 0 : Extraction `parseColor` (DRY, pré-requis)
+
+**Files:**
+
+- Create: `src/utils/parseColor.ts`
+- Modify: `src/components/NNDiagram.tsx` (import, supprimer copie locale)
+
+### Step 1: Créer `src/utils/parseColor.ts`
+
+```typescript
+/** Parse a CSS color string (#hex or rgb()) into [r, g, b]. */
+export function parseColor(c: string): [number, number, number] {
+  if (c.startsWith("#")) {
+    const hex = c.slice(1);
+    return [
+      parseInt(hex.slice(0, 2), 16),
+      parseInt(hex.slice(2, 4), 16),
+      parseInt(hex.slice(4, 6), 16),
+    ];
+  }
+  const m = c.match(/(\d+)/g);
+  return m ? [+m[0], +m[1], +m[2]] : [128, 128, 128];
+}
+```
+
+### Step 2: Mettre à jour NNDiagram.tsx
+
+Supprimer la fonction `parseColor` locale (lignes 56-69) et ajouter l'import :
+
+```typescript
+import { parseColor } from "../utils/parseColor";
+```
+
+### Step 3: Vérifier que les tests existants passent
+
+Run: `npx vitest run src/components/NNDiagram.test.tsx`
+Expected: 2 tests PASS (aucun changement de comportement)
+
+### Step 4: Commit
+
+```
+refactor: extract parseColor to shared utility (DRY for PCA)
+```
 
 ---
 
@@ -451,9 +501,9 @@ export function pushWteSnapshot(state: ModelState) {
   wteSnapshots.push({ step: state.totalStep, wte: snap });
 }
 
-/** Get all snapshots (for PCA animation). */
+/** Get all snapshots (for PCA animation). Returns shallow copy to avoid memo bypass. */
 export function getWteSnapshots(): WteSnapshot[] {
-  return wteSnapshots;
+  return [...wteSnapshots];
 }
 ```
 
@@ -472,22 +522,30 @@ export function resetModel(datasetId?: string) {
 
 ```typescript
 describe("wteSnapshots", () => {
+  beforeEach(() => {
+    act(() => resetModel());
+  });
+
   it("pushWteSnapshot stores a deep copy", () => {
-    const model = getTestModel(); // utiliser le pattern existant
-    pushWteSnapshot(model);
+    const { result } = renderHook(() => useModel());
+    act(() => {
+      pushWteSnapshot(result.current);
+    });
     const snaps = getWteSnapshots();
     expect(snaps).toHaveLength(1);
-    expect(snaps[0].step).toBe(model.totalStep);
-    expect(snaps[0].wte).toHaveLength(model.stateDict.wte.length);
-    expect(snaps[0].wte[0]).toHaveLength(model.stateDict.wte[0].length);
+    expect(snaps[0].step).toBe(result.current.totalStep);
+    expect(snaps[0].wte).toHaveLength(result.current.stateDict.wte.length);
     // Verify it's a copy, not a reference
-    expect(snaps[0].wte[0][0]).toBe(model.stateDict.wte[0][0].data);
+    expect(snaps[0].wte[0][0]).toBe(result.current.stateDict.wte[0][0].data);
   });
 
   it("resetModel clears snapshots", () => {
-    pushWteSnapshot(model);
+    const { result } = renderHook(() => useModel());
+    act(() => {
+      pushWteSnapshot(result.current);
+    });
     expect(getWteSnapshots().length).toBeGreaterThan(0);
-    resetModel();
+    act(() => resetModel());
     expect(getWteSnapshots()).toHaveLength(0);
   });
 });
@@ -655,7 +713,7 @@ interface PCAScatterPlotProps {
 2. **PCA 16D→2D** — via `pca2d()` importé depuis `utils/pca.ts`
 3. **Hover** — tooltip Canvas-rendered (pas HTML overlay) avec lettre, type (voyelle/consonne), coordonnées PC1/PC2. Rounded rect avec fill `--surface2`, texte en `--text`, coordonnées en `--text-dim`. Même couche visuelle que le reste du canvas (cohérence NNDiagram).
 4. **Bidirectional hover link** (HIGH priority) — Quand l'utilisateur survole un point, `onHoverLetter(index)` est appelé → la ligne correspondante s'illumine dans la heatmap wte au-dessus. Et inversement : `highlightLetter` en prop → le dot correspondant reçoit un anneau de surbrillance + les connexions partant de cette lettre sont accentuées. Pattern identique au BertVizView dans AttentionPage (état hover remonté dans la page parent).
-5. **Animation replay** — si snapshots.length ≥ 3, bouton "Rejouer l'évolution"
+5. **Animation replay** — si snapshots.length ≥ 3, bouton `<button type="button" className="btn btn-secondary pca-replay">▶ Rejouer l'évolution</button>`
    - Animation par `requestAnimationFrame` avec interpolation ease-in-out entre chaque paire de snapshots (~200ms par transition)
    - Total pour 20 snapshots : ~4 secondes (perceptuellement fluide)
    - **Ghost trails** : les 3-4 positions précédentes de chaque dot sont dessinées à alpha décroissant (0.3, 0.15, 0.05), créant un effet de "motion blur" qui montre la trajectoire
@@ -793,24 +851,14 @@ Ajouter après la section `.nn-*` :
   right: 8px;
   z-index: 1;
 }
-
-.pca-canvas-wrap .pca-step-label {
-  position: absolute;
-  top: 8px;
-  left: 12px;
-  font-size: 11px;
-  color: var(--text-dim);
-  z-index: 1;
-  pointer-events: none;
-}
 ```
 
-**Note :** La classe `.pca-tooltip` est supprimée — le tooltip est désormais rendu entièrement dans le Canvas (cohérence visuelle, pas de couche HTML par-dessus le canvas).
+**Note :** Les classes `.pca-tooltip` et `.pca-step-label` sont absentes — tooltip et step label sont rendus entièrement dans le Canvas (D10, cohérence visuelle, pas de couche HTML par-dessus le canvas).
 
 Responsive (dans les breakpoints existants) :
 
-- `@media (max-width: 640px)` : `.pca-canvas-wrap canvas { height: 300px; }`
-- `@media (max-width: 400px)` : `.pca-canvas-wrap canvas { height: 220px; }`
+- `@media (max-width: 768px)` : `.pca-canvas-wrap canvas { height: 300px; }`
+- `@media (max-width: 480px)` : `.pca-canvas-wrap canvas { height: 220px; }`
 
 Ce CSS est inclus dans le commit de la Task 4 ou fait un commit séparé si nécessaire.
 
