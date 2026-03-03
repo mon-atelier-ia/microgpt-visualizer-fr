@@ -388,6 +388,19 @@ App
 - 3 `VectorBar` empilés : token emb + position emb = combined
 - Séparateur `.vector-divider` "+" et "="
 
+**Panneau 4 — "PCA — les plongements en 2D"**
+
+- Badge d'état dynamique (même pattern que panneau 1 wte)
+- `.pca-canvas-wrap` > `PCAScatterPlot` Canvas 2D :
+  - `wteData`: `model.stateDict.wte` mappé en `number[][]` (27×16), deps `[model, model.totalStep]`
+  - `totalStep`: `model.totalStep`
+  - `snapshots`: `getWteSnapshots()` — deep copies wte capturées tous les 50 pas
+  - `highlightLetter={hoverRow}` — heatmap wte survol → anneau PCA
+  - `onHoverLetter={setHoverRow}` — PCA dot survol → highlight heatmap wte
+- Texte pédagogique : métaphore de l'ombre (16D → 2D = "ombre sur un mur")
+- Mention conditionnelle : "Clique le bouton « Rejouer »" si ≥3 snapshots disponibles
+- Termes : `plongement`, `dimension`
+
 ---
 
 ### 7.3 Page 3 : Propagation
@@ -688,7 +701,30 @@ Dessins :
 
 Empty state : texte centré "Clique sur « Entraîner » pour commencer".
 
-### 9.8 Composants atomiques
+### 9.8 PCAScatterPlot
+
+| Prop              | Type                              |
+| ----------------- | --------------------------------- |
+| `wteData`         | `number[][]` (27×16)              |
+| `totalStep`       | `number`                          |
+| `snapshots`       | `WteSnapshot[]`                   |
+| `highlightLetter` | `number \| null`                  |
+| `onHoverLetter`   | `(index: number \| null) => void` |
+
+- Canvas 2D (641 lignes), pattern identique NNDiagram/LossChart
+- **Points** : 27 dots (voyelles=`--cyan`, consonnes=`--orange`, BOS=`--purple`), labels lettres
+- **Constellation** : lignes entre points proches, couleur par type (même type=couleur type, cross=`--border`), alpha/épaisseur par distance inversée
+- **Axes** : lignes centrées sur l'origine PCA, labels "Composante 1" / "Composante 2"
+- **Hover** : anneau lumineux (`shadowBlur` + `strokeStyle` couleur type), constellation highlight
+- **Hover bidirectionnel** : `highlightLetter` prop → anneau sur le dot correspondant ; `onHoverLetter` callback → met à jour heatmap wte
+- **Animation replay** : interpolation linéaire entre snapshots wte (ghost trails cyan 30%), bouton "Rejouer" conditionnel ≥3 snapshots
+- **Vignette** : dégradé radial transparent→noir (effet observatoire)
+- **Responsive** : hauteur 400→300→220px via media queries sur `.pca-canvas-wrap`
+- `prefers-reduced-motion` : skip animation, état final immédiat
+- IntersectionObserver (scroll reveal), ResizeObserver (responsive), MutationObserver (thème)
+- Couleurs lues via `getComputedStyle` + `parseColor()` (réactif au changement de thème)
+
+### 9.9 Composants atomiques
 
 | Composant    | Props                                        | Couleur                                                               |
 | ------------ | -------------------------------------------- | --------------------------------------------------------------------- |
@@ -962,7 +998,15 @@ Classifie dynamiquement un head d'attention en 4 personnalités :
 
 Retourne un JSX avec une explication FR de la personnalité du head. Aucun `dangerouslySetInnerHTML`.
 
-### 15.3 `computeCharStats(docs: string[]): Map<string, CharStats>`
+### 15.3 `pca2d(data: number[][]): [number, number][]`
+
+Projection PCA analytique (pas de bibliothèque). Centrage des données, covariance 2×2, résolution analytique des vecteurs propres, projection sur les 2 premières composantes. Retourne un tableau de coordonnées `[x, y]`.
+
+### 15.4 `parseColor(str: string): [number, number, number]`
+
+Parse une couleur CSS (`#rrggbb`, `rgb(r,g,b)`, `rgba(r,g,b,a)`) en triplet RGB. Fallback `[128,128,128]` pour chaîne vide. Utilisé par `PCAScatterPlot` pour extraire les couleurs CSS variables (`getComputedStyle`).
+
+### 15.5 `computeCharStats(docs: string[]): Map<string, CharStats>`
 
 ```typescript
 interface CharStats {
@@ -987,6 +1031,8 @@ export function resetModel(datasetId?: string): void;
 export function notifyModelUpdate(): void;
 export function getModelTotalStep(): number; // non-réactif
 export function useModel(): ModelState; // hook React
+export function pushWteSnapshot(model: ModelState): void; // deep copy wte
+export function getWteSnapshots(): WteSnapshot[]; // {step, wte}[]
 ```
 
 **Pattern** : version counter + Set<Listener>. `model` est muté in-place par `trainStep`, la version est incrémentée via `notifyModelUpdate()`.
@@ -997,29 +1043,33 @@ export function useModel(): ModelState; // hook React
 
 ## 17. Tests existants
 
-108 tests dans 19 fichiers. Framework : Vitest + jsdom + @testing-library/react.
+133 tests dans 24 fichiers. Framework : Vitest + jsdom + @testing-library/react.
 
-| Fichier test               | Nb  | Cible                                     |
-| -------------------------- | --- | ----------------------------------------- |
-| glossary.test.ts           | 8   | Intégrité données glossaire               |
-| datasets.test.ts           | 19  | Intégrité datasets                        |
-| Term.test.tsx              | 12  | Tooltip/modal composant                   |
-| Heatmap.test.tsx           | 12  | Roving tabindex, clavier, hint            |
-| ProbabilityBar.test.tsx    | 7   | Rendu, styles                             |
-| EmbeddingBarChart.test.tsx | 4   | Empty state, bars                         |
-| TrainingPage.test.tsx      | 2   | rAF cleanup, bouton stop                  |
-| InferencePage.test.tsx     | 6   | Labels, boutons, keys stables             |
-| PageSection.test.tsx       | 3   | Landmarks, aria-labelledby                |
-| ErrorBoundary.test.tsx     | 3   | Rendu, catch, reload                      |
-| LossChart.test.tsx         | 2   | role="img", aria-label                    |
-| TokenizerPage.test.tsx     | 2   | Label htmlFor, sr-only                    |
-| ForwardPassPage.test.tsx   | 2   | 26 token buttons, 16 position buttons     |
-| autograd.test.ts           | 5   | Arithmetic, backward                      |
-| model.test.ts              | 5   | tokenize, softmax, create, forward, train |
-| random.test.ts             | 1   | Determinism                               |
-| charStats.test.ts          | 5   | Fréquences, bigrams                       |
-| classifyHead.test.ts       | 4   | 4 personnalités                           |
-| modelStore.test.ts         | 6   | Hook, reset, notify, unsub                |
+| Fichier test               | Nb  | Cible                                            |
+| -------------------------- | --- | ------------------------------------------------ |
+| glossary.test.ts           | 8   | Intégrité données glossaire                      |
+| datasets.test.ts           | 19  | Intégrité datasets                               |
+| Term.test.tsx              | 12  | Tooltip/modal composant                          |
+| Heatmap.test.tsx           | 12  | Roving tabindex, clavier, hint                   |
+| ProbabilityBar.test.tsx    | 7   | Rendu, styles                                    |
+| EmbeddingBarChart.test.tsx | 4   | Empty state, bars                                |
+| TrainingPage.test.tsx      | 2   | rAF cleanup, bouton stop                         |
+| InferencePage.test.tsx     | 6   | Labels, boutons, keys stables                    |
+| PageSection.test.tsx       | 3   | Landmarks, aria-labelledby                       |
+| ErrorBoundary.test.tsx     | 3   | Rendu, catch, reload                             |
+| LossChart.test.tsx         | 2   | role="img", aria-label                           |
+| TokenizerPage.test.tsx     | 2   | Label htmlFor, sr-only                           |
+| ForwardPassPage.test.tsx   | 3   | 26 token buttons, 16 position buttons, canvas NN |
+| autograd.test.ts           | 5   | Arithmetic, backward                             |
+| model.test.ts              | 5   | tokenize, softmax, create, forward, train        |
+| random.test.ts             | 1   | Determinism                                      |
+| charStats.test.ts          | 5   | Fréquences, bigrams                              |
+| classifyHead.test.ts       | 4   | 4 personnalités                                  |
+| modelStore.test.ts         | 8   | Hook, reset, notify, unsub, snapshots            |
+| pca.test.ts                | 6   | Identité, corrélation, forme, taille, vide       |
+| parseColor.test.ts         | 5   | hex6, rgb, rgba, hex3, fallback                  |
+| EmbeddingsPage.test.tsx    | 4   | PCA canvas, wrap, hover, badge                   |
+| NNDiagram.test.tsx         | 2   | Canvas role/aria-label, Rejouer                  |
 
 ---
 

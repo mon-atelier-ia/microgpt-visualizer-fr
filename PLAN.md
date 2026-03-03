@@ -139,9 +139,9 @@ Ensemble, ils forment une paire pedagogique complete pour tuto-llm :
 src/
 ├── App.tsx                        # 251 lignes — shell, routing, theme, TermProvider, lazy, ErrorBoundary
 ├── main.tsx                       #   5 lignes — point d'entrée React
-├── modelStore.ts                  #  49 lignes — useSyncExternalStore + useModel() hook (A-1)
-├── modelStore.test.ts             #  72 lignes — 6 tests (useModel shape, reset, dataset switch, notify, unsubscribe, getModelTotalStep)
-├── styles.css                     # ~1 857 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion, barchart, attn-matrix, bv-*
+├── modelStore.ts                  #  76 lignes — useSyncExternalStore + useModel() hook + wteSnapshots (A-1)
+├── modelStore.test.ts             # 107 lignes — 8 tests (useModel shape, reset, dataset switch, notify, unsubscribe, getModelTotalStep, wteSnapshot deep-copy, reset clears)
+├── styles.css                     # ~1 908 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion, barchart, attn-matrix, bv-*, pca-canvas-wrap
 ├── data/
 │   ├── glossary.ts                # 314 lignes — 30 définitions (Tier 1 + Tier 2)
 │   └── glossary.test.ts           # 121 lignes — 8 tests intégrité données
@@ -177,13 +177,16 @@ src/
 │   ├── FlowDiagram.tsx            # 123 lignes — sous-composant ForwardPassPage (C-4)
 │   ├── VectorsPanel.tsx           #  41 lignes — sous-composant ForwardPassPage (C-4)
 │   ├── NNDiagram.tsx              # ~300 lignes — Canvas 2D réseau de neurones interactif (section 16)
+│   ├── NNDiagram.test.tsx         #  40 lignes — 2 tests (canvas role/aria-label, bouton Rejouer)
+│   ├── PCAScatterPlot.tsx         # 641 lignes — Canvas 2D scatter plot PCA wte (section 17)
 │   └── MLPActivationPanel.tsx     #  46 lignes — sous-composant ForwardPassPage (C-4)
 ├── pages/
 │   ├── TokenizerPage.tsx          # 162 lignes — mapping char→id, tokenisation
 │   ├── TokenizerPage.test.tsx     #  19 lignes — 2 tests a11y (label sr-only)
-│   ├── EmbeddingsPage.tsx         # 154 lignes — heatmaps wte/wpe + bar chart + stats
+│   ├── EmbeddingsPage.tsx         # 251 lignes — heatmaps wte/wpe + bar chart + stats + PCA scatter plot
+│   ├── EmbeddingsPage.test.tsx    #  68 lignes — 4 tests (PCA canvas, wrap, hover bidirectionnel, training badge)
 │   ├── ForwardPassPage.tsx        # 136 lignes — pipeline 7 étapes, délègue à 4 sous-composants (C-4)
-│   ├── ForwardPassPage.test.tsx   #  62 lignes — 1 test a11y (select label)
+│   ├── ForwardPassPage.test.tsx   #  89 lignes — 3 tests (26 token buttons, 16 position buttons, canvas NN)
 │   ├── AttentionPage.tsx          # 397 lignes — 6 panneaux attention multi-token + BertViz deux-panneaux
 │   ├── TrainingPage.tsx           # 237 lignes — boucle rAF, loss chart
 │   ├── TrainingPage.test.tsx      #  37 lignes — 2 tests (rAF cleanup, stop)
@@ -194,7 +197,11 @@ src/
 │   ├── charStats.test.ts          #  30 lignes — 5 tests
 │   ├── classifyHead.ts            #  38 lignes — classifieur heuristique personnalités de têtes
 │   ├── classifyHead.test.ts       #  55 lignes — 4 tests (T=1, Précédent, Ancrage, Contexte)
-│   └── headExplanation.tsx        #  37 lignes — phrases explicatives FR par personnalité
+│   ├── headExplanation.tsx        #  37 lignes — phrases explicatives FR par personnalité
+│   ├── pca.ts                     #  96 lignes — PCA 2D (centrage, covariance, vecteurs propres)
+│   ├── pca.test.ts                #  76 lignes — 6 tests (identité, corrélation, forme sortie, taille, ≥2 lignes, vide)
+│   ├── parseColor.ts              #  15 lignes — parse hex/rgb/rgba → [r,g,b]
+│   └── parseColor.test.ts         #  25 lignes — 5 tests (hex6, rgb, rgba, hex3, fallback)
 ├── engine/                        # 464 lignes — LECTURE SEULE (upstream)
 │   ├── autograd.ts                #  98 lignes — classe Value, backward
 │   ├── autograd.test.ts           #  48 lignes — 5 tests (arithmétique, backward, diamond)
@@ -216,6 +223,7 @@ playground.html # Visualisation réseau de neurones 5 colonnes, forward+backward
 playground-full.html # Visualisation réseau de neurones 13 colonnes fidèle architecture
 playground-attention.html # Prototype attention animé (Q·K, softmax, V) — remplacé par BertViz
 playground-bertviz.html # Visualisation BertViz — lignes token↔token, classifieur dynamique de têtes
+playground-pca.html # Prototype PCA scatter plot (points colorés, constellation, animation)
 
 scripts/
 └── investigate-heads.ts # Investigation empirique des personnalités de têtes (10 seeds × 1000 steps)
@@ -223,9 +231,10 @@ scripts/
 docs/
 ├── plans/
 │ ├── 2026-03-01-embeddings-page-vivante-design.md # Design EmbeddingsPage vivante
-│ └── 2026-03-01-embeddings-page-vivante-plan.md # Plan d'implémentation
+│ ├── 2026-03-01-embeddings-page-vivante-plan.md # Plan d'implémentation
+│ └── 2026-03-03-pca-embeddings.md # Plan PCA scatter plot (8 tasks)
 
-**Total : ~6 000 lignes src (hors data blobs), 41 fichiers source + 20 fichiers test. 111 tests. 4 playgrounds standalone.**
+**Total : ~6 900 lignes src (hors data blobs), 44 fichiers source + 24 fichiers test. 133 tests. 5 playgrounds standalone.**
 
 ### Constats clés
 
@@ -239,7 +248,7 @@ docs/
 - **Attention** : boucle multi-token côté page (KV cache pattern), matrice T×T `<table>` sémantique
 - **Model sharing** : `useSyncExternalStore` dans `modelStore.ts`, hook `useModel()` (A-1 corrigé)
 - **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
-- **Tests** : Vitest + jsdom + @testing-library/react (111 tests, 20 fichiers)
+- **Tests** : Vitest + jsdom + @testing-library/react (133 tests, 24 fichiers)
 - **ErrorBoundary** : class component, `window.location.reload()`, sidebar hors boundary
 - **Code splitting** : `React.lazy()` + `Suspense` → 6+ chunks JS séparés
 - **CSS** : 20 classes utilitaires + BEM + `.sr-only` + `prefers-reduced-motion`. Inline styles réduits de 64 à 7 (pages originales) + 8 (AttentionPage, dont 2 dynamiques)
@@ -486,6 +495,42 @@ Amélioration pédagogique : rapprocher les contrôles du feedback visuel (proxi
 - Forward only — backward = page 5 (Entraînement)
 - `probs.length` dynamique — support vocabulaire variable (27-101)
 - Poids extraits dans ForwardPassPage (props primitives), pas dans NNDiagram (principe C-4)
+
+### 17. PCA Scatter Plot — plongements en 2D (page 2) — FAIT
+
+Visualisation PCA des embeddings wte : projection 2D des 27 vecteurs de 16 dimensions, avec animation d'évolution pendant l'entraînement.
+
+- ✅ `pca.ts` — PCA 2D pur (centrage, covariance 2×2, vecteurs propres analytiques), 6 tests
+- ✅ `parseColor.ts` — extraction RGB depuis CSS computed styles (hex/rgb/rgba), 5 tests
+- ✅ `modelStore.ts` — `pushWteSnapshot()` / `getWteSnapshots()` infrastructure snapshots (deep copy), 2 tests ajoutés
+- ✅ `PCAScatterPlot.tsx` — Canvas 2D (641 lignes) :
+  - 27 points colorés (voyelles=cyan, consonnes=orange, BOS=violet)
+  - Lignes de constellation (même type=couleur type, cross-type=border, alpha/épaisseur par proximité)
+  - Hover interactif : anneau lumineux + highlight constellation
+  - Hover bidirectionnel : PCA ↔ heatmap wte via `highlightLetter` / `onHoverLetter`
+  - Axes PCA (axes centrés sur l'origine, labels Composante 1/2)
+  - Vignette radiale + effet observatoire scientifique
+  - Animation replay (interpolation linéaire entre snapshots wte, trails fantômes)
+  - Bouton Rejouer (conditionnel ≥3 snapshots)
+  - `prefers-reduced-motion` : skip animation
+  - Support dark/light via CSS variables
+  - Responsive : 400px → 300px → 220px via media queries
+- ✅ `playground-pca.html` — prototype standalone Canvas pour itération design
+- ✅ Intégration dans `EmbeddingsPage.tsx` (4e panneau, +97 lignes) :
+  - Badge entraînement dynamique
+  - Texte pédagogique adapté 10-14 ans (métaphore de l'ombre)
+  - Mention conditionnelle bouton Rejouer (≥3 snapshots)
+- ✅ `TrainingPage.tsx` — `pushWteSnapshot(model)` tous les 50 pas d'entraînement
+- ✅ 4 tests EmbeddingsPage (canvas PCA, wrap, hover bidirectionnel, training badge)
+- ✅ Vérification visuelle complète (Playwright : initial, hover, entraînement, animation, light theme, responsive 640px)
+
+**Décisions** :
+
+- PCA analytique (pas de bibliothèque — 96 lignes, O(n·d²) adapté à n=27, d=16)
+- Canvas 2D (pas SVG — cohérence avec NNDiagram et LossChart)
+- `parseColor` extraite car `valToColor()` utilise un format différent (`rgb()` string) — pas de réutilisation possible
+- Snapshots deep copy (mutation-proof) — pattern vérifié par test H-2
+- Animation cancellation sur changement de snapshots (F-2) — même pattern C-6/P-4
 
 ### 10. Polish CSS — FAIT
 

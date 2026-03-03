@@ -220,7 +220,7 @@ Net : +560 lignes. Tests : 111 → ~123.
 
 ---
 
-## Task 0 : Extraction `parseColor` (DRY, pré-requis)
+## Task 0 : Extraction `parseColor` (DRY, pré-requis) — FAIT ✅ `6c26017`
 
 **Files:**
 
@@ -266,7 +266,7 @@ refactor: extract parseColor to shared utility (DRY for PCA)
 
 ---
 
-## Task 1 : Utilitaire PCA (TDD)
+## Task 1 : Utilitaire PCA (TDD) — FAIT ✅ `0080c8f`
 
 **Files:**
 
@@ -472,7 +472,7 @@ feat: add PCA utility for 2D projection of embedding vectors
 
 ---
 
-## Task 2 : Infrastructure de snapshots dans modelStore
+## Task 2 : Infrastructure de snapshots dans modelStore — FAIT ✅ `4f94fdd`
 
 **Files:**
 
@@ -564,7 +564,7 @@ feat: add wte snapshot infrastructure to modelStore
 
 ---
 
-## Task 3 : Collecte de snapshots dans TrainingPage
+## Task 3 : Collecte de snapshots dans TrainingPage — FAIT ✅ `6f03ece`
 
 **Files:**
 
@@ -625,7 +625,7 @@ feat: collect wte snapshots during training every 50 steps
 
 ---
 
-## Task 4 : Composant PCAScatterPlot (TDD)
+## Task 4 : Composant PCAScatterPlot (TDD) — FAIT ✅ `b2f462a`
 
 **Files:**
 
@@ -807,7 +807,7 @@ feat: add PCAScatterPlot Canvas 2D scatter component
 
 ---
 
-## Task 5 : CSS pour le scatter PCA + `.text-orange`
+## Task 5 : CSS pour le scatter PCA + `.text-orange` — FAIT ✅
 
 **Files:**
 
@@ -864,7 +864,7 @@ Ce CSS est inclus dans le commit de la Task 4 ou fait un commit séparé si néc
 
 ---
 
-## Task 6 : Intégration dans EmbeddingsPage + hover bidirectionnel
+## Task 6 : Intégration dans EmbeddingsPage + hover bidirectionnel — FAIT ✅
 
 **Files:**
 
@@ -979,7 +979,7 @@ feat: integrate PCA scatter plot into EmbeddingsPage
 
 ---
 
-## Task 7 : Vérification visuelle avec Playwright
+## Task 7 : Vérification visuelle avec Playwright — FAIT ✅
 
 ### Step 1: Lancer le dev server (`npm run dev`)
 
@@ -991,7 +991,7 @@ feat: integrate PCA scatter plot into EmbeddingsPage
 - 27 points éparpillés avec radial gradient + ombres subtiles
 - BOS est légèrement plus grand avec symbole ⊕, couleur purple
 - Voyelles = cyan, consonnes = orange
-- Vignette radiale (bords plus sombres) + grille de points fins
+- Vignette radiale (bords plus sombres)
 - Constellation lines (cosinus 16D, type-colored, cross-type bridges visibles)
 - Pas de bouton Rejouer (aucun snapshot)
 - Hover sur un point → tooltip Canvas-rendered avec lettre, type, PC1/PC2
@@ -1025,7 +1025,7 @@ feat: integrate PCA scatter plot into EmbeddingsPage
 
 ---
 
-## Task 8 : Documentation
+## Task 8 : Documentation — FAIT ✅
 
 **Files:**
 
@@ -1043,7 +1043,7 @@ Projection PCA 2D des 27 embeddings wte, intégrée dans la page 2 (Embeddings).
 - ✅ `src/components/PCAScatterPlot.tsx` — Canvas 2D scatter plot interactif (~350 lignes)
 - ✅ Snapshots wte dans `modelStore.ts` — capture toutes les 50 étapes pendant l'entraînement
 - ✅ Animation replay : rAF + interpolation ease-in-out entre snapshots, ghost trails (time-lapse)
-- ✅ Visual design : radial gradient dots, constellation lines, vignette, grille de points
+- ✅ Visual design : radial gradient dots, constellation lines, vignette atmosphere
 - ✅ Hover bidirectionnel PCA ↔ heatmap wte (pont conceptuel "16 nombres = position sur la carte")
 - ✅ Tooltip Canvas-rendered (pas HTML overlay)
 - ✅ Couleurs : voyelles cyan, consonnes orange, BOS purple ⊕ (CSS variables)

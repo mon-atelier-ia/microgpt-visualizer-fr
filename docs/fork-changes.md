@@ -180,6 +180,19 @@ Commits: `4ea6c80`, `226e502`, `8c63af0`, `441b85b`, `e13fcdc`, `c6e7c2c`, `8baa
 | Position selector: 16 buttons replacing `<select>` dropdown         | `ForwardPassPage.tsx`            | Pattern `.btn-toggle--char` cohérent avec EmbeddingsPage — remplace le `<select>` natif incohérent          |
 | Token-box display (page 1) preserved as-is                          | —                                | Différenciation sélecteur (`.btn-toggle--char`) / affichage (`.token-box`) — juste milieu qualité/cohérence |
 
+## PCA Scatter Plot — plongements en 2D (page 2)
+
+| Change                                                                       | Fichier(s)                                                | Justification                                                                                                        |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `pca2d(data)` pure PCA 2D utility (centering, covariance, eigenvectors)      | `src/utils/pca.ts`, `src/utils/pca.test.ts`               | Projection analytique 16D→2D. Pur math, zéro dépendance, O(n·d²) adapté à n=27 d=16                                  |
+| `parseColor(str)` CSS color parser (hex/rgb/rgba → [r,g,b])                  | `src/utils/parseColor.ts`, `src/utils/parseColor.test.ts` | Extraction RGB depuis `getComputedStyle` pour colorer les dots Canvas. Séparé de `valToColor()` (format différent)   |
+| `pushWteSnapshot()` / `getWteSnapshots()` snapshot infrastructure            | `src/modelStore.ts`, `src/modelStore.test.ts`             | Deep copy wte tous les 50 pas → animation replay PCA. Mutation-proof (test H-2 vérifié)                              |
+| `PCAScatterPlot` Canvas 2D component (641 lines)                             | `src/components/PCAScatterPlot.tsx`                       | 27 dots colorés (voyelles=cyan, consonnes=orange, BOS=violet), constellation, hover bidirectionnel, animation replay |
+| `.pca-canvas-wrap` CSS + `.text-orange` utility                              | `src/styles.css`                                          | Container Canvas avec box-shadow observatoire, responsive 400→300→220px. Orange utility pour labels consonnes        |
+| PCA panel integrated as 4th panel in EmbeddingsPage                          | `src/pages/EmbeddingsPage.tsx`                            | Badge entraînement dynamique, texte pédagogique (métaphore ombre), hover bidirectionnel PCA↔heatmap wte              |
+| `pushWteSnapshot(model)` every 50 training steps                             | `src/pages/TrainingPage.tsx`                              | Alimente l'infrastructure snapshots pour l'animation replay PCA                                                      |
+| 4 integration tests (PCA canvas, wrap, hover bidirectionnel, training badge) | `src/pages/EmbeddingsPage.test.tsx`                       | Couverture : canvas presence, PCA panel structure, hoverRow↔highlightLetter cycle, training badge label              |
+
 ## Deployment
 
 | Change                                                                     | Justification                                  |
