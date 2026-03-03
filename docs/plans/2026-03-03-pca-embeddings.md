@@ -40,7 +40,7 @@ Le `useModel()` hook + `[model, model.totalStep]` deps garantit que le scatter P
 
 ### Ce qui est nouveau
 
-- `src/utils/pca.ts` — utilitaire pur PCA 16D→2D (~55 lignes)
+- `src/utils/pca.ts` — utilitaire pur PCA 16D→2D + `cosineSim` + `topSimilarPairs` (~75 lignes)
 - Snapshots wte dans `modelStore.ts` — ~20 lignes ajoutées
 - `PCAScatterPlot.tsx` — composant Canvas 2D (~350 lignes, inclut enrichissements visuels)
 - `.text-orange` CSS class — manquante, doit être ajoutée (cohérence avec `.text-cyan`, `.text-green`)
@@ -200,19 +200,19 @@ Le panneau PCA doit s'inscrire dans le réseau de renvois existants :
 
 ## Fichiers critiques
 
-| Fichier                                  | Action   | Lignes estimées                   |
-| ---------------------------------------- | -------- | --------------------------------- |
-| `src/utils/pca.ts`                       | Créer    | ~55                               |
-| `src/utils/pca.test.ts`                  | Créer    | ~50                               |
-| `src/components/PCAScatterPlot.tsx`      | Créer    | ~350                              |
-| `src/components/PCAScatterPlot.test.tsx` | Créer    | ~45                               |
-| `src/modelStore.ts`                      | Modifier | +20 lignes                        |
-| `src/modelStore.test.ts`                 | Modifier | +25 lignes                        |
-| `src/pages/TrainingPage.tsx`             | Modifier | +10 lignes                        |
-| `src/pages/EmbeddingsPage.tsx`           | Modifier | +50 lignes (hover bidirectionnel) |
-| `src/styles.css`                         | Modifier | +35 lignes (incl. `.text-orange`) |
+| Fichier                                  | Action   | Lignes estimées                           |
+| ---------------------------------------- | -------- | ----------------------------------------- |
+| `src/utils/pca.ts`                       | Créer    | ~75 (pca2d + cosineSim + topSimilarPairs) |
+| `src/utils/pca.test.ts`                  | Créer    | ~60                                       |
+| `src/components/PCAScatterPlot.tsx`      | Créer    | ~350                                      |
+| `src/components/PCAScatterPlot.test.tsx` | Créer    | ~45                                       |
+| `src/modelStore.ts`                      | Modifier | +20 lignes                                |
+| `src/modelStore.test.ts`                 | Modifier | +25 lignes                                |
+| `src/pages/TrainingPage.tsx`             | Modifier | +10 lignes                                |
+| `src/pages/EmbeddingsPage.tsx`           | Modifier | +50 lignes (hover bidirectionnel)         |
+| `src/styles.css`                         | Modifier | +35 lignes (incl. `.text-orange`)         |
 
-Net : +540 lignes. Tests : 111 → ~120.
+Net : +560 lignes. Tests : 111 → ~123.
 
 ---
 
@@ -228,7 +228,31 @@ Net : +540 lignes. Tests : 111 → ~120.
 ```typescript
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { pca2d } from "./pca";
+import { pca2d, cosineSim, topSimilarPairs } from "./pca";
+
+describe("cosineSim", () => {
+  it("retourne 1 pour des vecteurs identiques", () => {
+    expect(cosineSim([1, 2, 3], [1, 2, 3])).toBeCloseTo(1);
+  });
+
+  it("retourne ~0 pour des vecteurs orthogonaux", () => {
+    expect(cosineSim([1, 0], [0, 1])).toBeCloseTo(0);
+  });
+});
+
+describe("topSimilarPairs", () => {
+  it("retourne les paires triées par similarité décroissante", () => {
+    const emb = [
+      [1, 0],
+      [0.9, 0.1],
+      [0, 1],
+    ]; // 0↔1 très similaires
+    const pairs = topSimilarPairs(emb, 2);
+    expect(pairs[0][0]).toBe(0);
+    expect(pairs[0][1]).toBe(1);
+    expect(pairs[0][2]).toBeGreaterThan(0.9);
+  });
+});
 
 describe("pca2d", () => {
   it("retourne N points 2D pour N vecteurs d'entrée", () => {
@@ -284,9 +308,35 @@ describe("pca2d", () => {
 Run: `npx vitest run src/utils/pca.test.ts`
 Expected: FAIL — module not found
 
-### Step 3: Implémenter pca2d
+### Step 3: Implémenter pca2d + cosineSim + topSimilarPairs
 
 ```typescript
+/** Cosine similarity between two vectors. */
+export function cosineSim(a: number[], b: number[]): number {
+  let dot = 0,
+    na = 0,
+    nb = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
+  }
+  return dot / (Math.sqrt(na) * Math.sqrt(nb) || 1);
+}
+
+/** Return top-K most similar pairs by cosine in original space. */
+export function topSimilarPairs(
+  embeddings: number[][],
+  topK: number,
+): [number, number, number][] {
+  const pairs: [number, number, number][] = [];
+  for (let i = 0; i < embeddings.length; i++)
+    for (let j = i + 1; j < embeddings.length; j++)
+      pairs.push([i, j, cosineSim(embeddings[i], embeddings[j])]);
+  pairs.sort((a, b) => b[2] - a[2]);
+  return pairs.slice(0, topK);
+}
+
 /**
  * PCA — Project N vectors of dimension D down to 2D.
  * Uses power iteration on the covariance matrix (no external deps).
@@ -362,7 +412,7 @@ export function pca2d(data: number[][]): number[][] {
 ### Step 4: Vérifier que les tests passent
 
 Run: `npx vitest run src/utils/pca.test.ts`
-Expected: 4 tests PASS
+Expected: 7 tests PASS (4 pca2d + 2 cosineSim + 1 topSimilarPairs)
 
 ### Step 5: Commit
 
@@ -611,7 +661,7 @@ interface PCAScatterPlotProps {
    - **Ghost trails** : les 3-4 positions précédentes de chaque dot sont dessinées à alpha décroissant (0.3, 0.15, 0.05), créant un effet de "motion blur" qui montre la trajectoire
    - Label "Étape N" pendant l'animation (snap sur le step exact du snapshot courant)
    - À la fin, revient à l'état courant
-6. **Constellation lines** (idle state) — lignes fines entre lettres proches (3-nearest neighbors) à alpha très faible (~0.04) en couleur `--border`. Après entraînement, les connexions même-type (voyelle↔voyelle) deviennent plus lumineuses (~0.12) que les connexions cross-type — le réseau de connexions s'auto-organise visuellement sans que l'élève ait besoin de le comprendre.
+6. **Constellation lines — similarité cosinus 16D** (HONEST) — lignes entre les paires d'embeddings les plus similaires selon le cosinus dans l'espace 16D original (pas la distance écran 2D). Top ~80 paires. Alpha et épaisseur proportionnels à la force de similarité (strength = normalized cosine). Couleur = type des endpoints (cyan pour voyelle↔voyelle, orange pour consonne↔consonne, blend pour cross-type). Cross-type et same-type traités ÉGALEMENT — les ponts bigrammes (t↔e, q↔u) sont visibles quand la similarité 16D est forte. Hover : lignes connectées au dot survolé s'allument dans la couleur du dot. Ceci révèle des relations que la projection 2D perd (la similarité vit sur des dimensions non capturées par PC1/PC2).
 7. **Dot rendering avec profondeur** — radial gradient par dot (plus lumineux au centre, fade vers l'extérieur, comme des planètes vues au télescope — thème "observatoire scientifique"). Ombre subtile sous chaque dot (1px offset, alpha faible). BOS visuellement distinct : symbole ⊕ et taille légèrement plus grande.
 8. **Canvas atmosphere** — vignette radiale peinte sur le canvas (bords plus sombres, centre légèrement plus clair → attire le regard). Grille de points fins (pas de lignes) à intervalles réguliers en couleur `--border` alpha ~0.08 — impression de carte astronomique, pas de tableur.
 9. **DPR + ResizeObserver + MutationObserver** — même pattern NNDiagram/LossChart
@@ -627,7 +677,7 @@ const BOS_RADIUS = 15; // BOS légèrement plus grand
 const PAD = 50;
 const INTERP_DURATION_MS = 200; // durée d'interpolation entre 2 snapshots
 const GHOST_TRAIL_COUNT = 4; // nombre de positions fantômes pendant l'animation
-const CONSTELLATION_K = 3; // k-nearest neighbors pour les lignes de constellation
+const CONSTELLATION_TOP_PAIRS = 80; // top cosine-similar pairs in 16D for constellation lines
 ```
 
 **Labels / couleurs :**
@@ -672,7 +722,7 @@ function easeInOut(t: number): number {
 2. Radial vignette (center transparent → edges rgba(0,0,0,0.15))
 3. Grid dots (`--border` at alpha 0.08, spacing ~40px)
 4. Axis crosshairs (dashed, faint)
-5. Constellation lines (k-nearest, alpha 0.04 default, 0.12 same-type after training)
+5. Constellation lines (top ~80 cosine-similar pairs in 16D, alpha 0.15–0.60 scaled by strength, type-colored)
 6. Ghost trails (during animation only, decreasing alpha)
 7. Dot shadows (1px offset, rgba(0,0,0,0.2))
 8. Dot radial gradients (main dot fill)
@@ -894,7 +944,7 @@ feat: integrate PCA scatter plot into EmbeddingsPage
 - BOS est légèrement plus grand avec symbole ⊕, couleur purple
 - Voyelles = cyan, consonnes = orange
 - Vignette radiale (bords plus sombres) + grille de points fins
-- Constellation lines (fines, basse alpha) entre lettres proches
+- Constellation lines (cosinus 16D, type-colored, cross-type bridges visibles)
 - Pas de bouton Rejouer (aucun snapshot)
 - Hover sur un point → tooltip Canvas-rendered avec lettre, type, PC1/PC2
 - **Hover bidirectionnel :** survol d'un point → la ligne correspondante s'illumine dans la heatmap wte au-dessus
@@ -908,7 +958,7 @@ feat: integrate PCA scatter plot into EmbeddingsPage
 ### Step 5: Vérifier l'état entraîné
 
 - Les points ont bougé (structure visible, voyelles se regroupent)
-- Constellation lines plus lumineuses entre lettres du même type (voyelle↔voyelle)
+- Constellation lines : same-type bright + cross-type bridges visibles (t↔e, q↔u si cosinus fort)
 - Le bouton "Rejouer l'évolution" est présent (≥3 snapshots avec 200 étapes)
 - Cliquer → animation fluide (rAF interpolation) avec ghost trails visibles
 - Les points glissent d'un snapshot à l'autre (pas de saut brusque)
@@ -976,7 +1026,7 @@ docs: update PLAN and fork-changes for PCA scatter plot
 | D10 | Tooltip rendu dans le Canvas (pas HTML overlay)        | Cohérence visuelle : même couche que les dots, pas de clash HTML/Canvas. NNDiagram hover est déjà 100% Canvas                                                                                                          |
 | D11 | Hover bidirectionnel PCA ↔ heatmap wte                 | Le pont conceptuel clé : "les 16 nombres = une position sur la carte". `hoverRow` existant sert les 2 directions (aucun nouveau state). Pattern BertVizView                                                            |
 | D12 | Ghost trails pendant animation (4 frames)              | Montre la trajectoire, pas juste la destination. Différence entre diaporama et time-lapse                                                                                                                              |
-| D13 | Constellation lines (3-nearest, alpha 0.04)            | Texture visuelle même avant entraînement. Après entraînement : connexions même-type plus lumineuses → structure visible sans explication                                                                               |
+| D13 | Constellation lines via cosinus 16D (pas distance 2D)  | HONNÊTETÉ : les lignes reflètent la vraie géométrie du modèle. Top ~80 paires par cosinus. Cross-type visible quand similarité forte (bigrammes t↔e, q↔u). Révèle des relations perdues par la projection PCA 2D       |
 | D14 | Radial gradient dots + ombre                           | Profondeur "planètes vues au télescope" — thème observatoire scientifique cohérent                                                                                                                                     |
 | D15 | Vignette + grille de points                            | Atmosphère de carte astronomique, attire le regard au centre                                                                                                                                                           |
 | D16 | "condenser" (pas "écraser")                            | Un 12 ans pourrait croire que les données sont détruites. "condenser" est non-destructif                                                                                                                               |
@@ -990,7 +1040,7 @@ docs: update PLAN and fork-changes for PCA scatter plot
 3. `npx eslint src/` — 0 warnings, 0 errors
 4. `npm run build` — build Vite réussit
 5. Playwright — vérification visuelle page 2 :
-   - Scatter avec vignette + grille de points + constellation lines
+   - Scatter avec vignette + grille de points + constellation lines (cosinus 16D, cross-type bridges visibles)
    - Dots avec radial gradient + ombres, BOS plus grand avec ⊕
    - Hover → tooltip Canvas-rendered + heatmap wte s'illumine (bidirectionnel)
    - Hover heatmap → dot PCA surligné (bidirectionnel inverse)
@@ -1005,7 +1055,7 @@ Tous les findings de la review frontend-design ont été validés et intégrés 
 
 | #   | Finding                                   | Priorité | Intégré dans                       |
 | --- | ----------------------------------------- | -------- | ---------------------------------- |
-| F1  | Constellation lines entre lettres proches | Medium   | Task 4 §6                          |
+| F1  | Constellation lines cosinus 16D (honnête) | **High** | Task 1 (cosineSim), Task 4 §6      |
 | F2  | Ghost trails pendant animation            | Medium   | Task 4 §5                          |
 | F3  | Radial gradient dots + ombres             | Low      | Task 4 §7                          |
 | F4  | Canvas vignette + grille de points        | Medium   | Task 4 §8                          |

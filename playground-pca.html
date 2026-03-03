@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Embeddings PCA — Playground</title>
+<title>Embeddings PCA — Playground (waow edition)</title>
 <style>
   :root {
     --bg: #1a1714; --surface: #242019; --surface2: #2e2a22;
@@ -42,16 +42,12 @@
     display: block; width: 700px; height: 550px;
     background: var(--surface); border-radius: 10px; cursor: crosshair;
   }
-  .tooltip {
-    position: absolute; pointer-events: none; display: none;
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 6px; padding: 8px 12px; font-size: 0.8rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 10;
-    white-space: nowrap;
+  .toggle-row {
+    display: flex; gap: 16px; margin-top: 10px; font-size: 0.78rem;
+    color: var(--text-dim);
   }
-  .tooltip .letter { font-size: 1.3rem; font-weight: bold; }
-  .tooltip .type { font-size: 0.7rem; margin-left: 6px; }
-  .tooltip .coords { color: var(--text-dim); font-size: 0.7rem; margin-top: 2px; }
+  .toggle-row label { cursor: pointer; display: flex; align-items: center; gap: 4px; }
+  .toggle-row input { accent-color: var(--cyan); }
   .legend {
     display: flex; gap: 20px; margin-top: 12px; font-size: 0.8rem;
     color: var(--text-dim);
@@ -74,7 +70,7 @@
 <body>
 
 <h1>Projection PCA des embeddings</h1>
-<p class="subtitle">27 vecteurs de 16 dimensions → 2D</p>
+<p class="subtitle">27 vecteurs de 16 dimensions → 2D — compare avec/sans les couches visuelles</p>
 
 <div class="controls">
   <button id="btnReset">Réinitialiser (aléatoire)</button>
@@ -84,10 +80,16 @@
 
 <div class="canvas-wrap">
   <canvas id="canvas" width="1400" height="1100"></canvas>
-  <div class="tooltip" id="tooltip">
-    <span class="letter"></span><span class="type"></span>
-    <div class="coords"></div>
-  </div>
+</div>
+
+<div class="toggle-row">
+  <label><input type="checkbox" id="togVignette" checked> Vignette</label>
+  <label><input type="checkbox" id="togGrid" checked> Grille de points</label>
+  <label><input type="checkbox" id="togConstellation" checked> Similarité 16D (lignes)</label>
+  <label><input type="checkbox" id="togGradient" checked> Radial gradient dots</label>
+  <label><input type="checkbox" id="togShadows" checked> Ombres dots</label>
+  <label><input type="checkbox" id="togGhostTrails" checked> Ghost trails</label>
+  <label><input type="checkbox" id="togCanvasTooltip" checked> Canvas tooltip</label>
 </div>
 
 <div class="legend">
@@ -97,11 +99,10 @@
 </div>
 
 <div class="info">
-  <strong>Que voit-on ?</strong> Chaque point est une lettre. Sa position vient de la
-  projection PCA (composantes principales) de son vecteur d'embedding (16 nombres → 2 nombres).
-  <br>Avant entraînement, les points sont éparpillés au hasard.
-  Après entraînement, les voyelles se regroupent et les consonnes forment des sous-groupes
-  — le modèle a appris que certaines lettres jouent des rôles similaires dans les noms.
+  <strong>Démo visuelle.</strong> Active/désactive chaque couche individuellement pour juger.
+  Clique "Simuler entraînement" pour voir les ghost trails en action.
+  Les lignes de constellation relient les paires les plus similaires dans l'espace 16D
+  du modèle (similarité cosinus), pas la distance écran — c'est la vraie géométrie des embeddings.
 </div>
 
 <script>
@@ -109,15 +110,23 @@
 const VOCAB = 'abcdefghijklmnopqrstuvwxyz'.split('').concat(['BOS']);
 const N_EMBD = 16;
 const VOWELS = new Set(['a', 'e', 'i', 'o', 'u', 'y']);
+const CONSTELLATION_K = 3; // k-nearest neighbors
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const tooltip = document.getElementById('tooltip');
 const stepLabel = document.getElementById('stepLabel');
 
-const W = canvas.width;
-const H = canvas.height;
-const PAD = 80;
+// Toggle refs
+const tog = {
+  vignette: document.getElementById('togVignette'),
+  grid: document.getElementById('togGrid'),
+  constellation: document.getElementById('togConstellation'),
+  gradient: document.getElementById('togGradient'),
+  shadows: document.getElementById('togShadows'),
+  ghostTrails: document.getElementById('togGhostTrails'),
+  canvasTooltip: document.getElementById('togCanvasTooltip'),
+};
+for (const cb of Object.values(tog)) cb.addEventListener('change', draw);
 
 // ── RNG ─────────────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -131,10 +140,11 @@ function mulberry32(seed) {
 
 // ── Embedding generation ────────────────────────────────────────
 let rng = mulberry32(42);
-let embeddings = []; // 27 × 16
-let projected = [];  // 27 × 2
+let embeddings = [];
+let projected = [];
 let trainStep = 0;
 let animating = false;
+let ghostHistory = []; // array of projected[] snapshots for trails
 
 function randomEmbeddings(seed) {
   rng = mulberry32(seed);
@@ -143,122 +153,164 @@ function randomEmbeddings(seed) {
   );
 }
 
-// Simulate trained embeddings: vowels cluster, consonant sub-groups form
 function trainedEmbeddings(seed) {
   rng = mulberry32(seed);
-  const emb = VOCAB.map((ch, i) => {
-    const base = Array.from({ length: N_EMBD }, () => (rng() - 0.5) * 0.3);
+  // Simulate realistic French-text trained embeddings:
+  // - Vowels and consonants cluster by type (dims 0-4)
+  // - Frequent bigram pairs share a DEDICATED dimension (dims 5-15)
+  //   Both partners get a large positive bump on the SAME dim → high cosine sim
+  //   e.g. t↔e both get +0.9 on dim 5 → cross-type bridge visible
 
+  // Each bridge: [consonant, vowel, [dims], strength]
+  // Strong pairs share 3 dims, weak pairs share 2 — must overcome type separation
+  const BRIDGES = [
+    ['t', 'e', [5,6,7],   1.1],   // te = #1 bigram in French
+    ['t', 'a', [5,8],     0.7],
+    ['s', 'e', [6,7,9],   1.0],
+    ['s', 'a', [6,10],    0.6],
+    ['l', 'e', [7,9,11],  0.9],
+    ['l', 'a', [9,10],    0.7],
+    ['n', 'e', [8,11,12], 0.85],
+    ['n', 'a', [8,10],    0.6],
+    ['r', 'e', [9,12,13], 0.8],
+    ['r', 'i', [12,13],   0.6],
+    ['q', 'u', [5,10,14], 1.3],   // qu quasi obligatoire
+    ['d', 'e', [5,11],    0.6],
+    ['c', 'e', [6,13],    0.5],
+    ['m', 'e', [8,14],    0.55],
+    ['p', 'a', [10,14],   0.5],
+  ];
+
+  // Pre-index: for each char, which (dim, strength) bumps to apply
+  const bridgeMap = {};
+  for (const [c, v, dims, str] of BRIDGES) {
+    if (!bridgeMap[c]) bridgeMap[c] = [];
+    if (!bridgeMap[v]) bridgeMap[v] = [];
+    for (const dim of dims) {
+      bridgeMap[c].push([dim, str]);
+      bridgeMap[v].push([dim, str]); // SAME dim, SAME strength → cosine bridge
+    }
+  }
+
+  return VOCAB.map((ch) => {
+    const base = Array.from({ length: N_EMBD }, () => (rng() - 0.5) * 0.3);
     if (ch === 'BOS') {
-      // BOS gets its own distinct region
       base[0] += 2.5; base[1] -= 2.0; base[2] += 1.5;
     } else if (VOWELS.has(ch)) {
-      // Vowels cluster together (negative PC1, positive PC2)
-      base[0] -= 1.5 + rng() * 0.4;
-      base[1] += 1.2 + rng() * 0.4;
-      base[2] -= 0.5 + rng() * 0.3;
-      // Sub-structure: a/e close, i/o close, u/y close
+      // Reduced type separation so bridge dims can create cross-type cosine > 0
+      base[0] -= 0.8 + rng() * 0.3;
+      base[1] += 0.7 + rng() * 0.3;
+      base[2] -= 0.3 + rng() * 0.2;
       const vIdx = 'aeiouy'.indexOf(ch);
       base[3] += (vIdx % 3) * 0.5;
       base[4] += Math.floor(vIdx / 3) * 0.6;
     } else {
-      // Consonants: sub-groups by phonetic similarity
-      const stops = 'bpdtgk';
-      const fricatives = 'fvszcj';
-      const nasals = 'mn';
-      const liquids = 'lr';
-      const others = 'hqwx';
-
-      if (stops.includes(ch)) {
-        base[0] += 1.0 + rng() * 0.4;
-        base[1] += 0.8 + rng() * 0.3;
-      } else if (fricatives.includes(ch)) {
-        base[0] += 0.8 + rng() * 0.4;
-        base[1] -= 1.0 + rng() * 0.3;
-      } else if (nasals.includes(ch)) {
-        base[0] -= 0.3 + rng() * 0.3;
-        base[1] -= 0.8 + rng() * 0.3;
-      } else if (liquids.includes(ch)) {
-        base[0] -= 0.5 + rng() * 0.3;
-        base[1] -= 0.3 + rng() * 0.3;
-      } else {
-        base[0] += 1.8 + rng() * 0.4;
-        base[1] -= 0.2 + rng() * 0.3;
+      const stops = 'bpdtgk', fricatives = 'fvszcj', nasals = 'mn', liquids = 'lr';
+      if (stops.includes(ch))          { base[0] += 1.0 + rng()*0.4; base[1] += 0.8 + rng()*0.3; }
+      else if (fricatives.includes(ch)){ base[0] += 0.8 + rng()*0.4; base[1] -= 1.0 + rng()*0.3; }
+      else if (nasals.includes(ch))    { base[0] -= 0.3 + rng()*0.3; base[1] -= 0.8 + rng()*0.3; }
+      else if (liquids.includes(ch))   { base[0] -= 0.5 + rng()*0.3; base[1] -= 0.3 + rng()*0.3; }
+      else                             { base[0] += 1.8 + rng()*0.4; base[1] -= 0.2 + rng()*0.3; }
+    }
+    // Apply bigram bridges: both partners bump the SAME dim
+    const bumps = bridgeMap[ch];
+    if (bumps) {
+      for (const [dim, str] of bumps) {
+        base[dim] += str;
       }
     }
     return base;
   });
-  return emb;
 }
 
 // ── PCA (16D → 2D) ─────────────────────────────────────────────
 function pca2d(data) {
-  const n = data.length;
-  const d = data[0].length;
-
-  // 1. Center
+  const n = data.length, d = data[0].length;
   const mean = Array(d).fill(0);
   for (const row of data) for (let j = 0; j < d; j++) mean[j] += row[j];
   for (let j = 0; j < d; j++) mean[j] /= n;
-
   const centered = data.map(row => row.map((v, j) => v - mean[j]));
-
-  // 2. Covariance matrix (d×d)
   const cov = Array.from({ length: d }, () => Array(d).fill(0));
-  for (const row of centered) {
-    for (let i = 0; i < d; i++) {
-      for (let j = i; j < d; j++) {
-        cov[i][j] += row[i] * row[j];
-      }
-    }
-  }
-  for (let i = 0; i < d; i++) {
-    for (let j = i; j < d; j++) {
-      cov[i][j] /= (n - 1);
-      cov[j][i] = cov[i][j];
-    }
-  }
+  for (const row of centered)
+    for (let i = 0; i < d; i++)
+      for (let j = i; j < d; j++) cov[i][j] += row[i] * row[j];
+  for (let i = 0; i < d; i++)
+    for (let j = i; j < d; j++) { cov[i][j] /= (n-1); cov[j][i] = cov[i][j]; }
 
-  // 3. Power iteration for top 2 eigenvectors
-  function powerIter(mat, deflated) {
+  function powerIter(mat) {
     let v = Array.from({ length: d }, () => Math.random() - 0.5);
     for (let iter = 0; iter < 100; iter++) {
       const nv = Array(d).fill(0);
-      for (let i = 0; i < d; i++)
-        for (let j = 0; j < d; j++)
-          nv[i] += (deflated || mat)[i][j] * v[j];
+      for (let i = 0; i < d; i++) for (let j = 0; j < d; j++) nv[i] += mat[i][j] * v[j];
       const norm = Math.sqrt(nv.reduce((s, x) => s + x * x, 0)) || 1;
       v = nv.map(x => x / norm);
     }
-    // Eigenvalue
     const mv = Array(d).fill(0);
-    for (let i = 0; i < d; i++)
-      for (let j = 0; j < d; j++)
-        mv[i] += (deflated || mat)[i][j] * v[j];
-    const eigenval = v.reduce((s, x, i) => s + x * mv[i], 0);
-    return { vec: v, val: eigenval };
+    for (let i = 0; i < d; i++) for (let j = 0; j < d; j++) mv[i] += mat[i][j] * v[j];
+    return { vec: v, val: v.reduce((s, x, i) => s + x * mv[i], 0) };
   }
-
   const e1 = powerIter(cov);
-  // Deflate
   const deflated = cov.map((row, i) => row.map((v, j) => v - e1.val * e1.vec[i] * e1.vec[j]));
-  const e2 = powerIter(cov, deflated);
-
-  // 4. Project
+  const e2 = powerIter(deflated);
   return centered.map(row => [
     row.reduce((s, v, j) => s + v * e1.vec[j], 0),
     row.reduce((s, v, j) => s + v * e2.vec[j], 0),
   ]);
 }
 
+// ── Helpers ─────────────────────────────────────────────────────
+function parseColor(c) {
+  if (c.startsWith('#')) {
+    const h = c.slice(1);
+    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+  }
+  const m = c.match(/(\d+)/g);
+  return m ? [+m[0], +m[1], +m[2]] : [128, 128, 128];
+}
+
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function getColorRgb(ch) {
+  if (ch === 'BOS') return parseColor(cssVar('--purple'));
+  if (VOWELS.has(ch)) return parseColor(cssVar('--cyan'));
+  return parseColor(cssVar('--orange'));
+}
+
+function sameType(a, b) {
+  if (a === 'BOS' || b === 'BOS') return a === b;
+  return VOWELS.has(a) === VOWELS.has(b);
+}
+
+// Cosine similarity between two vectors (16D embeddings)
+function cosineSim(a, b) {
+  let dot = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
+  }
+  return dot / (Math.sqrt(na) * Math.sqrt(nb) || 1);
+}
+
+// Compute all pairwise similarities in 16D + return pairs above threshold
+// Each pair: [i, j, sim] where sim ∈ [-1, 1]
+function similarityPairs(emb, topK) {
+  const pairs = [];
+  for (let i = 0; i < emb.length; i++) {
+    for (let j = i + 1; j < emb.length; j++) {
+      pairs.push([i, j, cosineSim(emb[i], emb[j])]);
+    }
+  }
+  // Sort by similarity descending, keep top K (= k-nearest equivalent)
+  pairs.sort((a, b) => b[2] - a[2]);
+  return pairs.slice(0, topK);
+}
+
 // ── Drawing ─────────────────────────────────────────────────────
 let hoverIdx = -1;
-
-function getColor(ch) {
-  if (ch === 'BOS') return getComputedStyle(document.documentElement).getPropertyValue('--purple').trim();
-  if (VOWELS.has(ch)) return getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim();
-  return getComputedStyle(document.documentElement).getPropertyValue('--orange').trim();
-}
+let hoverMx = 0, hoverMy = 0; // mouse coords for canvas tooltip
 
 function draw() {
   const dpr = window.devicePixelRatio || 1;
@@ -268,12 +320,43 @@ function draw() {
   canvas.height = ch * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const bg = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
-  const textDim = getComputedStyle(document.documentElement).getPropertyValue('--text-dim').trim();
-  const border = getComputedStyle(document.documentElement).getPropertyValue('--border').trim();
+  const bg = cssVar('--surface');
+  const textDim = cssVar('--text-dim');
+  const border = cssVar('--border');
+  const borderRgb = parseColor(border);
 
+  // 1. Background fill
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, cw, ch);
+
+  // 2. Vignette — subtle lighter center + darker edges
+  if (tog.vignette.checked) {
+    // Lighten center slightly
+    const vgLight = ctx.createRadialGradient(cw/2, ch/2, 0, cw/2, ch/2, Math.min(cw,ch)*0.35);
+    vgLight.addColorStop(0, 'rgba(255,255,255,0.025)');
+    vgLight.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = vgLight;
+    ctx.fillRect(0, 0, cw, ch);
+    // Darken edges
+    const vg = ctx.createRadialGradient(cw/2, ch/2, Math.min(cw,ch)*0.3, cw/2, ch/2, Math.max(cw,ch)*0.65);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, cw, ch);
+  }
+
+  // 3. Grid dots
+  if (tog.grid.checked) {
+    const spacing = 40;
+    ctx.fillStyle = `rgba(${borderRgb[0]},${borderRgb[1]},${borderRgb[2]},0.25)`;
+    for (let gx = spacing; gx < cw; gx += spacing) {
+      for (let gy = spacing; gy < ch; gy += spacing) {
+        ctx.beginPath();
+        ctx.arc(gx, gy, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
 
   if (projected.length === 0) return;
 
@@ -294,64 +377,233 @@ function draw() {
     ];
   }
 
-  // Axes
+  const screenPts = projected.map(([px, py]) => toScreen(px, py));
+
+  // 4. Axes (dashed crosshairs)
   ctx.strokeStyle = border;
   ctx.lineWidth = 1;
   ctx.setLineDash([4, 4]);
-  // Horizontal center
-  const [, cy] = toScreen(0, (minY + maxY) / 2);
-  ctx.beginPath(); ctx.moveTo(pad, cy); ctx.lineTo(cw - pad, cy); ctx.stroke();
-  // Vertical center
-  const [cx] = toScreen((minX + maxX) / 2, 0);
-  ctx.beginPath(); ctx.moveTo(cx, pad); ctx.lineTo(cx, ch - pad); ctx.stroke();
+  const [, cy2] = toScreen(0, (minY + maxY) / 2);
+  ctx.beginPath(); ctx.moveTo(pad, cy2); ctx.lineTo(cw - pad, cy2); ctx.stroke();
+  const [cx2] = toScreen((minX + maxX) / 2, 0);
+  ctx.beginPath(); ctx.moveTo(cx2, pad); ctx.lineTo(cx2, ch - pad); ctx.stroke();
   ctx.setLineDash([]);
 
-  // Axis labels
-  ctx.font = '11px monospace';
-  ctx.fillStyle = textDim;
-  ctx.textAlign = 'center';
-  ctx.fillText('PC1', cw - pad + 20, cy + 4);
-  ctx.fillText('PC2', cx, pad - 10);
+  // 5. Constellation lines — HONEST: cosine similarity in 16D space
+  //    Lines connect embeddings that are truly similar in the model's
+  //    representation, regardless of their 2D projection distance.
+  //    Color = type of endpoints. Alpha/thickness = 16D similarity strength.
+  if (tog.constellation.checked) {
+    // ~80 pairs: enough for inter-cluster bridges, not just intra-cluster
+    const pairs = similarityPairs(embeddings, Math.min(80, VOCAB.length * 3));
 
-  // Points (non-hovered first, hovered last)
+    // Normalize: simRange maps to visual strength
+    const maxSim = pairs.length > 0 ? pairs[0][2] : 1;
+    const minSim = pairs.length > 0 ? pairs[pairs.length - 1][2] : 0;
+    const simRange = (maxSim - minSim) || 1;
+
+    for (const [a, b, sim] of pairs) {
+      const strength = (sim - minSim) / simRange; // 0 = weakest shown, 1 = strongest
+      const same = sameType(VOCAB[a], VOCAB[b]);
+
+      // Line color: type of endpoints (NOT artificially dimmed for cross-type)
+      let lrgb;
+      if (same) {
+        lrgb = getColorRgb(VOCAB[a]); // cyan, orange, or purple
+      } else {
+        // Cross-type: blend the two endpoint colors
+        const rgbA = getColorRgb(VOCAB[a]);
+        const rgbB = getColorRgb(VOCAB[b]);
+        lrgb = [
+          Math.round((rgbA[0] + rgbB[0]) / 2),
+          Math.round((rgbA[1] + rgbB[1]) / 2),
+          Math.round((rgbA[2] + rgbB[2]) / 2),
+        ];
+      }
+
+      // Hover: lines connected to hovered dot glow brightly
+      const isHoverLine = hoverIdx >= 0 && (a === hoverIdx || b === hoverIdx);
+
+      let alpha, lineW;
+      if (isHoverLine) {
+        lrgb = getColorRgb(VOCAB[hoverIdx]);
+        alpha = 0.55 + strength * 0.35;
+        lineW = 1.5 + strength * 2.0;
+      } else if (trainStep > 0) {
+        // After training: BOLD lines — dark background needs high alpha
+        alpha = 0.15 + strength * 0.45;
+        lineW = 0.8 + strength * 2.0;
+      } else {
+        // Dormant: visible web of potential structure
+        alpha = 0.08 + strength * 0.18;
+        lineW = 0.5 + strength * 0.8;
+      }
+
+      ctx.strokeStyle = `rgba(${lrgb[0]},${lrgb[1]},${lrgb[2]},${alpha})`;
+      ctx.lineWidth = lineW;
+      ctx.beginPath();
+      ctx.moveTo(screenPts[a][0], screenPts[a][1]);
+      ctx.lineTo(screenPts[b][0], screenPts[b][1]);
+      ctx.stroke();
+    }
+  }
+
+  // 6. Ghost trails (during animation)
+  if (tog.ghostTrails.checked && ghostHistory.length > 0) {
+    const trailCount = Math.min(4, ghostHistory.length);
+    for (let t = 0; t < trailCount; t++) {
+      const ghost = ghostHistory[ghostHistory.length - 1 - t];
+      const alpha = 0.25 - t * 0.06; // 0.25, 0.19, 0.13, 0.07
+      if (alpha <= 0) continue;
+
+      // Reproject ghost with current bounds (they share the same PCA space approximately)
+      let gMinX = Infinity, gMaxX = -Infinity, gMinY = Infinity, gMaxY = -Infinity;
+      for (const [px, py] of ghost) {
+        if (px < gMinX) gMinX = px; if (px > gMaxX) gMaxX = px;
+        if (py < gMinY) gMinY = py; if (py > gMaxY) gMaxY = py;
+      }
+      // Use current bounds for consistency
+      for (let i = 0; i < ghost.length; i++) {
+        const [gsx, gsy] = toScreen(ghost[i][0], ghost[i][1]);
+        const rgb = getColorRgb(VOCAB[i]);
+        ctx.beginPath();
+        ctx.arc(gsx, gsy, 5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
+        ctx.fill();
+      }
+    }
+  }
+
+  // 7+8+9. Dots (shadows → radial gradient → label)
   const DOT_R = 14;
-  const order = VOCAB.map((_, i) => i).sort((a, b) => (a === hoverIdx ? 1 : 0) - (b === hoverIdx ? 1 : 0));
+  const BOS_R = 18;
+  const order = VOCAB.map((_, i) => i).sort((a, b) =>
+    (a === hoverIdx ? 1 : 0) - (b === hoverIdx ? 1 : 0)
+  );
 
   for (const i of order) {
-    const [sx, sy] = toScreen(projected[i][0], projected[i][1]);
-    const color = getColor(VOCAB[i]);
+    const [sx, sy] = screenPts[i];
+    const rgb = getColorRgb(VOCAB[i]);
+    const isBos = VOCAB[i] === 'BOS';
     const isHover = i === hoverIdx;
+    const r = isBos ? BOS_R : DOT_R;
+    const drawR = isHover ? r * 1.3 : r;
 
-    // Glow on hover
+    // Hover outer glow — subtle halo, not a floodlight
     if (isHover) {
+      const glow = ctx.createRadialGradient(sx, sy, drawR * 0.8, sx, sy, drawR * 1.5);
+      glow.addColorStop(0, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.08)`);
+      glow.addColorStop(1, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0)`);
       ctx.beginPath();
-      ctx.arc(sx, sy, DOT_R * 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = color.replace(')', ',0.15)').replace('rgb', 'rgba');
+      ctx.arc(sx, sy, drawR * 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
       ctx.fill();
     }
 
-    // Dot
+    // 7. Shadow (offset + blur-like multi-layer)
+    if (tog.shadows.checked) {
+      for (let s = 3; s >= 1; s--) {
+        ctx.beginPath();
+        ctx.arc(sx + 2, sy + 2.5, drawR + s, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,0,0,${0.12 / s})`;
+        ctx.fill();
+      }
+    }
+
+    // 8. Dot (flat or radial gradient)
     ctx.beginPath();
-    ctx.arc(sx, sy, isHover ? DOT_R * 1.3 : DOT_R, 0, Math.PI * 2);
-    ctx.fillStyle = isHover ? color : color.replace(')', ',0.7)').replace('rgb', 'rgba');
+    ctx.arc(sx, sy, drawR, 0, Math.PI * 2);
+    if (tog.gradient.checked) {
+      const grad = ctx.createRadialGradient(sx - drawR*0.25, sy - drawR*0.25, drawR*0.1, sx, sy, drawR);
+      const a = isHover ? 1.0 : 0.75;
+      grad.addColorStop(0, `rgba(${Math.min(255,rgb[0]+60)},${Math.min(255,rgb[1]+60)},${Math.min(255,rgb[2]+60)},${a})`);
+      grad.addColorStop(0.6, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`);
+      grad.addColorStop(1, `rgba(${Math.max(0,rgb[0]-30)},${Math.max(0,rgb[1]-30)},${Math.max(0,rgb[2]-30)},${a * 0.85})`);
+      ctx.fillStyle = grad;
+    } else {
+      const a = isHover ? 1.0 : 0.7;
+      ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
+    }
     ctx.fill();
 
-    // Letter label
-    ctx.font = isHover ? 'bold 14px monospace' : '11px monospace';
+    // 9. Letter label
+    ctx.font = isHover ? 'bold 14px monospace' : (isBos ? 'bold 15px monospace' : '11px monospace');
     ctx.fillStyle = '#1a1714';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(VOCAB[i] === 'BOS' ? '⊕' : VOCAB[i], sx, sy + 1);
+    ctx.fillText(isBos ? '⊕' : VOCAB[i], sx, sy + 1);
   }
-
   ctx.textBaseline = 'alphabetic';
+
+  // 10. Axis labels
+  ctx.font = '11px monospace';
+  ctx.fillStyle = textDim;
+  ctx.textAlign = 'center';
+  ctx.fillText('PC1', cw - pad + 20, cy2 + 4);
+  ctx.fillText('PC2', cx2, pad - 10);
+
+  // 11. Canvas-rendered tooltip
+  if (tog.canvasTooltip.checked && hoverIdx >= 0) {
+    const ch2 = VOCAB[hoverIdx];
+    const type = ch2 === 'BOS' ? 'spécial' : VOWELS.has(ch2) ? 'voyelle' : 'consonne';
+    const rgb = getColorRgb(ch2);
+    const line1 = ch2 + '  ' + type;
+    const line2 = `PC1: ${projected[hoverIdx][0].toFixed(2)}  PC2: ${projected[hoverIdx][1].toFixed(2)}`;
+
+    ctx.font = '12px monospace';
+    const w1 = ctx.measureText(line1).width;
+    const w2 = ctx.measureText(line2).width;
+    const tw = Math.max(w1, w2) + 20;
+    const th = 42;
+
+    // Position tooltip near mouse, clamp to canvas
+    let tx = hoverMx + 16;
+    let ty = hoverMy - 10;
+    if (tx + tw > cw - 8) tx = hoverMx - tw - 8;
+    if (ty + th > ch - 8) ty = ch - th - 8;
+    if (ty < 8) ty = 8;
+
+    // Background
+    const s2 = cssVar('--surface2');
+    ctx.fillStyle = s2;
+    ctx.beginPath();
+    roundRect(ctx, tx, ty, tw, th, 6);
+    ctx.fill();
+    ctx.strokeStyle = border;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Text
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText(ch2, tx + 8, ty + 6);
+    ctx.fillStyle = textDim;
+    ctx.font = '11px monospace';
+    ctx.fillText(type, tx + 8 + ctx.measureText(ch2 + '  ').width, ty + 8);
+    ctx.fillText(line2, tx + 8, ty + 24);
+    ctx.textBaseline = 'alphabetic';
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
 }
 
 // ── Hover ───────────────────────────────────────────────────────
 canvas.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
+  hoverMx = e.clientX - rect.left;
+  hoverMy = e.clientY - rect.top;
   const cw = canvas.clientWidth;
   const ch = canvas.clientHeight;
   const pad = 60;
@@ -366,70 +618,66 @@ canvas.addEventListener('mousemove', (e) => {
   const rangeX = (maxX - minX) || 1;
   const rangeY = (maxY - minY) || 1;
 
-  let closest = -1, closestDist = 30; // 30px threshold
+  let closest = -1, closestDist = 30;
   for (let i = 0; i < projected.length; i++) {
     const sx = pad + ((projected[i][0] - minX) / rangeX) * (cw - pad * 2);
     const sy = pad + ((projected[i][1] - minY) / rangeY) * (ch - pad * 2);
-    const dist = Math.sqrt((mx - sx) ** 2 + (my - sy) ** 2);
+    const dist = Math.sqrt((hoverMx - sx) ** 2 + (hoverMy - sy) ** 2);
     if (dist < closestDist) { closest = i; closestDist = dist; }
   }
 
   if (closest !== hoverIdx) {
     hoverIdx = closest;
     draw();
-  }
-
-  if (closest >= 0) {
-    const ch2 = VOCAB[closest];
-    const type = ch2 === 'BOS' ? 'spécial' : VOWELS.has(ch2) ? 'voyelle' : 'consonne';
-    const color = getColor(ch2);
-    tooltip.querySelector('.letter').textContent = ch2;
-    tooltip.querySelector('.letter').style.color = color;
-    tooltip.querySelector('.type').textContent = type;
-    tooltip.querySelector('.type').style.color = color;
-    tooltip.querySelector('.coords').textContent =
-      `PC1: ${projected[closest][0].toFixed(2)}  PC2: ${projected[closest][1].toFixed(2)}`;
-    tooltip.style.display = 'block';
-    tooltip.style.left = (e.clientX - rect.left + 16) + 'px';
-    tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
-  } else {
-    tooltip.style.display = 'none';
+  } else if (closest >= 0) {
+    // Mouse moved but same dot — redraw tooltip position
+    draw();
   }
 });
 
 canvas.addEventListener('mouseleave', () => {
   hoverIdx = -1;
-  tooltip.style.display = 'none';
   draw();
 });
 
-// ── Animation: interpolate from current to target ───────────────
-function animateTo(targetEmb, steps, onDone) {
+// ── Animation: rAF interpolation with ghost trails ──────────────
+function animateTo(targetEmb, durationMs, onDone) {
   if (animating) return;
   animating = true;
+  ghostHistory = [];
   const startEmb = embeddings.map(row => [...row]);
-  let step = 0;
+  const startTime = performance.now();
+  let frameCount = 0;
 
-  function tick() {
-    step++;
-    const t = step / steps;
-    // Ease-out cubic
-    const ease = 1 - Math.pow(1 - t, 3);
+  function tick(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(1, elapsed / durationMs);
+    // Ease-in-out cubic
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 
     embeddings = startEmb.map((row, i) =>
       row.map((v, j) => v + (targetEmb[i][j] - v) * ease)
     );
     projected = pca2d(embeddings);
 
-    trainStep = Math.round(t * 1000);
+    // Store ghost trail every 4 frames
+    frameCount++;
+    if (frameCount % 4 === 0) {
+      ghostHistory.push(projected.map(p => [...p]));
+      if (ghostHistory.length > 5) ghostHistory.shift();
+    }
+
+    trainStep = Math.round(ease * 1000);
     stepLabel.textContent = `Étape ${trainStep} — entraînement${t >= 1 ? ' terminé' : '…'}`;
 
     draw();
 
-    if (step < steps) {
+    if (t < 1) {
       requestAnimationFrame(tick);
     } else {
       animating = false;
+      ghostHistory = []; // clear trails when done
+      draw();
       if (onDone) onDone();
     }
   }
@@ -443,6 +691,7 @@ document.getElementById('btnReset').addEventListener('click', () => {
   embeddings = randomEmbeddings(seed);
   projected = pca2d(embeddings);
   trainStep = 0;
+  ghostHistory = [];
   stepLabel.textContent = 'Étape 0 — poids aléatoires';
   draw();
 });
@@ -450,22 +699,21 @@ document.getElementById('btnReset').addEventListener('click', () => {
 document.getElementById('btnTrain').addEventListener('click', () => {
   if (animating) return;
   if (trainStep >= 1000) {
-    // Already trained, reset first
     const seed = Math.floor(Math.random() * 100000);
     embeddings = randomEmbeddings(seed);
     projected = pca2d(embeddings);
     trainStep = 0;
+    ghostHistory = [];
     stepLabel.textContent = 'Étape 0 — poids aléatoires';
     draw();
-    // Small delay then start training animation
     setTimeout(() => {
       const target = trainedEmbeddings(seed + 7);
-      animateTo(target, 120, null);
+      animateTo(target, 3000, null);
     }, 300);
   } else {
     const seed = Math.floor(Math.random() * 100000);
     const target = trainedEmbeddings(seed);
-    animateTo(target, 120, null);
+    animateTo(target, 3000, null);
   }
 });
 
@@ -473,8 +721,6 @@ document.getElementById('btnTrain').addEventListener('click', () => {
 embeddings = randomEmbeddings(42);
 projected = pca2d(embeddings);
 draw();
-
-// Resize
 window.addEventListener('resize', draw);
 </script>
 </body>
