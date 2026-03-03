@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import {
   resetModel,
   notifyModelUpdate,
   useModel,
   getModelTotalStep,
+  pushWteSnapshot,
+  getWteSnapshots,
 } from "./modelStore";
 import { renderHook, act } from "@testing-library/react";
 
@@ -68,5 +70,38 @@ describe("modelStore", () => {
     unmount();
     act(() => notifyModelUpdate());
     // No assertion needed — if listeners leaked, this would error or call stale setState
+  });
+});
+
+describe("wteSnapshots", () => {
+  beforeEach(() => {
+    act(() => resetModel());
+  });
+
+  it("pushWteSnapshot stores a deep copy (mutation-proof)", () => {
+    const { result } = renderHook(() => useModel());
+    act(() => {
+      pushWteSnapshot(result.current);
+    });
+    const snaps = getWteSnapshots();
+    expect(snaps).toHaveLength(1);
+    expect(snaps[0].step).toBe(result.current.totalStep);
+    expect(snaps[0].wte).toHaveLength(result.current.stateDict.wte.length);
+    // Verify deep copy: mutate the live model, snapshot must be unaffected
+    const originalVal = result.current.stateDict.wte[0][0].data;
+    result.current.stateDict.wte[0][0].data = originalVal + 999;
+    expect(snaps[0].wte[0][0]).toBe(originalVal);
+    // Restore to avoid polluting other tests
+    result.current.stateDict.wte[0][0].data = originalVal;
+  });
+
+  it("resetModel clears snapshots", () => {
+    const { result } = renderHook(() => useModel());
+    act(() => {
+      pushWteSnapshot(result.current);
+    });
+    expect(getWteSnapshots().length).toBeGreaterThan(0);
+    act(() => resetModel());
+    expect(getWteSnapshots()).toHaveLength(0);
   });
 });

@@ -9,6 +9,32 @@ let currentDatasetId = DEFAULT_DATASET_ID;
 let model: ModelState = createModel(getDataset(currentDatasetId).words);
 let version = 0;
 
+// ── wte Snapshots (visualization concern, not engine) ──
+export interface WteSnapshot {
+  step: number;
+  wte: number[][]; // vocabSize × N_EMBD (copied values, not Value references)
+}
+
+let wteSnapshots: WteSnapshot[] = [];
+export const SNAPSHOT_INTERVAL = 50;
+
+/** Push a deep copy of current wte embeddings. */
+export function pushWteSnapshot(state: ModelState) {
+  const snap: number[][] = state.stateDict.wte.map((row) =>
+    row.map((v) => v.data),
+  );
+  wteSnapshots.push({ step: state.totalStep, wte: snap });
+}
+
+/**
+ * Get all snapshots (for PCA animation). Returns shallow copy to avoid memo bypass.
+ * INVARIANT: callers of pushWteSnapshot must call notifyModelUpdate() after,
+ * so that components re-render and read the updated snapshot list.
+ */
+export function getWteSnapshots(): WteSnapshot[] {
+  return [...wteSnapshots];
+}
+
 function emit() {
   version++;
   for (const fn of listeners) fn();
@@ -29,6 +55,7 @@ function getSnapshot() {
 export function resetModel(datasetId?: string) {
   if (datasetId !== undefined) currentDatasetId = datasetId;
   model = createModel(getDataset(currentDatasetId).words);
+  wteSnapshots = [];
   emit();
 }
 
