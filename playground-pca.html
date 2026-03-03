@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embeddings PCA — Playground</title>
+<style>
+  :root {
+    --bg: #1a1714; --surface: #242019; --surface2: #2e2a22;
+    --text: #e8e0d4; --text-dim: #6a655d; --border: #3a352d;
+    --green: #4ade80; --red: #f87171; --cyan: #67e8f9;
+    --purple: #c084fc; --orange: #fb923c; --blue: #60a5fa;
+  }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    padding: 24px; display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+  }
+  h1 { color: var(--cyan); font-size: 1.4rem; margin-bottom: 4px; }
+  .subtitle { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 20px; }
+  .controls {
+    display: flex; gap: 10px; margin-bottom: 16px; align-items: center;
+    flex-wrap: wrap; justify-content: center;
+  }
+  button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    padding: 8px 18px; border-radius: 6px; cursor: pointer;
+    font-family: inherit; font-size: 0.85rem; transition: all 0.15s;
+  }
+  button:hover { border-color: var(--cyan); color: var(--cyan); }
+  button.active { background: var(--cyan); color: var(--bg); border-color: var(--cyan); }
+  .step-label {
+    color: var(--text-dim); font-size: 0.8rem; min-width: 160px; text-align: center;
+  }
+  .canvas-wrap {
+    position: relative; border-radius: 10px; overflow: hidden;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.25);
+  }
+  canvas {
+    display: block; width: 700px; height: 550px;
+    background: var(--surface); border-radius: 10px; cursor: crosshair;
+  }
+  .tooltip {
+    position: absolute; pointer-events: none; display: none;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 12px; font-size: 0.8rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 10;
+    white-space: nowrap;
+  }
+  .tooltip .letter { font-size: 1.3rem; font-weight: bold; }
+  .tooltip .type { font-size: 0.7rem; margin-left: 6px; }
+  .tooltip .coords { color: var(--text-dim); font-size: 0.7rem; margin-top: 2px; }
+  .legend {
+    display: flex; gap: 20px; margin-top: 12px; font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .legend .dot {
+    width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+  }
+  .info {
+    max-width: 700px; margin-top: 16px; padding: 12px 16px;
+    background: var(--surface); border-left: 3px solid var(--cyan);
+    border-radius: 4px; font-size: 0.8rem; color: var(--text-dim);
+    line-height: 1.5;
+  }
+  @media (max-width: 760px) {
+    canvas { width: 95vw; height: 70vw; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Projection PCA des embeddings</h1>
+<p class="subtitle">27 vecteurs de 16 dimensions → 2D</p>
+
+<div class="controls">
+  <button id="btnReset">Réinitialiser (aléatoire)</button>
+  <button id="btnTrain">Simuler entraînement</button>
+  <span class="step-label" id="stepLabel">Étape 0 — poids aléatoires</span>
+</div>
+
+<div class="canvas-wrap">
+  <canvas id="canvas" width="1400" height="1100"></canvas>
+  <div class="tooltip" id="tooltip">
+    <span class="letter"></span><span class="type"></span>
+    <div class="coords"></div>
+  </div>
+</div>
+
+<div class="legend">
+  <span><span class="dot" style="background: var(--cyan)"></span> Voyelles (a, e, i, o, u, y)</span>
+  <span><span class="dot" style="background: var(--orange)"></span> Consonnes</span>
+  <span><span class="dot" style="background: var(--purple)"></span> BOS (début/fin)</span>
+</div>
+
+<div class="info">
+  <strong>Que voit-on ?</strong> Chaque point est une lettre. Sa position vient de la
+  projection PCA (composantes principales) de son vecteur d'embedding (16 nombres → 2 nombres).
+  <br>Avant entraînement, les points sont éparpillés au hasard.
+  Après entraînement, les voyelles se regroupent et les consonnes forment des sous-groupes
+  — le modèle a appris que certaines lettres jouent des rôles similaires dans les noms.
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────
+const VOCAB = 'abcdefghijklmnopqrstuvwxyz'.split('').concat(['BOS']);
+const N_EMBD = 16;
+const VOWELS = new Set(['a', 'e', 'i', 'o', 'u', 'y']);
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const tooltip = document.getElementById('tooltip');
+const stepLabel = document.getElementById('stepLabel');
+
+const W = canvas.width;
+const H = canvas.height;
+const PAD = 80;
+
+// ── RNG ─────────────────────────────────────────────────────────
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// ── Embedding generation ────────────────────────────────────────
+let rng = mulberry32(42);
+let embeddings = []; // 27 × 16
+let projected = [];  // 27 × 2
+let trainStep = 0;
+let animating = false;
+
+function randomEmbeddings(seed) {
+  rng = mulberry32(seed);
+  return VOCAB.map(() =>
+    Array.from({ length: N_EMBD }, () => (rng() - 0.5) * 2)
+  );
+}
+
+// Simulate trained embeddings: vowels cluster, consonant sub-groups form
+function trainedEmbeddings(seed) {
+  rng = mulberry32(seed);
+  const emb = VOCAB.map((ch, i) => {
+    const base = Array.from({ length: N_EMBD }, () => (rng() - 0.5) * 0.3);
+
+    if (ch === 'BOS') {
+      // BOS gets its own distinct region
+      base[0] += 2.5; base[1] -= 2.0; base[2] += 1.5;
+    } else if (VOWELS.has(ch)) {
+      // Vowels cluster together (negative PC1, positive PC2)
+      base[0] -= 1.5 + rng() * 0.4;
+      base[1] += 1.2 + rng() * 0.4;
+      base[2] -= 0.5 + rng() * 0.3;
+      // Sub-structure: a/e close, i/o close, u/y close
+      const vIdx = 'aeiouy'.indexOf(ch);
+      base[3] += (vIdx % 3) * 0.5;
+      base[4] += Math.floor(vIdx / 3) * 0.6;
+    } else {
+      // Consonants: sub-groups by phonetic similarity
+      const stops = 'bpdtgk';
+      const fricatives = 'fvszcj';
+      const nasals = 'mn';
+      const liquids = 'lr';
+      const others = 'hqwx';
+
+      if (stops.includes(ch)) {
+        base[0] += 1.0 + rng() * 0.4;
+        base[1] += 0.8 + rng() * 0.3;
+      } else if (fricatives.includes(ch)) {
+        base[0] += 0.8 + rng() * 0.4;
+        base[1] -= 1.0 + rng() * 0.3;
+      } else if (nasals.includes(ch)) {
+        base[0] -= 0.3 + rng() * 0.3;
+        base[1] -= 0.8 + rng() * 0.3;
+      } else if (liquids.includes(ch)) {
+        base[0] -= 0.5 + rng() * 0.3;
+        base[1] -= 0.3 + rng() * 0.3;
+      } else {
+        base[0] += 1.8 + rng() * 0.4;
+        base[1] -= 0.2 + rng() * 0.3;
+      }
+    }
+    return base;
+  });
+  return emb;
+}
+
+// ── PCA (16D → 2D) ─────────────────────────────────────────────
+function pca2d(data) {
+  const n = data.length;
+  const d = data[0].length;
+
+  // 1. Center
+  const mean = Array(d).fill(0);
+  for (const row of data) for (let j = 0; j < d; j++) mean[j] += row[j];
+  for (let j = 0; j < d; j++) mean[j] /= n;
+
+  const centered = data.map(row => row.map((v, j) => v - mean[j]));
+
+  // 2. Covariance matrix (d×d)
+  const cov = Array.from({ length: d }, () => Array(d).fill(0));
+  for (const row of centered) {
+    for (let i = 0; i < d; i++) {
+      for (let j = i; j < d; j++) {
+        cov[i][j] += row[i] * row[j];
+      }
+    }
+  }
+  for (let i = 0; i < d; i++) {
+    for (let j = i; j < d; j++) {
+      cov[i][j] /= (n - 1);
+      cov[j][i] = cov[i][j];
+    }
+  }
+
+  // 3. Power iteration for top 2 eigenvectors
+  function powerIter(mat, deflated) {
+    let v = Array.from({ length: d }, () => Math.random() - 0.5);
+    for (let iter = 0; iter < 100; iter++) {
+      const nv = Array(d).fill(0);
+      for (let i = 0; i < d; i++)
+        for (let j = 0; j < d; j++)
+          nv[i] += (deflated || mat)[i][j] * v[j];
+      const norm = Math.sqrt(nv.reduce((s, x) => s + x * x, 0)) || 1;
+      v = nv.map(x => x / norm);
+    }
+    // Eigenvalue
+    const mv = Array(d).fill(0);
+    for (let i = 0; i < d; i++)
+      for (let j = 0; j < d; j++)
+        mv[i] += (deflated || mat)[i][j] * v[j];
+    const eigenval = v.reduce((s, x, i) => s + x * mv[i], 0);
+    return { vec: v, val: eigenval };
+  }
+
+  const e1 = powerIter(cov);
+  // Deflate
+  const deflated = cov.map((row, i) => row.map((v, j) => v - e1.val * e1.vec[i] * e1.vec[j]));
+  const e2 = powerIter(cov, deflated);
+
+  // 4. Project
+  return centered.map(row => [
+    row.reduce((s, v, j) => s + v * e1.vec[j], 0),
+    row.reduce((s, v, j) => s + v * e2.vec[j], 0),
+  ]);
+}
+
+// ── Drawing ─────────────────────────────────────────────────────
+let hoverIdx = -1;
+
+function getColor(ch) {
+  if (ch === 'BOS') return getComputedStyle(document.documentElement).getPropertyValue('--purple').trim();
+  if (VOWELS.has(ch)) return getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim();
+  return getComputedStyle(document.documentElement).getPropertyValue('--orange').trim();
+}
+
+function draw() {
+  const dpr = window.devicePixelRatio || 1;
+  const cw = canvas.clientWidth;
+  const ch = canvas.clientHeight;
+  canvas.width = cw * dpr;
+  canvas.height = ch * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
+  const textDim = getComputedStyle(document.documentElement).getPropertyValue('--text-dim').trim();
+  const border = getComputedStyle(document.documentElement).getPropertyValue('--border').trim();
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, cw, ch);
+
+  if (projected.length === 0) return;
+
+  // Compute bounds
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const [px, py] of projected) {
+    if (px < minX) minX = px; if (px > maxX) maxX = px;
+    if (py < minY) minY = py; if (py > maxY) maxY = py;
+  }
+  const rangeX = (maxX - minX) || 1;
+  const rangeY = (maxY - minY) || 1;
+  const pad = 60;
+
+  function toScreen(px, py) {
+    return [
+      pad + ((px - minX) / rangeX) * (cw - pad * 2),
+      pad + ((py - minY) / rangeY) * (ch - pad * 2),
+    ];
+  }
+
+  // Axes
+  ctx.strokeStyle = border;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  // Horizontal center
+  const [, cy] = toScreen(0, (minY + maxY) / 2);
+  ctx.beginPath(); ctx.moveTo(pad, cy); ctx.lineTo(cw - pad, cy); ctx.stroke();
+  // Vertical center
+  const [cx] = toScreen((minX + maxX) / 2, 0);
+  ctx.beginPath(); ctx.moveTo(cx, pad); ctx.lineTo(cx, ch - pad); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Axis labels
+  ctx.font = '11px monospace';
+  ctx.fillStyle = textDim;
+  ctx.textAlign = 'center';
+  ctx.fillText('PC1', cw - pad + 20, cy + 4);
+  ctx.fillText('PC2', cx, pad - 10);
+
+  // Points (non-hovered first, hovered last)
+  const DOT_R = 14;
+  const order = VOCAB.map((_, i) => i).sort((a, b) => (a === hoverIdx ? 1 : 0) - (b === hoverIdx ? 1 : 0));
+
+  for (const i of order) {
+    const [sx, sy] = toScreen(projected[i][0], projected[i][1]);
+    const color = getColor(VOCAB[i]);
+    const isHover = i === hoverIdx;
+
+    // Glow on hover
+    if (isHover) {
+      ctx.beginPath();
+      ctx.arc(sx, sy, DOT_R * 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = color.replace(')', ',0.15)').replace('rgb', 'rgba');
+      ctx.fill();
+    }
+
+    // Dot
+    ctx.beginPath();
+    ctx.arc(sx, sy, isHover ? DOT_R * 1.3 : DOT_R, 0, Math.PI * 2);
+    ctx.fillStyle = isHover ? color : color.replace(')', ',0.7)').replace('rgb', 'rgba');
+    ctx.fill();
+
+    // Letter label
+    ctx.font = isHover ? 'bold 14px monospace' : '11px monospace';
+    ctx.fillStyle = '#1a1714';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(VOCAB[i] === 'BOS' ? '⊕' : VOCAB[i], sx, sy + 1);
+  }
+
+  ctx.textBaseline = 'alphabetic';
+}
+
+// ── Hover ───────────────────────────────────────────────────────
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const cw = canvas.clientWidth;
+  const ch = canvas.clientHeight;
+  const pad = 60;
+
+  if (projected.length === 0) return;
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const [px, py] of projected) {
+    if (px < minX) minX = px; if (px > maxX) maxX = px;
+    if (py < minY) minY = py; if (py > maxY) maxY = py;
+  }
+  const rangeX = (maxX - minX) || 1;
+  const rangeY = (maxY - minY) || 1;
+
+  let closest = -1, closestDist = 30; // 30px threshold
+  for (let i = 0; i < projected.length; i++) {
+    const sx = pad + ((projected[i][0] - minX) / rangeX) * (cw - pad * 2);
+    const sy = pad + ((projected[i][1] - minY) / rangeY) * (ch - pad * 2);
+    const dist = Math.sqrt((mx - sx) ** 2 + (my - sy) ** 2);
+    if (dist < closestDist) { closest = i; closestDist = dist; }
+  }
+
+  if (closest !== hoverIdx) {
+    hoverIdx = closest;
+    draw();
+  }
+
+  if (closest >= 0) {
+    const ch2 = VOCAB[closest];
+    const type = ch2 === 'BOS' ? 'spécial' : VOWELS.has(ch2) ? 'voyelle' : 'consonne';
+    const color = getColor(ch2);
+    tooltip.querySelector('.letter').textContent = ch2;
+    tooltip.querySelector('.letter').style.color = color;
+    tooltip.querySelector('.type').textContent = type;
+    tooltip.querySelector('.type').style.color = color;
+    tooltip.querySelector('.coords').textContent =
+      `PC1: ${projected[closest][0].toFixed(2)}  PC2: ${projected[closest][1].toFixed(2)}`;
+    tooltip.style.display = 'block';
+    tooltip.style.left = (e.clientX - rect.left + 16) + 'px';
+    tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+  } else {
+    tooltip.style.display = 'none';
+  }
+});
+
+canvas.addEventListener('mouseleave', () => {
+  hoverIdx = -1;
+  tooltip.style.display = 'none';
+  draw();
+});
+
+// ── Animation: interpolate from current to target ───────────────
+function animateTo(targetEmb, steps, onDone) {
+  if (animating) return;
+  animating = true;
+  const startEmb = embeddings.map(row => [...row]);
+  let step = 0;
+
+  function tick() {
+    step++;
+    const t = step / steps;
+    // Ease-out cubic
+    const ease = 1 - Math.pow(1 - t, 3);
+
+    embeddings = startEmb.map((row, i) =>
+      row.map((v, j) => v + (targetEmb[i][j] - v) * ease)
+    );
+    projected = pca2d(embeddings);
+
+    trainStep = Math.round(t * 1000);
+    stepLabel.textContent = `Étape ${trainStep} — entraînement${t >= 1 ? ' terminé' : '…'}`;
+
+    draw();
+
+    if (step < steps) {
+      requestAnimationFrame(tick);
+    } else {
+      animating = false;
+      if (onDone) onDone();
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+// ── Buttons ─────────────────────────────────────────────────────
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (animating) return;
+  const seed = Math.floor(Math.random() * 100000);
+  embeddings = randomEmbeddings(seed);
+  projected = pca2d(embeddings);
+  trainStep = 0;
+  stepLabel.textContent = 'Étape 0 — poids aléatoires';
+  draw();
+});
+
+document.getElementById('btnTrain').addEventListener('click', () => {
+  if (animating) return;
+  if (trainStep >= 1000) {
+    // Already trained, reset first
+    const seed = Math.floor(Math.random() * 100000);
+    embeddings = randomEmbeddings(seed);
+    projected = pca2d(embeddings);
+    trainStep = 0;
+    stepLabel.textContent = 'Étape 0 — poids aléatoires';
+    draw();
+    // Small delay then start training animation
+    setTimeout(() => {
+      const target = trainedEmbeddings(seed + 7);
+      animateTo(target, 120, null);
+    }, 300);
+  } else {
+    const seed = Math.floor(Math.random() * 100000);
+    const target = trainedEmbeddings(seed);
+    animateTo(target, 120, null);
+  }
+});
+
+// ── Init ────────────────────────────────────────────────────────
+embeddings = randomEmbeddings(42);
+projected = pca2d(embeddings);
+draw();
+
+// Resize
+window.addEventListener('resize', draw);
+</script>
+</body>
+</html>
