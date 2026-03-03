@@ -540,6 +540,75 @@ Visualisation PCA des embeddings wte : projection 2D des 27 vecteurs de 16 dimen
 - 7 inline styles dynamiques conservés (couleurs/opacité calculés au runtime)
 - 3 `!important` légitimes (1 `.row-label` override inline, 2 `prefers-reduced-motion`)
 
+### 18. Page d'accueil — présentation de l'app
+
+> **État** : à faire. Problématiques à résoudre au démarrage.
+
+**Constat** : l'app s'ouvre directement sur page 1 (Tokenisation) — entrée abrupte, pas de contexte ni d'accroche. Un élève de 10-14 ans qui arrive ne sait pas ce qu'il va explorer ni pourquoi.
+
+**Objectif** : page d'accueil (ou modal) pédagogique et engageante — donne envie de continuer.
+
+**Problématiques à résoudre** :
+
+- Page dédiée (page 0 dans la sidebar) ou modal/overlay au premier lancement ?
+- Contenu : pitch court ("Tu vas construire un cerveau artificiel qui invente des prénoms"), aperçu visuel du parcours, bouton "Commencer"
+- Doit-on montrer un aperçu du résultat (nom généré) pour accrocher ?
+- Sidebar : la page d'accueil remplace-t-elle le titre actuel ou s'ajoute-t-elle ?
+- Persistance : afficher une seule fois (localStorage) ou toujours accessible ?
+
+### 19. Page modèle complet — visualisation architecture intégrale
+
+> **État** : à faire. Problématiques à résoudre au démarrage.
+
+**Constat** : `playground-full.html` montre les 13 colonnes fidèles au graphe de calcul complet, mais c'est un prototype standalone. L'intégrer dans l'app donnerait une vue d'ensemble que la page 3 (5 colonnes simplifiées) ne couvre pas.
+
+**Objectif** : page dédiée montrant l'architecture complète du modèle, avec les vrais poids/activations.
+
+**Problématiques à résoudre** :
+
+- Layout horizontal (scroll, comme le playground) ou vertical (empilé, plus mobile-friendly) ?
+- Ton : rappels pédagogiques intégrés (légendes, annotations) ou aire de jeu libre (exploration autonome) ?
+- Positionnement dans le parcours : après la page Attention (page 4.5) ? Après l'entraînement (page 5.5) ? Dernière page avant la conclusion ?
+- Résidus et skip connections : comment les rendre lisibles sans surcharger ?
+- Backward animation : inclure ici (port de `playground.html` phase backward) ou réserver à la page Entraînement ?
+- 13 colonnes × responsive : seuil minimum viable ? Fallback mobile ?
+
+### 20. Page de conclusion — ce que les vrais GPT font en plus
+
+> **État** : à faire. Problématiques à résoudre au démarrage.
+
+**Constat** : l'app montre un modèle à 4 192 paramètres. Les vrais GPT en ont des milliards. L'élève doit comprendre ce qui manque, pour situer ce qu'il a appris dans le paysage réel.
+
+**Objectif** : page finale qui liste honnêtement les différences entre microGPT et les vrais modèles, avec un ton motivant ("tu as compris les bases, voici ce que les ingénieurs ajoutent").
+
+**Problématiques à résoudre** :
+
+- Contenu : quelles différences exposer ? Candidates :
+  - Taille (4K → 175B paramètres, vocabulaire 27 → 50K tokens)
+  - BPE tokenizer (sous-mots vs lettres)
+  - Multi-couches (1 → 96 layers), multi-têtes (4 → 96 heads)
+  - Normalisation (LayerNorm), dropout, learning rate scheduling
+  - RLHF / instruction tuning (alignement)
+  - Fenêtre de contexte (8 → 128K tokens)
+  - Infrastructure (GPU clusters, mois d'entraînement)
+- Format : liste annotée ? Tableau comparatif ? Infographie interactive ?
+- Fonctions et étapes du pipeline réel à nommer explicitement (embedding, attention, FFN, softmax, sampling, beam search…)
+- Lien vers tuto-llm / microgpt-ts-fr pour aller plus loin ?
+- Ton : ne pas décourager ("c'est pareil en plus grand") vs être honnête ("il manque beaucoup")
+
+### 21. Sidebar — rôle et contenu
+
+> **État** : à résoudre. Problématiques à résoudre au démarrage.
+
+**Constat** : la sidebar actuelle contient une section de référence (doc upstream) héritée du fork. Avec l'ajout de nouvelles pages (accueil, modèle complet, conclusion), sa structure doit être repensée.
+
+**Problématiques à résoudre** :
+
+- La doc de référence upstream : conserver telle quelle ? Adapter ? Supprimer ? Déplacer dans une page dédiée "Référence" ?
+- Navigation : suffisante pour 6 pages, mais 9-10 pages nécessitent-elles un regroupement (ex: "Comprendre" / "Explorer" / "Aller plus loin") ?
+- Indicateur de progression : utile pour le public cible ? (ex: pastilles vertes sur pages visitées)
+- Mobile : le hamburger menu actuel tient-il avec plus d'entrées ?
+
 ---
 
 ## References
