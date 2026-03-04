@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sous-graphe réel — Playground</title>
+<style>
+/* ── Theme tokens (mirror of src/styles.css) ─────────────────── */
+:root,
+[data-theme="dark"] {
+  --bg: #181816;
+  --surface: #222220;
+  --surface2: #2a2a27;
+  --border: #363632;
+  --border-hover: #4a4a44;
+  --text: #cdc8be;
+  --text-dim: #959082;
+  --blue: #c28b4e;
+  --purple: #a08cb4;
+  --cyan: #6a9f9b;
+  --green: #8aaa6b;
+  --red: #bf6a63;
+  --orange: #c4885c;
+}
+[data-theme="light"] {
+  --bg: #f5f1ea;
+  --surface: #fffdf8;
+  --surface2: #ece8e0;
+  --border: #d6d0c5;
+  --border-hover: #b8b2a6;
+  --text: #2c2a25;
+  --text-dim: #6a655d;
+  --blue: #9c6b30;
+  --purple: #7b5ea0;
+  --cyan: #3a7d78;
+  --green: #527a34;
+  --red: #a04040;
+  --orange: #a06830;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  transition: background 0.2s, color 0.2s;
+}
+
+h1 { font-size: 22px; color: var(--blue); margin-bottom: 6px; }
+h2 { font-size: 15px; color: var(--cyan); margin-bottom: 8px; }
+.page-desc {
+  font-size: 13px; color: var(--text-dim);
+  margin-bottom: 16px; text-align: center; max-width: 660px;
+}
+
+.controls {
+  display: flex; gap: 8px; align-items: center;
+  flex-wrap: wrap; margin-bottom: 12px;
+}
+.btn {
+  padding: 7px 18px; background: var(--blue); color: var(--bg);
+  border: none; border-radius: 6px; font-family: inherit;
+  font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { filter: brightness(1.15); }
+.btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.btn-secondary { background: var(--border-hover); color: var(--text); }
+.btn-toggle {
+  padding: 4px 10px; background: var(--surface2); color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: 6px;
+  font-family: inherit; font-size: 11px; cursor: pointer; transition: all 0.15s;
+}
+.btn-toggle:hover { background: var(--border); color: var(--text); }
+
+canvas {
+  border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface);
+}
+
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 20px; margin-bottom: 16px;
+  max-width: 660px; width: 100%;
+}
+.explain {
+  font-size: 12px; color: var(--text-dim); line-height: 1.7;
+  margin-bottom: 12px; padding: 10px 12px;
+  background: var(--surface2); border-radius: 6px;
+  border-left: 3px solid var(--blue); text-align: left;
+}
+.explain b { color: var(--cyan); }
+
+.summary {
+  font-size: 12px; line-height: 1.7; padding: 10px 12px;
+  background: var(--surface2); border-radius: 6px;
+  border-left: 3px solid var(--orange); margin-top: 12px;
+}
+.summary b { color: var(--orange); }
+
+.compare {
+  display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap;
+}
+.compare-box {
+  flex: 1; min-width: 200px; padding: 10px 12px;
+  background: var(--surface2); border-radius: 6px;
+  font-size: 12px; line-height: 1.7;
+}
+.compare-box h3 {
+  font-size: 13px; margin-bottom: 4px;
+}
+.compare-box.simple h3 { color: var(--green); }
+.compare-box.real h3 { color: var(--red); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+<h1>Sous-graphe réel — le chemin d'un paramètre</h1>
+<p class="page-desc">
+  L'autograd parcourt un <b>graphe de calcul</b>. Dans l'exemple simple (a×b+a),
+  ce graphe a 4 nœuds. Mais dans le vrai modèle, rien que pour UN paramètre
+  et UNE position, le chemin traverse des <b>milliers d'opérations</b>.
+</p>
+
+<div class="controls">
+  <button class="btn" id="btn-replay">Rejouer</button>
+  <button class="btn-toggle" id="btn-theme">Thème clair</button>
+</div>
+
+<!-- Flowchart -->
+<div class="panel">
+  <h2>wte[e][0] → … → loss</h2>
+  <div class="explain">
+    On suit <b>un seul nombre</b> : la dimension 0 du plongement de la lettre 'e'
+    (<code>wte[4][0]</code>). Ce paramètre part de l'embedding et traverse tout le modèle
+    jusqu'à la loss. Chaque boîte montre une étape et le nombre d'opérations qu'elle contient.
+  </div>
+  <canvas id="subgraphCanvas" width="580" height="640"></canvas>
+</div>
+
+<!-- Comparison -->
+<div class="panel">
+  <h2>La comparaison</h2>
+  <div class="compare">
+    <div class="compare-box simple">
+      <h3>Exemple Karpathy</h3>
+      2 paramètres (a, b)<br>
+      4 nœuds dans le graphe<br>
+      backward() parcourt 4 nœuds<br>
+      Résultat : 2 gradients
+    </div>
+    <div class="compare-box real">
+      <h3>Vrai modèle (1 position)</h3>
+      4 192 paramètres<br>
+      ~7 000 nœuds dans le graphe<br>
+      backward() parcourt ~7 000 nœuds<br>
+      Résultat : 4 192 gradients
+    </div>
+  </div>
+  <div class="summary">
+    Et pour entraîner sur un nom de 5 lettres, il y a <b>5 positions</b> × ~7 000 = <b>~35 000 opérations</b>.<br>
+    L'entraînement fait 1 000 étapes → <b>~35 millions d'opérations</b> au total.<br><br>
+    Mais l'algorithme est <b>exactement le même</b> que pour a×b+a : remonter le graphe nœud par nœud,
+    multiplier les taux de changement en chemin. Rien de magique — juste beaucoup plus gros.
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// Subgraph flowchart — stages of one parameter's path
+// ═══════════════════════════════════════════════════════════════
+const canvas = document.getElementById('subgraphCanvas');
+const ctx = canvas.getContext('2d');
+const dpr = window.devicePixelRatio || 1;
+canvas.width = 580 * dpr;
+canvas.height = 640 * dpr;
+canvas.style.width = '580px';
+canvas.style.height = '640px';
+ctx.scale(dpr, dpr);
+
+function getCssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// Stages: [label, ops count, color-var, detail]
+const STAGES = [
+  // Top row: two boxes merging
+  { type: 'dual', left: 'wte[e][0]', right: 'wpe[0][0]', ops: '', color: '--blue', detail: 'plongements (lookup)' },
+  { type: 'single', label: '+ addition', ops: '1', color: '--blue', detail: 'tokEmb + posEmb' },
+  { type: 'single', label: 'rmsnorm', ops: '~50', color: '--blue', detail: '16 carrés + somme + √ + 16 divisions' },
+  { type: 'single', label: 'Q, K, V projections', ops: '1 488', color: '--cyan', detail: '3 matrices × 16×16 multiplications' },
+  { type: 'single', label: 'Attention (4 têtes)', ops: '~60', color: '--cyan', detail: 'Q·K / √d, softmax, pondération V' },
+  { type: 'single', label: 'Wo + résidu', ops: '512', color: '--cyan', detail: 'projection 16×16 + 16 additions' },
+  { type: 'single', label: 'rmsnorm', ops: '~50', color: '--green', detail: 'normalisation pré-MLP' },
+  { type: 'single', label: 'MLP (fc1→relu→fc2)', ops: '4 080', color: '--green', detail: '64×16 + 64 relu + 16×64 + résidu' },
+  { type: 'single', label: 'lm_head', ops: '837', color: '--red', detail: 'projection vers 27 logits (27×16)' },
+  { type: 'single', label: 'softmax', ops: '~106', color: '--red', detail: '27 exp + somme + 27 divisions' },
+  { type: 'single', label: '-log(prob)', ops: '2', color: '--red', detail: 'log + négation → loss' },
+  { type: 'result', label: 'loss', ops: '', color: '--orange', detail: 'backward() part d\'ici et remonte tout' },
+];
+
+// Layout constants
+const BOX_W = 260, BOX_H = 36;
+const GAP = 8;
+const START_Y = 10;
+const CX = 290; // center x
+
+// Animation state
+let animStep = -1; // which stage is currently being drawn (-1 = none, STAGES.length = all)
+let animRaf = 0;
+const REDUCED_MOTION = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+function drawArrow(fromX, fromY, toX, toY, color) {
+  ctx.beginPath();
+  ctx.moveTo(fromX, fromY);
+  ctx.lineTo(toX, toY);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+  ctx.beginPath();
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(toX - 7 * Math.cos(angle - 0.4), toY - 7 * Math.sin(angle - 0.4));
+  ctx.lineTo(toX - 7 * Math.cos(angle + 0.4), toY - 7 * Math.sin(angle + 0.4));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function drawStage(idx, y, lit) {
+  const stage = STAGES[idx];
+  const color = getCssVar(stage.color);
+  const dimColor = getCssVar('--border');
+  const bgColor = lit ? getCssVar('--surface2') : getCssVar('--surface');
+  const textColor = lit ? getCssVar('--text') : getCssVar('--text-dim');
+
+  if (stage.type === 'dual') {
+    // Two boxes side by side
+    const halfW = (BOX_W - 16) / 2;
+    for (let i = 0; i < 2; i++) {
+      const bx = CX - BOX_W / 2 + i * (halfW + 16);
+      ctx.fillStyle = bgColor;
+      ctx.strokeStyle = lit ? color : dimColor;
+      ctx.lineWidth = lit ? 2 : 1;
+      ctx.beginPath();
+      ctx.roundRect(bx, y, halfW, BOX_H, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = 'bold 11px monospace';
+      ctx.fillStyle = lit ? color : textColor;
+      ctx.textAlign = 'center';
+      ctx.fillText(i === 0 ? stage.left : stage.right, bx + halfW / 2, y + BOX_H / 2 + 4);
+    }
+
+    // Detail text to the right
+    ctx.font = '10px monospace';
+    ctx.fillStyle = getCssVar('--text-dim');
+    ctx.textAlign = 'left';
+    ctx.fillText(stage.detail, CX + BOX_W / 2 + 12, y + BOX_H / 2 + 3);
+    return;
+  }
+
+  // Single box
+  const bx = CX - BOX_W / 2;
+  ctx.fillStyle = bgColor;
+  ctx.strokeStyle = lit ? color : dimColor;
+  ctx.lineWidth = lit ? 2 : 1;
+  ctx.beginPath();
+  ctx.roundRect(bx, y, BOX_W, BOX_H, 6);
+  ctx.fill();
+  ctx.stroke();
+
+  // Label + ops: draw label left-aligned, ops right-aligned
+  if (stage.ops) {
+    // Label on the left
+    ctx.font = 'bold 11px monospace';
+    ctx.fillStyle = lit ? color : textColor;
+    ctx.textAlign = 'left';
+    ctx.fillText(stage.label, bx + 10, y + BOX_H / 2 + 4);
+
+    // Ops count on the right
+    ctx.fillStyle = lit ? getCssVar('--orange') : getCssVar('--text-dim');
+    ctx.textAlign = 'right';
+    ctx.fillText(stage.ops + ' ops', bx + BOX_W - 10, y + BOX_H / 2 + 4);
+  } else {
+    // No ops: center the label
+    ctx.font = stage.type === 'result' ? 'bold 13px monospace' : 'bold 11px monospace';
+    ctx.fillStyle = lit ? color : textColor;
+    ctx.textAlign = 'center';
+    ctx.fillText(stage.label, CX, y + BOX_H / 2 + 4);
+  }
+}
+
+function drawAll() {
+  ctx.clearRect(0, 0, 580, 640);
+
+  const positions = []; // y positions for each stage
+
+  let y = START_Y;
+  for (let i = 0; i < STAGES.length; i++) {
+    positions.push(y);
+    const lit = i <= animStep;
+    drawStage(i, y, lit);
+
+    // Arrow to next
+    if (i < STAGES.length - 1) {
+      const arrowColor = i < animStep ? getCssVar(STAGES[i + 1].color) : getCssVar('--border');
+      const nextY = y + BOX_H + GAP;
+
+      if (STAGES[i].type === 'dual') {
+        // Two arrows merging
+        const halfW = (BOX_W - 16) / 2;
+        drawArrow(CX - BOX_W / 2 + halfW / 2, y + BOX_H, CX, nextY, arrowColor);
+        drawArrow(CX + 8 + halfW / 2, y + BOX_H, CX, nextY, arrowColor);
+      } else {
+        drawArrow(CX, y + BOX_H, CX, nextY, arrowColor);
+      }
+    }
+
+    y += BOX_H + GAP;
+  }
+
+  // Total ops counter
+  if (animStep >= STAGES.length - 1) {
+    ctx.font = 'bold 13px monospace';
+    ctx.fillStyle = getCssVar('--orange');
+    ctx.textAlign = 'center';
+    ctx.fillText('Total : ~7 186 opérations pour 1 position', CX, y + 10);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Animation — stages light up one by one (forward), then flash backward
+// ═══════════════════════════════════════════════════════════════
+function animate() {
+  cancelAnimationFrame(animRaf);
+
+  if (REDUCED_MOTION) {
+    animStep = STAGES.length - 1;
+    drawAll();
+    return;
+  }
+
+  animStep = -1;
+  const STEP_MS = 250;
+  const TOTAL_FWD = STAGES.length * STEP_MS;
+  const PAUSE = 500;
+  const BWD_MS = 800;
+  const start = performance.now();
+
+  function tick(now) {
+    const elapsed = now - start;
+
+    if (elapsed < TOTAL_FWD) {
+      // Forward: light up stages one by one
+      animStep = Math.min(Math.floor(elapsed / STEP_MS), STAGES.length - 1);
+      drawAll();
+      animRaf = requestAnimationFrame(tick);
+    } else if (elapsed < TOTAL_FWD + PAUSE) {
+      animStep = STAGES.length - 1;
+      drawAll();
+      animRaf = requestAnimationFrame(tick);
+    } else if (elapsed < TOTAL_FWD + PAUSE + BWD_MS) {
+      // Backward flash: orange pulse from bottom to top
+      animStep = STAGES.length - 1;
+      drawAll();
+
+      // Draw backward overlay
+      const bwdProgress = (elapsed - TOTAL_FWD - PAUSE) / BWD_MS;
+      const bwdStage = Math.floor((1 - bwdProgress) * STAGES.length);
+      const y = START_Y + bwdStage * (BOX_H + GAP);
+
+      ctx.fillStyle = getCssVar('--orange') + '30';
+      ctx.beginPath();
+      ctx.roundRect(CX - BOX_W / 2 - 4, y - 2, BOX_W + 8, BOX_H + 4, 8);
+      ctx.fill();
+
+      ctx.font = 'bold 11px monospace';
+      ctx.fillStyle = getCssVar('--orange');
+      ctx.textAlign = 'right';
+      ctx.fillText('← backward', CX + BOX_W / 2 + 80, y + BOX_H / 2 + 4);
+
+      animRaf = requestAnimationFrame(tick);
+    } else {
+      animStep = STAGES.length - 1;
+      drawAll();
+    }
+  }
+
+  animRaf = requestAnimationFrame(tick);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Controls
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('btn-replay').addEventListener('click', animate);
+
+document.getElementById('btn-theme').addEventListener('click', () => {
+  const html = document.documentElement;
+  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = next;
+  document.getElementById('btn-theme').textContent = next === 'dark' ? 'Thème clair' : 'Thème sombre';
+  animStep = STAGES.length - 1;
+  drawAll();
+});
+
+// Init
+animate();
+</script>
+</body>
+</html>

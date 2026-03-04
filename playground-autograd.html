@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autograd — Playground</title>
+<style>
+/* ── Theme tokens (mirror of src/styles.css) ─────────────────── */
+:root,
+[data-theme="dark"] {
+  --bg: #181816;
+  --surface: #222220;
+  --surface2: #2a2a27;
+  --border: #363632;
+  --border-hover: #4a4a44;
+  --text: #cdc8be;
+  --text-dim: #959082;
+  --blue: #c28b4e;
+  --purple: #a08cb4;
+  --cyan: #6a9f9b;
+  --green: #8aaa6b;
+  --red: #bf6a63;
+  --orange: #c4885c;
+}
+[data-theme="light"] {
+  --bg: #f5f1ea;
+  --surface: #fffdf8;
+  --surface2: #ece8e0;
+  --border: #d6d0c5;
+  --border-hover: #b8b2a6;
+  --text: #2c2a25;
+  --text-dim: #6a655d;
+  --blue: #9c6b30;
+  --purple: #7b5ea0;
+  --cyan: #3a7d78;
+  --green: #527a34;
+  --red: #a04040;
+  --orange: #a06830;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  transition: background 0.2s, color 0.2s;
+}
+
+h1 { font-size: 22px; color: var(--blue); margin-bottom: 6px; }
+h2 { font-size: 15px; color: var(--cyan); margin-bottom: 8px; }
+.page-desc {
+  font-size: 13px; color: var(--text-dim);
+  margin-bottom: 16px; text-align: center; max-width: 620px;
+}
+
+.controls {
+  display: flex; gap: 8px; align-items: center;
+  flex-wrap: wrap; margin-bottom: 12px;
+}
+.btn {
+  padding: 7px 18px; background: var(--blue); color: var(--bg);
+  border: none; border-radius: 6px; font-family: inherit;
+  font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { filter: brightness(1.15); }
+.btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.btn-secondary { background: var(--border-hover); color: var(--text); }
+.btn-toggle {
+  padding: 4px 10px; background: var(--surface2); color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: 6px;
+  font-family: inherit; font-size: 11px; cursor: pointer; transition: all 0.15s;
+}
+.btn-toggle:hover { background: var(--border); color: var(--text); }
+
+canvas {
+  border-radius: 10px; cursor: crosshair;
+  border: 1px solid var(--border); background: var(--surface);
+}
+
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 20px; margin-bottom: 16px;
+  max-width: 660px; width: 100%;
+}
+.explain {
+  font-size: 12px; color: var(--text-dim); line-height: 1.7;
+  margin-bottom: 12px; padding: 10px 12px;
+  background: var(--surface2); border-radius: 6px;
+  border-left: 3px solid var(--blue); text-align: left;
+}
+.explain b { color: var(--cyan); }
+
+/* ── Slider ──────────────────────────────────────────────────── */
+.slider-row {
+  display: flex; align-items: center; gap: 12px;
+  margin: 12px 0; font-size: 13px;
+}
+.slider-row input[type="range"] {
+  flex: 1; max-width: 200px; accent-color: var(--blue);
+}
+.slider-row .val { color: var(--cyan); font-weight: bold; min-width: 36px; }
+.slider-row .fixed { color: var(--text-dim); }
+
+/* ── Proof box ───────────────────────────────────────────────── */
+.proof {
+  font-size: 12px; line-height: 1.8; padding: 10px 12px;
+  background: var(--surface2); border-radius: 6px;
+  border-left: 3px solid var(--green); margin-top: 8px;
+}
+.proof .ok { color: var(--green); font-weight: bold; }
+
+/* ── Bridge (zone 3) ─────────────────────────────────────────── */
+.bridge {
+  font-size: 12px; line-height: 1.7; padding: 10px 12px;
+  background: var(--surface2); border-radius: 6px;
+  border-left: 3px solid var(--orange); margin-top: 8px;
+}
+.bridge b { color: var(--orange); }
+.bridge .param-val { color: var(--cyan); }
+
+/* ── Blockquote ──────────────────────────────────────────────── */
+blockquote {
+  font-size: 12px; font-style: italic; color: var(--text-dim);
+  border-left: 3px solid var(--purple); padding: 8px 12px;
+  margin: 8px 0; background: var(--surface2); border-radius: 0 6px 6px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+<h1>Autograd — comment le modèle apprend</h1>
+<p class="page-desc">
+  Le modèle a 4 192 paramètres. Comment sait-il lesquels corriger, et de combien ?
+  C'est le rôle de l'<b>autograd</b> : calculer automatiquement la direction de chaque correction.
+</p>
+
+<div class="controls">
+  <button class="btn" id="btn-replay">Rejouer</button>
+  <button class="btn-toggle" id="btn-theme">Thème clair</button>
+</div>
+
+<!-- Zone 1 : graphe de calcul -->
+<div class="panel">
+  <h2>Le graphe de calcul</h2>
+  <div class="explain">
+    Chaque opération (+, ×) crée un <b>nœud</b> qui se souvient de ses entrées.
+    Le <b style="color:var(--blue)">forward</b> calcule le résultat de gauche à droite — c'est de l'arithmétique.
+    Le <b style="color:var(--orange)">backward</b> remonte de droite à gauche pour trouver qui est responsable de l'erreur.
+  </div>
+  <canvas id="graphCanvas" width="580" height="240"></canvas>
+</div>
+
+<!-- Zone 2 : slider interactif -->
+<div class="panel">
+  <h2>Bouge a — observe le gradient</h2>
+  <div class="explain">
+    Le <b>gradient</b> d'un paramètre dit : « si je te bouge d'un tout petit peu,
+    de combien le résultat change ? » Bouge <b>a</b> et vérifie par toi-même.
+  </div>
+  <div class="slider-row">
+    <span>a =</span>
+    <input type="range" id="sliderA" min="0.1" max="5" step="0.1" value="2">
+    <span class="val" id="valA">2.0</span>
+    <span class="fixed">b = 3.0 (fixe)</span>
+  </div>
+  <div class="proof" id="proof"></div>
+</div>
+
+<!-- Zone 3 : pont vers le vrai modèle -->
+<div class="panel">
+  <h2>Le même mécanisme, en beaucoup plus grand</h2>
+  <blockquote>
+    « Pour chaque paramètre du modèle, on a besoin de savoir :
+    si je bouge ce nombre un tout petit peu, est-ce que l'erreur monte ou descend, et de combien ? »
+    <br>— Andrej Karpathy, guide MicroGPT, section Autograd
+  </blockquote>
+  <div class="bridge">
+    Dans l'exemple ci-dessus, il y a <b>2 paramètres</b> (a et b) et <b>4 nœuds</b>.<br><br>
+    Le vrai modèle, c'est le <b>même algorithme</b> — mais avec <b>4 192 paramètres</b>
+    et des <b>milliers d'opérations</b> par étape d'entraînement.<br><br>
+    L'analogie de Karpathy : <em>« Si une voiture roule 2× plus vite qu'un vélo, et le vélo 4×
+    plus vite qu'un piéton, alors la voiture roule 2 × 4 = 8× plus vite que le piéton. »</em>
+    C'est la <b>règle de la chaîne</b> — on multiplie les taux de changement en remontant.
+    L'autograd fait ça automatiquement pour chaque paramètre.
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// Value class — same as src/engine/autograd.ts
+// ═══════════════════════════════════════════════════════════════
+class Val {
+  constructor(data, children = [], localGrads = [], label = '') {
+    this.data = data;
+    this.grad = 0;
+    this._children = children;
+    this._localGrads = localGrads;
+    this.label = label;
+  }
+  add(other) {
+    const o = typeof other === 'number' ? new Val(other) : other;
+    return new Val(this.data + o.data, [this, o], [1, 1]);
+  }
+  mul(other) {
+    const o = typeof other === 'number' ? new Val(other) : other;
+    return new Val(this.data * o.data, [this, o], [o.data, this.data]);
+  }
+  backward() {
+    const topo = [];
+    const visited = new Set();
+    const build = (v) => {
+      if (visited.has(v)) return;
+      visited.add(v);
+      for (const c of v._children) build(c);
+      topo.push(v);
+    };
+    build(this);
+    this.grad = 1;
+    for (const v of [...topo].reverse()) {
+      for (let i = 0; i < v._children.length; i++) {
+        v._children[i].grad += v._localGrads[i] * v.grad;
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Compute the Karpathy example: a*b + a
+// ═══════════════════════════════════════════════════════════════
+function computeGraph(aVal) {
+  const a = new Val(aVal, [], [], 'a');
+  const b = new Val(3.0, [], [], 'b');
+  const c = a.mul(b); c.label = 'c = a×b';
+  const L = c.add(a); L.label = 'L = c+a';
+  L.backward();
+  return { a, b, c, L };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Canvas drawing — graph nodes
+// ═══════════════════════════════════════════════════════════════
+const canvas = document.getElementById('graphCanvas');
+const ctx = canvas.getContext('2d');
+const dpr = window.devicePixelRatio || 1;
+canvas.width = 580 * dpr;
+canvas.height = 240 * dpr;
+canvas.style.width = '580px';
+canvas.style.height = '240px';
+ctx.scale(dpr, dpr);
+
+// Node positions
+const NODES = {
+  a: { x: 80, y: 55, r: 34 },
+  b: { x: 80, y: 185, r: 34 },
+  c: { x: 280, y: 120, r: 38 },
+  L: { x: 490, y: 120, r: 38 },
+};
+
+// Edges: [from, to, label]
+const EDGES = [
+  ['a', 'c', '×'],
+  ['b', 'c', '×'],
+  ['c', 'L', '+'],
+  ['a', 'L', '+'],  // skip connection
+];
+
+function getCssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// Animation state
+let animPhase = 'idle';   // 'forward' | 'backward' | 'idle'
+let animProgress = 0;     // 0..1
+let animRaf = 0;
+let currentGraph = computeGraph(2.0);
+
+function drawEdge(from, to, label, progress, phase) {
+  const f = NODES[from], t = NODES[to];
+  const isSkip = from === 'a' && to === 'L';
+
+  ctx.beginPath();
+  if (isSkip) {
+    // Bézier curve above for skip connection
+    const cpY = Math.min(f.y, t.y) - 50;
+    ctx.moveTo(f.x + f.r, f.y - 10);
+    ctx.bezierCurveTo(f.x + 100, cpY, t.x - 100, cpY, t.x - t.r, t.y - 10);
+  } else {
+    ctx.moveTo(f.x + f.r, f.y);
+    ctx.lineTo(t.x - t.r, t.y);
+  }
+
+  // Color based on phase
+  const dimColor = getCssVar('--border');
+  const fwdColor = getCssVar('--blue');
+  const bwdColor = getCssVar('--orange');
+
+  if (phase === 'idle') {
+    ctx.strokeStyle = getCssVar('--border-hover');
+    ctx.lineWidth = 1.5;
+  } else if (phase === 'forward') {
+    ctx.strokeStyle = progress > 0 ? fwdColor : dimColor;
+    ctx.lineWidth = progress > 0 ? 2.5 : 1.5;
+  } else {
+    ctx.strokeStyle = progress > 0 ? bwdColor : dimColor;
+    ctx.lineWidth = progress > 0 ? 2.5 : 1.5;
+  }
+  ctx.stroke();
+
+  // Arrow head
+  const angle = isSkip ? Math.PI * 0.6 : Math.atan2(t.y - f.y, t.x - f.x);
+  const ax = t.x - t.r * Math.cos(isSkip ? Math.PI * 0.15 : angle);
+  const ay = (isSkip ? t.y - 10 : t.y) - t.r * Math.sin(isSkip ? Math.PI * 0.15 : angle);
+  ctx.beginPath();
+  ctx.moveTo(ax, ay);
+  ctx.lineTo(ax - 8 * Math.cos(angle - 0.35), ay - 8 * Math.sin(angle - 0.35));
+  ctx.lineTo(ax - 8 * Math.cos(angle + 0.35), ay - 8 * Math.sin(angle + 0.35));
+  ctx.closePath();
+  ctx.fillStyle = ctx.strokeStyle;
+  ctx.fill();
+
+  // Label on edge
+  if (label) {
+    const mx = isSkip ? (f.x + t.x) / 2 : (f.x + f.r + t.x - t.r) / 2;
+    const my = isSkip ? Math.min(f.y, t.y) - 55 : (f.y + t.y) / 2 - 10;
+    ctx.font = 'bold 13px monospace';
+    ctx.fillStyle = getCssVar('--text-dim');
+    ctx.textAlign = 'center';
+    ctx.fillText(label, mx, my);
+  }
+}
+
+function drawNode(key, node, val, phase, lit) {
+  const { x, y, r } = node;
+
+  // Circle
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = lit ? getCssVar('--surface2') : getCssVar('--surface');
+  ctx.fill();
+
+  const borderColor = phase === 'forward' && lit ? getCssVar('--blue')
+    : phase === 'backward' && lit ? getCssVar('--orange')
+    : getCssVar('--border-hover');
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = lit ? 2.5 : 1.5;
+  ctx.stroke();
+
+  // Label above
+  ctx.font = 'bold 12px monospace';
+  ctx.fillStyle = getCssVar('--text-dim');
+  ctx.textAlign = 'center';
+  ctx.fillText(key === 'c' ? 'c = a×b' : key === 'L' ? 'L = c+a' : key, x, y - r - 6);
+
+  // Value inside
+  ctx.font = 'bold 14px monospace';
+  ctx.fillStyle = getCssVar('--blue');
+  ctx.fillText(val.data.toFixed(1), x, y + 2);
+
+  // Gradient below (only after backward)
+  if (phase === 'backward' && lit || phase === 'idle') {
+    ctx.font = '11px monospace';
+    ctx.fillStyle = getCssVar('--orange');
+    ctx.fillText('grad=' + val.grad.toFixed(1), x, y + r + 14);
+  }
+}
+
+// Which nodes are "lit" at each animation progress
+function getForwardLit(progress) {
+  if (progress < 0.25) return new Set(['a', 'b']);
+  if (progress < 0.55) return new Set(['a', 'b', 'c']);
+  return new Set(['a', 'b', 'c', 'L']);
+}
+
+function getBackwardLit(progress) {
+  if (progress < 0.33) return new Set(['L']);
+  if (progress < 0.66) return new Set(['L', 'c']);
+  return new Set(['L', 'c', 'a', 'b']);
+}
+
+function getEdgeProgress(from, to, litSet) {
+  return litSet.has(from) && litSet.has(to) ? 1 : 0;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, 580, 240);
+  const g = currentGraph;
+
+  const litSet = animPhase === 'forward' ? getForwardLit(animProgress)
+    : animPhase === 'backward' ? getBackwardLit(animProgress)
+    : new Set(['a', 'b', 'c', 'L']);
+
+  // Edges first (behind nodes)
+  for (const [from, to, label] of EDGES) {
+    const ep = getEdgeProgress(from, to, litSet);
+    drawEdge(from, to, label, ep, animPhase);
+  }
+
+  // Nodes
+  for (const [key, node] of Object.entries(NODES)) {
+    drawNode(key, node, g[key], animPhase, litSet.has(key));
+  }
+
+  // Phase label
+  if (animPhase !== 'idle') {
+    ctx.font = 'bold 13px monospace';
+    ctx.fillStyle = animPhase === 'forward' ? getCssVar('--blue') : getCssVar('--orange');
+    ctx.textAlign = 'right';
+    ctx.fillText(animPhase === 'forward' ? '→ forward' : '← backward', 570, 20);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Animation
+// ═══════════════════════════════════════════════════════════════
+const REDUCED_MOTION = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+function animate() {
+  cancelAnimationFrame(animRaf);
+
+  if (REDUCED_MOTION) {
+    animPhase = 'idle';
+    draw();
+    return;
+  }
+
+  const FWD_MS = 1200, BWD_MS = 1200, PAUSE_MS = 400;
+  const start = performance.now();
+
+  function tick(now) {
+    const elapsed = now - start;
+
+    if (elapsed < FWD_MS) {
+      animPhase = 'forward';
+      animProgress = elapsed / FWD_MS;
+    } else if (elapsed < FWD_MS + PAUSE_MS) {
+      animPhase = 'forward';
+      animProgress = 1;
+    } else if (elapsed < FWD_MS + PAUSE_MS + BWD_MS) {
+      animPhase = 'backward';
+      animProgress = (elapsed - FWD_MS - PAUSE_MS) / BWD_MS;
+    } else {
+      animPhase = 'idle';
+      animProgress = 1;
+      draw();
+      return;
+    }
+
+    draw();
+    animRaf = requestAnimationFrame(tick);
+  }
+
+  animRaf = requestAnimationFrame(tick);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Slider + proof
+// ═══════════════════════════════════════════════════════════════
+const slider = document.getElementById('sliderA');
+const valAEl = document.getElementById('valA');
+const proofEl = document.getElementById('proof');
+
+function updateFromSlider() {
+  const a = parseFloat(slider.value);
+  valAEl.textContent = a.toFixed(1);
+  currentGraph = computeGraph(a);
+  animPhase = 'idle';
+  draw();
+  updateProof(a);
+}
+
+function updateProof(a) {
+  const eps = 0.001;
+  const g1 = computeGraph(a);
+  const g2 = computeGraph(a + eps);
+  const diff = g2.L.data - g1.L.data;
+  const predicted = g1.a.grad * eps;
+
+  proofEl.innerHTML =
+    `a = ${a.toFixed(3)} → L = ${g1.L.data.toFixed(3)}<br>` +
+    `a = ${(a + eps).toFixed(3)} → L = ${g2.L.data.toFixed(3)}<br>` +
+    `Différence réelle = ${diff.toFixed(4)}<br>` +
+    `Gradient prédit : ${g1.a.grad.toFixed(1)} × ${eps} = ${predicted.toFixed(4)} ` +
+    `<span class="ok">✓ identique !</span><br><br>` +
+    `<b style="color:var(--orange)">a.grad = ${g1.a.grad.toFixed(1)}</b> ` +
+    `(via 2 chemins : ×b=${g1.b.data.toFixed(0)} et +1 = ${g1.b.data.toFixed(0)}+1)<br>` +
+    `<b style="color:var(--orange)">b.grad = ${g1.b.grad.toFixed(1)}</b> ` +
+    `(via 1 chemin : ×a=${a.toFixed(0)})`;
+}
+
+slider.addEventListener('input', updateFromSlider);
+
+// ═══════════════════════════════════════════════════════════════
+// Replay + theme
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('btn-replay').addEventListener('click', () => {
+  currentGraph = computeGraph(parseFloat(slider.value));
+  animate();
+});
+
+document.getElementById('btn-theme').addEventListener('click', () => {
+  const html = document.documentElement;
+  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = next;
+  document.getElementById('btn-theme').textContent = next === 'dark' ? 'Thème clair' : 'Thème sombre';
+  draw();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════════════
+updateProof(2.0);
+animate();
+</script>
+</body>
+</html>
