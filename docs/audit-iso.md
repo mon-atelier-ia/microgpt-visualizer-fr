@@ -38,10 +38,10 @@
 
 ### Informationnel (2) — inhérent à l'architecture
 
-| #   | Norme             | Constat                                | Raison de non-action                                                                                           |
-| --- | ----------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| P-1 | 25010 Performance | Main bundle ~638 KB (datasets inlinés) | App 100 % client-side, pas de backend. `manualChunks` = nice-to-have, pas un défaut.                           |
-| S-3 | 40500 WCAG        | `valToColor()` contraste < 4,5:1       | Interpolation RGB runtime, CSS inapplicable. Accepté (audit-frontend.md). Données supplementaires via `title`. |
+| #   | Norme             | Constat                                | Raison de non-action                                                                                                                                                    |
+| --- | ----------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P-1 | 25010 Performance | Main bundle ~638 KB (datasets inlinés) | App 100 % client-side, pas de backend. `manualChunks` = nice-to-have, pas un défaut.                                                                                    |
+| S-3 | 40500 WCAG        | `valToColor()` contraste < 4,5:1       | Interpolation runtime entre CSS vars (`--red`/`--green`/`--surface2`). Cellules proches de zéro = faible contraste structurel. Accepté. `title` + `--vector-text` fixe. |
 
 ### Modérées — ✅ TOUS CORRIGÉS
 
@@ -192,9 +192,9 @@
 
 #### Non-conformités résiduelles
 
-| Critère        | Problème                                                  | Sévérité                         |
-| -------------- | --------------------------------------------------------- | -------------------------------- |
-| 1.4.3 Contrast | S-3 : `valToColor()` Heatmap — certaines cellules < 4,5:1 | Acceptée (interpolation runtime) |
+| Critère        | Problème                                                        | Sévérité                                                              |
+| -------------- | --------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 1.4.3 Contrast | S-3 : `valToColor()` Heatmap — cellules proches de zéro < 4,5:1 | Acceptée (interpolation runtime CSS vars, texte `--vector-text` fixe) |
 
 ### ISO 9241-110:2020 — Interaction (4,4/5)
 

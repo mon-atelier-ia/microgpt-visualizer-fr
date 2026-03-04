@@ -524,17 +524,20 @@ Visualisation PCA des embeddings wte : projection 2D des 27 vecteurs de 16 dimen
 - ✅ `pca.ts` — PCA 2D pur (centrage, covariance 2×2, vecteurs propres analytiques), 6 tests
 - ✅ `parseColor.ts` — extraction RGB depuis CSS computed styles (hex/rgb/rgba), 5 tests
 - ✅ `modelStore.ts` — `pushWteSnapshot()` / `getWteSnapshots()` infrastructure snapshots (deep copy), 2 tests ajoutés
-- ✅ `PCAScatterPlot.tsx` — Canvas 2D (641 lignes) :
+- ✅ `PCAScatterPlot.tsx` — Canvas 2D (~677 lignes) :
   - 27 points colorés (voyelles=cyan, consonnes=orange, BOS=violet)
   - Lignes de constellation (même type=couleur type, cross-type=border, alpha/épaisseur par proximité)
   - Hover interactif : anneau lumineux + highlight constellation
   - Hover bidirectionnel : PCA ↔ heatmap wte via `highlightLetter` / `onHoverLetter`
-  - Axes PCA (axes centrés sur l'origine, labels Composante 1/2)
-  - Vignette radiale + effet observatoire scientifique
-  - Animation replay (interpolation linéaire entre snapshots wte, trails fantômes)
+  - Axes PCA (axes centrés sur l'origine, labels PC1/PC2)
+  - Vignette radiale (centre 0.025α, bords 0.35α) + effet observatoire scientifique
+  - Animation replay : interpolation 16D entre snapshots → pca2d() chaque frame (mouvement organique)
+  - Trails fantômes (ghost trail) avec alphas dégressifs
+  - Labels bold avec halo (strokeText) pour lisibilité sur dots colorés
+  - IntersectionObserver scroll-reveal (seuil 0.3, même pattern NNDiagram)
   - Bouton Rejouer (conditionnel ≥3 snapshots)
   - `prefers-reduced-motion` : skip animation
-  - Support dark/light via CSS variables
+  - Support dark/light via CSS variables (`getCssVar` + `parseColor`)
   - Responsive : 400px → 300px → 220px via media queries
 - ✅ `playground-pca.html` — prototype standalone Canvas pour itération design
 - ✅ Intégration dans `EmbeddingsPage.tsx` (4e panneau, +97 lignes) :
@@ -549,9 +552,29 @@ Visualisation PCA des embeddings wte : projection 2D des 27 vecteurs de 16 dimen
 
 - PCA analytique (pas de bibliothèque — 96 lignes, O(n·d²) adapté à n=27, d=16)
 - Canvas 2D (pas SVG — cohérence avec NNDiagram et LossChart)
-- `parseColor` extraite car `valToColor()` utilise un format différent (`rgb()` string) — pas de réutilisation possible
+- `parseColor` extraite et partagée : Heatmap, AttnMatrix, LossChart, NNDiagram, PCAScatterPlot
 - Snapshots deep copy (mutation-proof) — pattern vérifié par test H-2
 - Animation cancellation sur changement de snapshots (F-2) — même pattern C-6/P-4
+- Interpolation 16D (pas 2D) : les axes PCA tournent naturellement → mouvement organique vs toile étirée
+
+### 17b. Audit conformité animations + migration CSS vars — FAIT
+
+Audit systématique des 7 composants animés/interactifs : cohérence visuelle, leverage code, fidélité données modèle, `prefers-reduced-motion`.
+
+- ✅ **PCAScatterPlot** — conformité plan corrigée :
+  - IntersectionObserver scroll-reveal ajouté (seuil 0.3, même pattern NNDiagram)
+  - Vignette intensité corrigée (centre 0.025α, bords 0.35α — était 0.02/0.15)
+  - Animation 16D : interpolation embeddings 16D + pca2d() chaque frame (était interpolation 2D = toile étirée)
+  - Labels bold + halo strokeText pour contraste sur dots colorés
+  - Badge invitation pédagogique aligné avec wte ("Valeurs aléatoires — reviens après…")
+- ✅ **Heatmap** — `valToColor()` migré vers CSS vars (`--red`, `--green`, `--surface2` via `getCssVar`+`parseColor`). Texte: `--vector-text`
+- ✅ **AttnMatrix** — couleur cellules migré vers `--blue` via `getCssVar`+`parseColor`. Texte: `--bg`/`--text-dim`
+- ✅ **LossChart** — couleurs alpha migré vers `parseColor` (plus de concat hex `+"44"`). Ajout ResizeObserver + MutationObserver (pattern NNDiagram)
+- ✅ **NNDiagram** — déjà conforme (getCssVar+parseColor, IO+RO+MO, reduced motion JS)
+- ✅ **TokenizerPage** — CSS keyframes, `prefers-reduced-motion` global CSS
+- ✅ **BertVizView** — SVG inline avec CSS vars HEAD_COLORS, pas d'animation à corriger
+
+**Résultat** : 0 couleur hardcodée dans les composants. Tous utilisent CSS custom properties → prêt pour futur oklch.
 
 ### 10. Polish CSS — FAIT
 

@@ -193,6 +193,19 @@ Commits: `4ea6c80`, `226e502`, `8c63af0`, `441b85b`, `e13fcdc`, `c6e7c2c`, `8baa
 | `pushWteSnapshot(model)` every 50 training steps                             | `src/pages/TrainingPage.tsx`                              | Alimente l'infrastructure snapshots pour l'animation replay PCA                                                      |
 | 4 integration tests (PCA canvas, wrap, hover bidirectionnel, training badge) | `src/pages/EmbeddingsPage.test.tsx`                       | Couverture : canvas presence, PCA panel structure, hoverRow↔highlightLetter cycle, training badge label              |
 
+## Audit conformité animations + migration CSS vars
+
+| Change                                                                            | Fichier(s)           | Justification                                                                                            |
+| --------------------------------------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------- |
+| PCA IntersectionObserver scroll-reveal (seuil 0.3)                                | `PCAScatterPlot.tsx` | PCA en bas de page 2 — animation démarrait hors viewport. Même pattern NNDiagram                         |
+| PCA vignette intensité corrigée (0.025/0.35 vs 0.02/0.15)                         | `PCAScatterPlot.tsx` | Conformité plan + playground-pca.html. Vignette était trop subtile                                       |
+| PCA animation 16D (interpolation embeddings + pca2d chaque frame)                 | `PCAScatterPlot.tsx` | Interpolation 2D créait des lignes droites (toile étirée). 16D = axes PCA tournent = mouvement organique |
+| PCA labels bold + halo strokeText                                                 | `PCAScatterPlot.tsx` | Contraste lettres sur dots colorés insuffisant. Bold + halo `--surface2` pour lisibilité                 |
+| PCA badge invitation aligné ("Valeurs aléatoires — reviens après…")               | `EmbeddingsPage.tsx` | Cohérence formule pédagogique avec wte badge — même préfixe "Valeurs aléatoires"                         |
+| Heatmap `valToColor()` migré vers CSS vars (`--red`, `--green`, `--surface2`)     | `Heatmap.tsx`        | Élimination RGB hardcodés (terracotta/sage). Texte: `--vector-text`. Prêt oklch                          |
+| AttnMatrix couleur cellules migré vers `--blue` via `getCssVar`+`parseColor`      | `AttnMatrix.tsx`     | Élimination `rgba(122,162,247,w)` hardcodé. Texte: `--bg`/`--text-dim`. Réactif au thème                 |
+| LossChart alpha couleurs via `parseColor` + ajout ResizeObserver+MutationObserver | `LossChart.tsx`      | Élimination concat hex `+"44"`. RO+MO = redraw sur resize/theme (pattern NNDiagram)                      |
+
 ## Deployment
 
 | Change                                                                     | Justification                                  |
