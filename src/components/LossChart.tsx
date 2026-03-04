@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { getCssVar } from "../utils/getCssVar";
+import { parseColor } from "../utils/parseColor";
 
 interface Props {
   lossHistory: number[];
@@ -7,18 +8,23 @@ interface Props {
 
 export default function LossChart({ lossHistory }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const dataRef = useRef(lossHistory);
+  dataRef.current = lossHistory;
 
-  useEffect(() => {
+  const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return; // jsdom — no canvas support
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * dpr;
-    canvas.height = canvas.clientHeight * dpr;
-    ctx.scale(dpr, dpr);
     const W = canvas.clientWidth;
     const H = canvas.clientHeight;
+    if (W === 0 || H === 0) return;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const data = dataRef.current;
 
     // Read theme colors from CSS variables
     const colSurface2 = getCssVar("--surface2");
@@ -27,11 +33,13 @@ export default function LossChart({ lossHistory }: Props) {
     const colBlue = getCssVar("--blue");
     const colGreen = getCssVar("--green");
     const colRed = getCssVar("--red");
+    const blueRgb = parseColor(colBlue);
+    const redRgb = parseColor(colRed);
 
     ctx.fillStyle = colSurface2;
     ctx.fillRect(0, 0, W, H);
 
-    if (lossHistory.length === 0) {
+    if (data.length === 0) {
       ctx.fillStyle = colTextDim;
       ctx.font = "14px monospace";
       ctx.textAlign = "center";
@@ -43,8 +51,8 @@ export default function LossChart({ lossHistory }: Props) {
     const pw = W - pad.left - pad.right;
     const ph = H - pad.top - pad.bottom;
 
-    const minLoss = Math.min(...lossHistory) * 0.95;
-    const maxLoss = Math.max(...lossHistory) * 1.02;
+    const minLoss = Math.min(...data) * 0.95;
+    const maxLoss = Math.max(...data) * 1.02;
 
     // Grid
     ctx.strokeStyle = colBorder;
@@ -64,27 +72,25 @@ export default function LossChart({ lossHistory }: Props) {
 
     // Raw loss line
     ctx.beginPath();
-    ctx.strokeStyle = colBlue + "44";
+    ctx.strokeStyle = `rgba(${blueRgb[0]},${blueRgb[1]},${blueRgb[2]},0.27)`;
     ctx.lineWidth = 1;
-    for (let i = 0; i < lossHistory.length; i++) {
-      const x = pad.left + (i / Math.max(1, lossHistory.length - 1)) * pw;
-      const y =
-        pad.top + (1 - (lossHistory[i] - minLoss) / (maxLoss - minLoss)) * ph;
+    for (let i = 0; i < data.length; i++) {
+      const x = pad.left + (i / Math.max(1, data.length - 1)) * pw;
+      const y = pad.top + (1 - (data[i] - minLoss) / (maxLoss - minLoss)) * ph;
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
     ctx.stroke();
 
     // Moving average
-    if (lossHistory.length > 10) {
+    if (data.length > 10) {
       ctx.beginPath();
       ctx.strokeStyle = colGreen;
       ctx.lineWidth = 2;
-      const ws = Math.min(20, Math.floor(lossHistory.length / 3));
-      for (let i = ws; i < lossHistory.length; i++) {
-        const avg =
-          lossHistory.slice(i - ws, i).reduce((a, b) => a + b, 0) / ws;
-        const x = pad.left + (i / (lossHistory.length - 1)) * pw;
+      const ws = Math.min(20, Math.floor(data.length / 3));
+      for (let i = ws; i < data.length; i++) {
+        const avg = data.slice(i - ws, i).reduce((a, b) => a + b, 0) / ws;
+        const x = pad.left + (i / (data.length - 1)) * pw;
         const y = pad.top + (1 - (avg - minLoss) / (maxLoss - minLoss)) * ph;
         if (i === ws) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -98,7 +104,7 @@ export default function LossChart({ lossHistory }: Props) {
     if (randomLoss >= minLoss && randomLoss <= maxLoss) {
       const y =
         pad.top + (1 - (randomLoss - minLoss) / (maxLoss - minLoss)) * ph;
-      ctx.strokeStyle = colRed + "44";
+      ctx.strokeStyle = `rgba(${redRgb[0]},${redRgb[1]},${redRgb[2]},0.27)`;
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -116,13 +122,38 @@ export default function LossChart({ lossHistory }: Props) {
     ctx.fillStyle = colTextDim;
     ctx.font = "10px monospace";
     ctx.textAlign = "center";
-    ctx.fillText(`Étape ${lossHistory.length}`, W / 2, H - 6);
+    ctx.fillText(`Étape ${data.length}`, W / 2, H - 6);
     ctx.textAlign = "right";
     ctx.fillStyle = colBlue;
     ctx.fillText("raw", W - pad.right, pad.top - 6);
     ctx.fillStyle = colGreen;
     ctx.fillText("avg", W - pad.right - 40, pad.top - 6);
-  }, [lossHistory, lossHistory.length]);
+  }, []);
+
+  // Redraw on data change
+  useEffect(() => {
+    draw();
+  }, [draw, lossHistory, lossHistory.length]);
+
+  // ResizeObserver — redraw on container resize (same pattern as NNDiagram)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => draw());
+    ro.observe(canvas.parentElement || canvas);
+    return () => ro.disconnect();
+  }, [draw]);
+
+  // MutationObserver — redraw on theme change (same pattern as NNDiagram)
+  useEffect(() => {
+    if (typeof MutationObserver === "undefined") return;
+    const mo = new MutationObserver(() => draw());
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    return () => mo.disconnect();
+  }, [draw]);
 
   const label =
     lossHistory.length === 0

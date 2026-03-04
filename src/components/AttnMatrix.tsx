@@ -1,3 +1,6 @@
+import { getCssVar } from "../utils/getCssVar";
+import { parseColor } from "../utils/parseColor";
+
 interface Props {
   matrix: number[][];
   tokens: string[];
@@ -18,6 +21,9 @@ export default function AttnMatrix({
   if (matrix.length === 0) return null;
 
   const cellClass = compact ? "attn-cell attn-cell--compact" : "attn-cell";
+  const blueRgb = parseColor(getCssVar("--blue"));
+  const textOnBlue = getCssVar("--bg");
+  const textDim = getCssVar("--text-dim");
 
   return (
     <table
@@ -55,8 +61,8 @@ export default function AttnMatrix({
                   key={c}
                   className={cellClass}
                   style={{
-                    background: `rgba(122, 162, 247, ${w})`,
-                    color: w > 0.3 ? "#fff" : "var(--text-dim)",
+                    background: `rgba(${blueRgb[0]},${blueRgb[1]},${blueRgb[2]},${w})`,
+                    color: w > 0.3 ? textOnBlue : textDim,
                   }}
                 >
                   {w.toFixed(2)}

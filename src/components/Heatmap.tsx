@@ -1,24 +1,26 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { Value } from "../engine/autograd";
+import { getCssVar } from "../utils/getCssVar";
+import { parseColor } from "../utils/parseColor";
 
 const DISPLAY_DECIMALS = 2;
 const TOOLTIP_DECIMALS = 4;
 
-function valToColor(v: number, scale = 0.3): string {
+/** Interpolate between neutral and target color based on value polarity. */
+function valToColor(
+  v: number,
+  scale: number,
+  negRgb: [number, number, number],
+  posRgb: [number, number, number],
+  neutralRgb: [number, number, number],
+): string {
   const t = Math.max(-1, Math.min(1, v / scale));
-  if (t < 0) {
-    // warm terracotta for negatives
-    const r = Math.floor(140 - t * 95);
-    const g = Math.floor(120 + t * 50);
-    const b = Math.floor(110 + t * 50);
-    return `rgb(${r},${g},${b})`;
-  } else {
-    // sage green for positives
-    const r = Math.floor(130 + t * 10);
-    const g = Math.floor(135 + t * 80);
-    const b = Math.floor(120 + t * 20);
-    return `rgb(${r},${g},${b})`;
-  }
+  const base = t < 0 ? negRgb : posRgb;
+  const a = Math.abs(t);
+  const r = Math.round(neutralRgb[0] * (1 - a) + base[0] * a);
+  const g = Math.round(neutralRgb[1] * (1 - a) + base[1] * a);
+  const b = Math.round(neutralRgb[2] * (1 - a) + base[2] * a);
+  return `rgb(${r},${g},${b})`;
 }
 
 interface Props {
@@ -37,6 +39,15 @@ export default function Heatmap({
   onHoverRow,
 }: Props) {
   const rowsRef = useRef<(HTMLTableRowElement | null)[]>([]);
+
+  // Read theme palette for heatmap colors (future-proof for oklch)
+  const palette = useMemo(() => {
+    const neg = parseColor(getCssVar("--red"));
+    const pos = parseColor(getCssVar("--green"));
+    const neutral = parseColor(getCssVar("--surface2"));
+    const text = getCssVar("--vector-text");
+    return { neg, pos, neutral, text };
+  }, [matrix]); // re-read on data change (theme may have changed)
 
   // Roving tabindex: Arrow Up/Down/Home/End to navigate rows (W-1)
   const handleKeyDown = useCallback(
@@ -104,13 +115,19 @@ export default function Heatmap({
               <td className="row-label">{rowLabels[r]}</td>
               {row.slice(0, colCount).map((cell, c) => {
                 const v = cell.data;
-                const bg = valToColor(v);
+                const bg = valToColor(
+                  v,
+                  0.3,
+                  palette.neg,
+                  palette.pos,
+                  palette.neutral,
+                );
                 return (
                   <td
                     key={c}
                     style={{
                       background: bg,
-                      color: Math.abs(v) > 0.25 ? "#2a2a25" : "#4a4a42",
+                      color: palette.text,
                     }}
                     title={`${rowLabels[r]} dim${c}: ${v.toFixed(TOOLTIP_DECIMALS)}`}
                   >
@@ -141,6 +158,10 @@ export function VectorBar({
   label?: string;
 }) {
   const maxAbs = Math.max(...values.map(Math.abs), 0.01);
+  const neg = parseColor(getCssVar("--red"));
+  const pos = parseColor(getCssVar("--green"));
+  const neutral = parseColor(getCssVar("--surface2"));
+  const text = getCssVar("--vector-text");
   return (
     <div>
       {label && <div className="label-dim vector-bar-label">{label}</div>}
@@ -149,7 +170,10 @@ export function VectorBar({
           <div
             key={i}
             className="vector-cell"
-            style={{ background: valToColor(v, maxAbs * 0.8) }}
+            style={{
+              background: valToColor(v, maxAbs * 0.8, neg, pos, neutral),
+              color: text,
+            }}
             title={`dim${i}: ${v.toFixed(TOOLTIP_DECIMALS)}`}
           >
             {v.toFixed(DISPLAY_DECIMALS)}
