@@ -15,6 +15,7 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 - **Inférence** — Génère des noms et observe les prédictions à chaque position
 - **Moteur autograd** — Différentiation automatique intégrée, transparente et éducative
 - **Playground réseau de neurones** — Visualisation Canvas 2D du réseau (forward + backward animés)
+- **Démo complète** — Playground standalone avec vrai autograd, entraînement Adam et génération de noms
 
 ## Différences avec l'original
 
@@ -90,8 +91,9 @@ docs/
 ├── audit-iso.md        # Audit ISO (25010, 40500, 9241-110)
 └── fork-changes.md     # Registre divergences upstream
 
-playground.html         # Visualisation réseau de neurones (5 colonnes, forward+backward)
-playground-full.html    # Visualisation fidèle (13 colonnes, résidus, têtes)
+playground.html           # Visualisation réseau de neurones (5 colonnes, forward+backward)
+playground-full.html      # Visualisation fidèle (13 colonnes, résidus, têtes)
+playground-complete.html  # Démo complète : vrai autograd, entraînement, inférence
 ```
 
 ## Stack technique
@@ -166,6 +168,7 @@ An interactive web application for visualizing and understanding how GPT (Genera
 - **Inference Mode** — Generate text and see predictions as they happen
 - **Custom Autograd Engine** — Built-in automatic differentiation for transparency
 - **Neural Network Playground** — Canvas 2D neural network visualization (animated forward + backward passes)
+- **Complete Demo** — Standalone playground with real autograd, Adam training and name generation
 
 ## Getting Started
 

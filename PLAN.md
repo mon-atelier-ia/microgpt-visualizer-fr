@@ -221,6 +221,7 @@ docs/
 
 playground.html # Visualisation réseau de neurones 5 colonnes, forward+backward animation
 playground-full.html # Visualisation réseau de neurones 13 colonnes fidèle architecture
+playground-complete.html # Démo complète : vrai autograd+Adam, tokenisation→entraînement→inférence
 playground-attention.html # Prototype attention animé (Q·K, softmax, V) — remplacé par BertViz
 playground-bertviz.html # Visualisation BertViz — lignes token↔token, classifieur dynamique de têtes
 playground-pca.html # Prototype PCA scatter plot (points colorés, constellation, animation)
@@ -234,7 +235,7 @@ docs/
 │ ├── 2026-03-01-embeddings-page-vivante-plan.md # Plan d'implémentation
 │ └── 2026-03-03-pca-embeddings.md # Plan PCA scatter plot (8 tasks)
 
-**Total : ~6 900 lignes src (hors data blobs), 44 fichiers source + 24 fichiers test. 133 tests. 5 playgrounds standalone.**
+**Total : ~6 900 lignes src (hors data blobs), 44 fichiers source + 24 fichiers test. 133 tests. 6 playgrounds standalone.**
 
 ### Constats clés
 
@@ -337,6 +338,26 @@ Score global : **4,5/5**. 10 findings retirés (inhérents/hors périmètre), 4 
 - ✅ Animation forward + backward dans `playground.html` (3 phases : forward→pause→backward, orange gradients)
 - ✅ Design system intégré (CSS custom properties, `.btn`, `.explain`, `prefers-reduced-motion`)
 - Prochain : intégrer dans l'app React (`ForwardPassPage` + `TrainingPage`) avec données réelles du modèle
+
+### 9b. Playground complet — cycle de vie intégral — FAIT
+
+Démo standalone Canvas 2D montrant le **voyage complet** du modèle, du zéro absolu à la génération de noms.
+
+- ✅ `playground-complete.html` — ~1 000 lignes, standalone, zéro dépendance
+- ✅ Port fidèle de l'autograd (classe `Val`, backward par tri topologique)
+- ✅ Port fidèle du PRNG (mulberry32), du modèle complet (4 192 params), de l'optimiseur Adam
+- ✅ 8 phases auto-play : architecture → tokenisation → forward → loss → backward → entraînement → inférence → idle
+- ✅ 13 colonnes avec activations réelles (pas de `Math.random()`)
+- ✅ Entraînement réel : 200 étapes, loss ~3.3 → ~1.3, courbe de loss live
+- ✅ Inférence réelle : génération de 3 noms lettre par lettre avec sampling
+- ✅ KV cache multi-token pour attention causale
+- ✅ 34 prénoms (a-z), vocabSize=27
+- ✅ Layout 3 panneaux : info (tokens, phase, architecture) | Canvas NN 13 colonnes | loss chart + entraînement + noms générés
+- ✅ Contrôles manuels : Entraîner ×100, Générer, Réinitialiser, Pause/Reprendre
+- ✅ Thème dark/light, responsive, hover interactif, `prefers-reduced-motion`
+- ✅ Textes explicatifs FR par phase (pédagogiques, cible 10-14 ans)
+
+**Différences vs `playground-full.html`** : `playground-full` utilise des données aléatoires et montre uniquement forward+backward. `playground-complete` porte le vrai moteur et montre le cycle complet de vie du modèle.
 
 ### 11. EmbeddingsPage vivante — FAIT
 

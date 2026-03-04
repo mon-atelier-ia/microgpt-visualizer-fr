@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MicroGPT — Le voyage complet</title>
+<style>
+:root,
+[data-theme="dark"] {
+  --bg: #181816; --surface: #222220; --surface2: #2a2a27;
+  --border: #363632; --border-hover: #4a4a44;
+  --text: #cdc8be; --text-dim: #959082;
+  --blue: #c28b4e; --purple: #a08cb4; --cyan: #6a9f9b;
+  --green: #8aaa6b; --red: #bf6a63; --orange: #c4885c;
+}
+[data-theme="light"] {
+  --bg: #f5f1ea; --surface: #fffdf8; --surface2: #ece8e0;
+  --border: #d6d0c5; --border-hover: #b8b2a6;
+  --text: #2c2a25; --text-dim: #6a655d;
+  --blue: #9c6b30; --purple: #7b5ea0; --cyan: #3a7d78;
+  --green: #527a34; --red: #a04040; --orange: #a06830;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  display: flex; flex-direction: column; align-items: center;
+  min-height: 100vh; padding: 14px;
+  transition: background 0.2s, color 0.2s;
+}
+h1 { font-size: 20px; color: var(--blue); margin-bottom: 2px; }
+.subtitle { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; text-align: center; }
+.controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.btn {
+  padding: 6px 14px; background: var(--blue); color: var(--bg); border: none;
+  border-radius: 6px; font-family: inherit; font-size: 11px; font-weight: bold;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn:hover { filter: brightness(1.15); }
+.btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.btn-secondary { background: var(--border-hover); color: var(--text); }
+.btn-toggle {
+  padding: 4px 10px; background: var(--surface2); color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: 6px; font-family: inherit;
+  font-size: 10px; cursor: pointer; transition: all 0.15s;
+}
+.main-layout { display: flex; gap: 10px; width: 100%; max-width: 1250px; align-items: stretch; }
+.side-panel { width: 175px; min-width: 140px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.panel-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 9px;
+}
+.panel-box h3 { font-size: 10px; color: var(--blue); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 1px; }
+.panel-box .val { font-size: 16px; font-weight: bold; }
+.panel-box .detail { font-size: 10px; color: var(--text-dim); line-height: 1.5; margin-top: 3px; }
+.token-list { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.tok {
+  display: inline-flex; flex-direction: column; align-items: center;
+  padding: 2px 5px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; font-size: 11px; transition: all 0.2s;
+}
+.tok.active { border-color: var(--blue); color: var(--blue); background: var(--surface2); }
+.tok .tid { font-size: 8px; color: var(--text-dim); }
+#nn-canvas {
+  flex: 1; min-width: 280px; height: 520px;
+  border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface); cursor: crosshair;
+}
+#loss-canvas { width: 100%; height: 70px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); }
+.gen-name { font-size: 13px; color: var(--cyan); margin: 1px 0; }
+.progress-bar { width: 100%; height: 4px; background: var(--surface); border-radius: 2px; overflow: hidden; margin-top: 3px; }
+.progress-fill { height: 100%; background: var(--green); transition: width 0.15s; width: 0%; }
+.explain {
+  font-size: 11px; color: var(--text-dim); line-height: 1.7; margin-top: 10px;
+  padding: 8px 12px; background: var(--surface2); border-radius: 6px;
+  border-left: 3px solid var(--blue); max-width: 1250px; width: 100%;
+}
+.explain b { color: var(--cyan); }
+.explain .g { color: var(--green); }
+.explain .r { color: var(--red); }
+.explain .o { color: var(--orange); }
+.explain .p { color: var(--purple); }
+@media (max-width: 860px) {
+  .main-layout { flex-direction: column; align-items: center; }
+  .side-panel { width: 100%; flex-direction: row; flex-wrap: wrap; }
+  .panel-box { flex: 1; min-width: 130px; }
+  #nn-canvas { width: 100%; height: 360px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+<h1>MicroGPT — Le voyage complet</h1>
+<p class="subtitle">De la tokenisation à la génération — 4 192 paramètres, de zéro à l'inférence</p>
+
+<div class="controls">
+  <button class="btn" id="btn-play">▶ Lancer la démo</button>
+  <button class="btn btn-secondary" id="btn-train">Entraîner ×100</button>
+  <button class="btn btn-secondary" id="btn-gen">Générer un nom</button>
+  <button class="btn btn-secondary" id="btn-reset">Réinitialiser</button>
+  <button class="btn-toggle" id="btn-theme">Thème clair</button>
+</div>
+
+<div class="main-layout">
+  <div class="side-panel" id="left-panel">
+    <div class="panel-box">
+      <h3>Nom</h3>
+      <div class="val" id="name-display">—</div>
+      <div id="token-container" class="detail"></div>
+    </div>
+    <div class="panel-box">
+      <h3>Phase</h3>
+      <div class="val" id="phase-display" style="font-size:13px">En attente</div>
+      <div class="detail" id="phase-detail"></div>
+    </div>
+    <div class="panel-box">
+      <h3>Architecture</h3>
+      <div class="detail">27 tokens (a–z + ⟨S⟩)<br>16 dimensions<br>4 têtes d'attention<br>1 couche transformer<br>4 192 paramètres</div>
+    </div>
+  </div>
+
+  <canvas id="nn-canvas"></canvas>
+
+  <div class="side-panel" id="right-panel">
+    <div class="panel-box">
+      <h3>Perte (Loss)</h3>
+      <canvas id="loss-canvas"></canvas>
+      <div class="detail" id="loss-display" style="margin-top:3px">—</div>
+    </div>
+    <div class="panel-box">
+      <h3>Entraînement</h3>
+      <div class="val" id="step-display" style="font-size:13px">Étape 0</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+    <div class="panel-box">
+      <h3>Noms générés</h3>
+      <div class="detail" id="gen-display">Aucun — entraîne d'abord !</div>
+    </div>
+  </div>
+</div>
+
+<div class="explain" id="explain">
+  <b>Bienvenue !</b> Ce playground montre le voyage complet d'un micro-GPT :
+  de la tokenisation d'un nom jusqu'à la génération de nouveaux noms,
+  en passant par l'entraînement réel (vrai autograd, vrai Adam).
+  Clique sur <b>▶ Lancer la démo</b> pour voir les 8 étapes.
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// 1. AUTOGRAD ENGINE (port fidèle de autograd.ts)
+// ═══════════════════════════════════════════════════════════════════
+class Val {
+  constructor(data, children, localGrads) {
+    this.data = data;
+    this.grad = 0;
+    this._c = children || [];
+    this._g = localGrads || [];
+  }
+  add(o) { const b = o instanceof Val ? o : new Val(o); return new Val(this.data + b.data, [this, b], [1, 1]); }
+  mul(o) { const b = o instanceof Val ? o : new Val(o); return new Val(this.data * b.data, [this, b], [b.data, this.data]); }
+  pow(n) { return new Val(this.data ** n, [this], [n * this.data ** (n - 1)]); }
+  log() { return new Val(Math.log(this.data), [this], [1 / this.data]); }
+  exp() { const e = Math.exp(this.data); return new Val(e, [this], [e]); }
+  relu() { return new Val(Math.max(0, this.data), [this], [this.data > 0 ? 1 : 0]); }
+  neg() { return this.mul(-1); }
+  sub(o) { const b = o instanceof Val ? o : new Val(o); return this.add(b.neg()); }
+  div(o) { const b = o instanceof Val ? o : new Val(o); return this.mul(b.pow(-1)); }
+  backward() {
+    const topo = [], vis = new Set();
+    const build = (v) => { if (vis.has(v)) return; vis.add(v); for (const c of v._c) build(c); topo.push(v); };
+    build(this);
+    this.grad = 1;
+    for (let i = topo.length - 1; i >= 0; i--) {
+      const v = topo[i];
+      for (let j = 0; j < v._c.length; j++) v._c[j].grad += v._g[j] * v.grad;
+    }
+  }
+}
+function vAdd(a, b) { return a.map((v, i) => v.add(b[i])); }
+function vSum(a) { let s = a[0]; for (let i = 1; i < a.length; i++) s = s.add(a[i]); return s; }
+
+// ═══════════════════════════════════════════════════════════════════
+// 2. PRNG (port fidèle de random.ts)
+// ═══════════════════════════════════════════════════════════════════
+function createRng(seed) {
+  let a = seed;
+  return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function gaussRandom(rng) { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function shuffle(arr, rng) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } }
+
+// ═══════════════════════════════════════════════════════════════════
+// 3. MODÈLE (port fidèle de model.ts)
+// ═══════════════════════════════════════════════════════════════════
+const N_EMBD = 16, N_HEAD = 4, N_LAYER = 1, BLOCK_SIZE = 16, HEAD_DIM = N_EMBD / N_HEAD;
+const NAMES = "emma,olivia,ava,sophia,mia,luna,ella,chloe,aria,lily,zoey,nora,riley,layla,maya,elena,anna,sara,lena,nina,leo,max,noah,adam,alex,ruby,jade,hugo,felix,gavin,quinn,wendy,kate,kirk".split(",");
+const uchars = [...new Set(NAMES.join(""))].sort();
+const BOS = uchars.length;
+const vocabSize = uchars.length + 1;
+const charToId = {}; uchars.forEach((c, i) => charToId[c] = i);
+function tokenize(name) { return [BOS, ...name.split("").map(c => charToId[c] ?? 0), BOS]; }
+function tokenLabel(id) { return id < uchars.length ? uchars[id] : "⟨S⟩"; }
+
+function makeMatrix(nout, nin, rng, std) {
+  std = std || 0.08;
+  return Array.from({ length: nout }, () => Array.from({ length: nin }, () => new Val(gaussRandom(rng) * std)));
+}
+function createModel() {
+  const rng = createRng(42);
+  const docs = [...NAMES]; shuffle(docs, rng);
+  const sd = { wte: makeMatrix(vocabSize, N_EMBD, rng), wpe: makeMatrix(BLOCK_SIZE, N_EMBD, rng), lm_head: makeMatrix(vocabSize, N_EMBD, rng) };
+  for (let i = 0; i < N_LAYER; i++) {
+    sd["layer" + i + ".attn_wq"] = makeMatrix(N_EMBD, N_EMBD, rng);
+    sd["layer" + i + ".attn_wk"] = makeMatrix(N_EMBD, N_EMBD, rng);
+    sd["layer" + i + ".attn_wv"] = makeMatrix(N_EMBD, N_EMBD, rng);
+    sd["layer" + i + ".attn_wo"] = makeMatrix(N_EMBD, N_EMBD, rng);
+    sd["layer" + i + ".mlp_fc1"] = makeMatrix(4 * N_EMBD, N_EMBD, rng);
+    sd["layer" + i + ".mlp_fc2"] = makeMatrix(N_EMBD, 4 * N_EMBD, rng);
+  }
+  const params = [];
+  for (const key of Object.keys(sd)) for (const row of sd[key]) for (const p of row) params.push(p);
+  return { stateDict: sd, params, docs, rng, adamM: new Float64Array(params.length), adamV: new Float64Array(params.length), totalStep: 0, lossHistory: [] };
+}
+function linear(x, w) { return w.map(wo => vSum(wo.map((wi, i) => wi.mul(x[i])))); }
+function softmax(logits) {
+  const mx = Math.max(...logits.map(v => v.data));
+  const exps = logits.map(v => v.sub(mx).exp());
+  const tot = vSum(exps);
+  return exps.map(e => e.div(tot));
+}
+function rmsnorm(x) {
+  const ms = vSum(x.map(xi => xi.mul(xi))).div(x.length);
+  return x.map(xi => xi.mul(ms.add(1e-5).pow(-0.5)));
+}
+
+function gptForward(tokenId, posId, keys, values, state, doTrace) {
+  const sd = state.stateDict;
+  const tokEmb = sd.wte[tokenId], posEmb = sd.wpe[posId];
+  let x = vAdd(tokEmb, posEmb);
+  const t = doTrace ? { tokenId, posId, tokEmb: tokEmb.map(v => v.data), posEmb: posEmb.map(v => v.data), combined: x.map(v => v.data) } : {};
+  x = rmsnorm(x);
+  if (doTrace) t.afterNorm = x.map(v => v.data);
+  for (let li = 0; li < N_LAYER; li++) {
+    const xRes = x; x = rmsnorm(x);
+    const q = linear(x, sd["layer" + li + ".attn_wq"]);
+    const k = linear(x, sd["layer" + li + ".attn_wk"]);
+    const v = linear(x, sd["layer" + li + ".attn_wv"]);
+    keys[li].push(k); values[li].push(v);
+    if (doTrace) { t.q = q.map(v => v.data); t.k = k.map(v => v.data); t.v = v.map(v => v.data); }
+    const xAttn = [], allW = [];
+    for (let h = 0; h < N_HEAD; h++) {
+      const hs = h * HEAD_DIM;
+      const qH = q.slice(hs, hs + HEAD_DIM);
+      const kH = keys[li].map(ki => ki.slice(hs, hs + HEAD_DIM));
+      const vH = values[li].map(vi => vi.slice(hs, hs + HEAD_DIM));
+      const scores = kH.map(kht => vSum(qH.map((qj, j) => qj.mul(kht[j]))).div(Math.sqrt(HEAD_DIM)));
+      const aw = softmax(scores);
+      if (doTrace) allW.push(aw.map(w => w.data));
+      for (let j = 0; j < HEAD_DIM; j++) xAttn.push(vSum(aw.map((w, ti) => w.mul(vH[ti][j]))));
+    }
+    if (doTrace) t.attnWeights = allW;
+    x = linear(xAttn, sd["layer" + li + ".attn_wo"]);
+    x = vAdd(x, xRes);
+    if (doTrace) t.afterAttn = x.map(v => v.data);
+    const xRes2 = x; x = rmsnorm(x);
+    x = linear(x, sd["layer" + li + ".mlp_fc1"]);
+    if (doTrace) { t.mlpHidden = x.map(v => v.data); t.mlpActiveMask = x.map(v => v.data > 0); }
+    x = x.map(xi => xi.relu());
+    x = linear(x, sd["layer" + li + ".mlp_fc2"]);
+    x = vAdd(x, xRes2);
+    if (doTrace) t.afterMlp = x.map(v => v.data);
+  }
+  const logits = linear(x, sd.lm_head);
+  if (doTrace) { t.logits = logits.map(v => v.data); const p = softmax(logits); t.probs = p.map(v => v.data); }
+  return { logits, trace: doTrace ? t : undefined };
+}
+
+const LR0 = 0.01, BETA1 = 0.85, BETA2 = 0.99, EPS_ADAM = 1e-8;
+function trainStep(state, targetSteps) {
+  const doc = state.docs[state.totalStep % state.docs.length];
+  const tokens = tokenize(doc);
+  const n = Math.min(BLOCK_SIZE, tokens.length - 1);
+  const ks = Array.from({ length: N_LAYER }, () => []);
+  const vs = Array.from({ length: N_LAYER }, () => []);
+  const losses = [];
+  for (let pos = 0; pos < n; pos++) {
+    const { logits } = gptForward(tokens[pos], pos, ks, vs, state);
+    const probs = softmax(logits);
+    losses.push(probs[tokens[pos + 1]].log().neg());
+  }
+  const loss = vSum(losses).div(n);
+  loss.backward();
+  const lr = LR0 * (1 - state.totalStep / targetSteps);
+  for (let i = 0; i < state.params.length; i++) {
+    state.adamM[i] = BETA1 * state.adamM[i] + (1 - BETA1) * state.params[i].grad;
+    state.adamV[i] = BETA2 * state.adamV[i] + (1 - BETA2) * state.params[i].grad ** 2;
+    const mH = state.adamM[i] / (1 - BETA1 ** (state.totalStep + 1));
+    const vH = state.adamV[i] / (1 - BETA2 ** (state.totalStep + 1));
+    state.params[i].data -= lr * mH / (Math.sqrt(vH) + EPS_ADAM);
+    state.params[i].grad = 0;
+  }
+  state.totalStep++;
+  state.lossHistory.push(loss.data);
+  return { loss: loss.data, doc };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 4. VISUALIZATION — 13 colonnes fidèles à architecture-nn.md
+// ═══════════════════════════════════════════════════════════════════
+const V_SIZE = vocabSize;
+const COLS = [
+  { n: 16,     label: "Token\nEmb",  xFrac: 0.000, stage: 0, color: "cyan",   sec: "Embedding" },
+  { n: 16,     label: "Pos\nEmb",    xFrac: 0.050, stage: 0, color: "cyan",   sec: "Embedding" },
+  { n: 16,     label: "Add\n+Norm",  xFrac: 0.125, stage: 1, color: "text",   sec: "" },
+  { n: 16,     label: "Q",           xFrac: 0.205, stage: 2, color: "purple", sec: "Attention" },
+  { n: 16,     label: "K",           xFrac: 0.250, stage: 2, color: "purple", sec: "Attention" },
+  { n: 16,     label: "V",           xFrac: 0.295, stage: 2, color: "purple", sec: "Attention" },
+  { n: 16,     label: "4 Têtes",     xFrac: 0.375, stage: 3, color: "purple", sec: "Attention", headGroups: 4 },
+  { n: 16,     label: "Après\nAttn", xFrac: 0.460, stage: 4, color: "purple", sec: "Attention" },
+  { n: 64,     label: "MLP\n(×4)",   xFrac: 0.560, stage: 5, color: "orange", sec: "MLP" },
+  { n: 64,     label: "ReLU",        xFrac: 0.645, stage: 6, color: "orange", sec: "MLP" },
+  { n: 16,     label: "Après\nMLP",  xFrac: 0.735, stage: 7, color: "orange", sec: "MLP" },
+  { n: V_SIZE, label: "Logits",      xFrac: 0.870, stage: 8, color: "blue",   sec: "Sortie" },
+  { n: V_SIZE, label: "Probs",       xFrac: 1.000, stage: 9, color: "blue",   sec: "Sortie" },
+];
+const EDGES = [
+  { from: 0,  to: 2,  type: "one2one" }, { from: 1,  to: 2,  type: "one2one" },
+  { from: 2,  to: 3,  type: "dense" },   { from: 2,  to: 4,  type: "dense" },
+  { from: 2,  to: 5,  type: "dense" },   { from: 3,  to: 6,  type: "one2one" },
+  { from: 4,  to: 6,  type: "one2one" }, { from: 5,  to: 6,  type: "one2one" },
+  { from: 6,  to: 7,  type: "dense" },   { from: 7,  to: 8,  type: "dense" },
+  { from: 8,  to: 9,  type: "one2one" }, { from: 9,  to: 10, type: "dense" },
+  { from: 10, to: 11, type: "dense" },   { from: 11, to: 12, type: "one2one" },
+];
+const RESIDUALS = [
+  { from: 2, to: 7,  label: "+rés₁" },
+  { from: 7, to: 10, label: "+rés₂" },
+];
+const MAX_STAGE = Math.max(...COLS.map(c => c.stage));
+const STAGE_DELAY = 160, FADE_DUR = 220;
+const FWD_DURATION = MAX_STAGE * STAGE_DELAY + FADE_DUR;
+const BWD_DURATION = FWD_DURATION;
+
+// ═══════════════════════════════════════════════════════════════════
+// 5. STATE
+// ═══════════════════════════════════════════════════════════════════
+let model = createModel();
+let currentTrace = null;
+let simGradients = null;
+let hoverNeuron = null;
+let neurons = [];
+let dpr = 1;
+
+// Phase state
+let phase = "waiting"; // waiting, intro, tokenize, forward, loss, backward, train, infer, idle
+let phaseStart = 0;
+let autoPlay = false;
+let trainTarget = 0;
+let demoName = "emma";
+let demoTokens = [];
+
+// Infer state
+let inferKeys, inferVals, inferTid, inferPos, inferName, inferNames, inferDone, inferLastTime;
+
+// DOM refs
+const nnCanvas = document.getElementById("nn-canvas");
+const nnCtx = nnCanvas.getContext("2d");
+const lossCanvas = document.getElementById("loss-canvas");
+const lossCtx = lossCanvas.getContext("2d");
+
+// ═══════════════════════════════════════════════════════════════════
+// 6. COLOR HELPERS
+// ═══════════════════════════════════════════════════════════════════
+let _rgb = {};
+function getC(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function parseRGB(c) {
+  if (c.startsWith("#")) { const h = c.slice(1); return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; }
+  const m = c.match(/(\d+)/g); return m ? m.map(Number) : [128,128,128];
+}
+function refreshColors() {
+  for (const k of ["bg","surface","text","textDim","blue","purple","cyan","green","red","orange","border"]) {
+    const v = k === "bg" ? "--bg" : k === "textDim" ? "--text-dim" : "--" + k;
+    _rgb[k] = parseRGB(getC(v));
+  }
+}
+function valToColor(v, alpha) {
+  const t = Math.max(-1, Math.min(1, v));
+  const src = t < 0 ? _rgb.red : _rgb.green;
+  const neu = _rgb.surface;
+  const a = Math.abs(t);
+  return `rgba(${Math.round(neu[0]*(1-a)+src[0]*a)},${Math.round(neu[1]*(1-a)+src[1]*a)},${Math.round(neu[2]*(1-a)+src[2]*a)},${alpha})`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 7. NEURON POSITIONS
+// ═══════════════════════════════════════════════════════════════════
+function computePositions(w, h) {
+  const padX = 42, padY = 40, labelH = 30;
+  const usableW = w - padX * 2, usableH = h - padY - labelH;
+  neurons = COLS.map((col) => {
+    const x = padX + col.xFrac * usableW;
+    const maxR = col.n <= 20 ? 6 : col.n <= 30 ? 4 : 2.5;
+    if (col.headGroups) {
+      const gs = col.n / col.headGroups, sp = maxR * 3, gap = maxR * 5;
+      const totalH = (col.n - 1) * sp + (col.headGroups - 1) * gap;
+      let cy = padY + (usableH - totalH) / 2;
+      const res = [];
+      for (let g = 0; g < col.headGroups; g++) {
+        for (let gi = 0; gi < gs; gi++) { res.push({ x, y: cy, r: maxR }); cy += sp; }
+        if (g < col.headGroups - 1) cy += gap;
+      }
+      return res;
+    }
+    const spacing = Math.min(usableH / (col.n + 1), maxR * 3.5);
+    const totalH = spacing * (col.n - 1);
+    const startY = padY + (usableH - totalH) / 2;
+    return Array.from({ length: col.n }, (_, ni) => ({ x, y: startY + ni * spacing, r: maxR }));
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 8. TRACE → ACTIVATIONS
+// ═══════════════════════════════════════════════════════════════════
+function traceToActs(tr) {
+  if (!tr) return COLS.map(c => new Array(c.n).fill(0));
+  const relu = tr.mlpHidden.map((v, i) => tr.mlpActiveMask[i] ? v : 0);
+  return [tr.tokEmb, tr.posEmb, tr.combined, tr.q, tr.k, tr.v, tr.q /*heads proxy*/, tr.afterAttn, tr.mlpHidden, relu, tr.afterMlp, tr.logits, tr.probs];
+}
+function runForwardTrace(name) {
+  const tokens = tokenize(name);
+  const ks = Array.from({ length: N_LAYER }, () => []);
+  const vs = Array.from({ length: N_LAYER }, () => []);
+  let last = null;
+  for (let pos = 0; pos < tokens.length - 1; pos++) {
+    const r = gptForward(tokens[pos], pos, ks, vs, model, pos === tokens.length - 2);
+    if (r.trace) last = r.trace;
+  }
+  return last;
+}
+function simulateGrads() {
+  return COLS.map((col, ci) => {
+    const scale = (col.stage + 1) / (MAX_STAGE + 1);
+    return Array.from({ length: col.n }, () => (Math.random() * 2 - 1) * scale);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 9. DRAW NN CANVAS
+// ═══════════════════════════════════════════════════════════════════
+function fwdStageP(stage, elapsed) { return Math.max(0, Math.min(1, (elapsed - stage * STAGE_DELAY) / FADE_DUR)); }
+function bwdStageP(stage, elapsed) { return Math.max(0, Math.min(1, (elapsed - (MAX_STAGE - stage) * STAGE_DELAY) / FADE_DUR)); }
+
+function drawNN(fwdElapsed, bwdElapsed) {
+  const w = nnCanvas.clientWidth, h = nnCanvas.clientHeight;
+  if (w === 0 || h === 0) return;
+  dpr = window.devicePixelRatio || 1;
+  nnCanvas.width = w * dpr; nnCanvas.height = h * dpr;
+  nnCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  refreshColors();
+  computePositions(w, h);
+
+  const acts = traceToActs(currentTrace);
+  const tr = _rgb.text, or = _rgb.orange, pr = _rgb.purple;
+  const GHOST = 0.06;
+
+  function fP(stage) {
+    if (fwdElapsed === undefined || fwdElapsed === null) return GHOST;
+    if (fwdElapsed >= 99999) return 1;
+    return Math.max(GHOST, fwdStageP(stage, fwdElapsed));
+  }
+  function bP(stage) {
+    if (!bwdElapsed) return 0;
+    return bwdStageP(stage, bwdElapsed);
+  }
+
+  nnCtx.clearRect(0, 0, w, h);
+  nnCtx.fillStyle = getC("--surface");
+  nnCtx.fillRect(0, 0, w, h);
+
+  // Phase indicator
+  if (fwdElapsed !== undefined && fwdElapsed !== null && fwdElapsed < 99999) {
+    nnCtx.save(); nnCtx.font = "bold 12px monospace"; nnCtx.textAlign = "right";
+    nnCtx.fillStyle = getC("--green");
+    nnCtx.fillText("→  Forward", w - 10, 14);
+    nnCtx.restore();
+  }
+  if (bwdElapsed > 0) {
+    nnCtx.save(); nnCtx.font = "bold 12px monospace"; nnCtx.textAlign = "right";
+    nnCtx.fillStyle = getC("--orange");
+    nnCtx.fillText("←  Backward", w - 10, 14);
+    nnCtx.restore();
+  }
+
+  // Section labels
+  const secs = {};
+  COLS.forEach((col, ci) => {
+    if (!col.sec) return;
+    if (!secs[col.sec]) secs[col.sec] = { minX: Infinity, maxX: -Infinity, color: col.color };
+    const cx = neurons[ci][0].x;
+    secs[col.sec].minX = Math.min(secs[col.sec].minX, cx);
+    secs[col.sec].maxX = Math.max(secs[col.sec].maxX, cx);
+  });
+  nnCtx.textAlign = "center"; nnCtx.font = "10px monospace";
+  for (const [name, sec] of Object.entries(secs)) {
+    const mx = (sec.minX + sec.maxX) / 2;
+    const rgb = _rgb[sec.color] || _rgb.textDim;
+    nnCtx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.7)`;
+    nnCtx.fillText(name, mx, 14);
+    nnCtx.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.25)`;
+    nnCtx.lineWidth = 1; nnCtx.beginPath(); nnCtx.moveTo(sec.minX - 8, 19); nnCtx.lineTo(sec.maxX + 8, 19); nnCtx.stroke();
+  }
+
+  // Draw connections
+  for (const edge of EDGES) {
+    const fl = neurons[edge.from], tl = neurons[edge.to];
+    const p = Math.min(fP(COLS[edge.from].stage), fP(COLS[edge.to].stage));
+    const bp = Math.min(bP(COLS[edge.from].stage), bP(COLS[edge.to].stage));
+    if (edge.type === "one2one") {
+      const cnt = Math.min(fl.length, tl.length);
+      for (let i = 0; i < cnt; i++) {
+        let alpha = 0.2 * p, lw = 0.8, colored = false;
+        if (hoverNeuron) {
+          if ((hoverNeuron.layer === edge.from && hoverNeuron.index === i) || (hoverNeuron.layer === edge.to && hoverNeuron.index === i)) {
+            alpha = 0.5 * p; lw = 1.6; colored = true;
+          }
+        }
+        if (alpha > 0.005) {
+          nnCtx.strokeStyle = colored ? valToColor((acts[edge.from][i] + acts[edge.to][i]) / 2, alpha) : `rgba(${tr[0]},${tr[1]},${tr[2]},${alpha})`;
+          nnCtx.lineWidth = lw; nnCtx.beginPath(); nnCtx.moveTo(fl[i].x, fl[i].y); nnCtx.lineTo(tl[i].x, tl[i].y); nnCtx.stroke();
+        }
+        if (bp > 0 && simGradients) {
+          const gm = (Math.abs(simGradients[edge.from][i]) + Math.abs(simGradients[edge.to][i])) / 2;
+          const ba = 0.3 * bp * (0.3 + gm * 0.7);
+          if (ba > 0.01) { nnCtx.strokeStyle = `rgba(${or[0]},${or[1]},${or[2]},${ba})`; nnCtx.lineWidth = 1.2; nnCtx.beginPath(); nnCtx.moveTo(fl[i].x, fl[i].y); nnCtx.lineTo(tl[i].x, tl[i].y); nnCtx.stroke(); }
+        }
+      }
+    } else {
+      // Dense batch
+      const total = fl.length * tl.length;
+      const baseA = total > 800 ? 0.012 : total > 300 ? 0.025 : 0.04;
+      const alpha = baseA * p;
+      if (alpha > 0.003) {
+        nnCtx.strokeStyle = `rgba(${tr[0]},${tr[1]},${tr[2]},${alpha})`;
+        nnCtx.lineWidth = 0.4; nnCtx.beginPath();
+        for (let fi = 0; fi < fl.length; fi++) {
+          for (let ti = 0; ti < tl.length; ti++) {
+            if (hoverNeuron && ((hoverNeuron.layer === edge.from && hoverNeuron.index === fi) || (hoverNeuron.layer === edge.to && hoverNeuron.index === ti))) continue;
+            nnCtx.moveTo(fl[fi].x, fl[fi].y); nnCtx.lineTo(tl[ti].x, tl[ti].y);
+          }
+        }
+        nnCtx.stroke();
+      }
+      // Hover highlight (colored on top)
+      if (hoverNeuron && p > 0.01) {
+        const hl = hoverNeuron.layer, hi = hoverNeuron.index;
+        if (hl === edge.from) {
+          for (let ti = 0; ti < tl.length; ti++) {
+            nnCtx.strokeStyle = valToColor((acts[hl][hi] + acts[edge.to][ti]) / 2, 0.4 * p);
+            nnCtx.lineWidth = 1.1; nnCtx.beginPath(); nnCtx.moveTo(fl[hi].x, fl[hi].y); nnCtx.lineTo(tl[ti].x, tl[ti].y); nnCtx.stroke();
+          }
+        } else if (hl === edge.to) {
+          for (let fi = 0; fi < fl.length; fi++) {
+            nnCtx.strokeStyle = valToColor((acts[edge.from][fi] + acts[hl][hi]) / 2, 0.4 * p);
+            nnCtx.lineWidth = 1.1; nnCtx.beginPath(); nnCtx.moveTo(fl[fi].x, fl[fi].y); nnCtx.lineTo(tl[hi].x, tl[hi].y); nnCtx.stroke();
+          }
+        }
+      }
+      // Backward overlay (dense batch)
+      if (bp > 0) {
+        const ba = baseA * 4 * bp;
+        if (ba > 0.003) {
+          nnCtx.strokeStyle = `rgba(${or[0]},${or[1]},${or[2]},${ba})`;
+          nnCtx.lineWidth = 0.4; nnCtx.beginPath();
+          for (let fi = 0; fi < fl.length; fi++) for (let ti = 0; ti < tl.length; ti++) { nnCtx.moveTo(fl[fi].x, fl[fi].y); nnCtx.lineTo(tl[ti].x, tl[ti].y); }
+          nnCtx.stroke();
+        }
+      }
+    }
+  }
+
+  // Residual arcs
+  for (const res of RESIDUALS) {
+    const p = Math.min(fP(COLS[res.from].stage), fP(COLS[res.to].stage));
+    if (p < 0.02) continue;
+    const fN = neurons[res.from], tN = neurons[res.to];
+    const x1 = fN[0].x, x2 = tN[0].x, y1 = fN[0].y - fN[0].r - 2, y2 = tN[0].y - tN[0].r - 2;
+    const cpX = (x1 + x2) / 2, cpY = Math.min(y1, y2) - 28;
+    nnCtx.setLineDash([4, 4]);
+    nnCtx.strokeStyle = `rgba(${pr[0]},${pr[1]},${pr[2]},${0.5 * p})`;
+    nnCtx.lineWidth = 1.5; nnCtx.beginPath(); nnCtx.moveTo(x1, y1); nnCtx.quadraticCurveTo(cpX, cpY, x2, y2); nnCtx.stroke();
+    nnCtx.setLineDash([]);
+    const mY = 0.25 * y1 + 0.5 * cpY + 0.25 * y2;
+    nnCtx.fillStyle = `rgba(${pr[0]},${pr[1]},${pr[2]},${0.7 * p})`;
+    nnCtx.font = "bold 10px monospace"; nnCtx.textAlign = "center";
+    nnCtx.fillText(res.label, cpX, mY - 2);
+  }
+
+  // Draw neurons
+  for (let ci = 0; ci < COLS.length; ci++) {
+    const p = fP(COLS[ci].stage);
+    const bp = bP(COLS[ci].stage);
+    const layer = neurons[ci];
+    for (let ni = 0; ni < layer.length; ni++) {
+      const n = layer[ni], val = acts[ci][ni] || 0;
+      const isMlpOff = ci === 8 && currentTrace && currentTrace.mlpActiveMask && !currentTrace.mlpActiveMask[ni];
+      // Forward glow
+      if (p > 0.5 && p < 1 && Math.abs(val) > 0.3) {
+        const ga = (1 - Math.abs(p - 0.75) * 4) * 0.3;
+        if (ga > 0) { nnCtx.beginPath(); nnCtx.arc(n.x, n.y, n.r * 2.5, 0, Math.PI * 2); nnCtx.fillStyle = valToColor(val, ga); nnCtx.fill(); }
+      }
+      // Backward glow
+      if (bp > 0.3 && bp < 1 && simGradients) {
+        const gv = Math.abs(simGradients[ci][ni]);
+        if (gv > 0.2) {
+          const ga = (1 - Math.abs(bp - 0.65) * 3) * 0.35 * gv;
+          if (ga > 0) { nnCtx.beginPath(); nnCtx.arc(n.x, n.y, n.r * 2.8, 0, Math.PI * 2); nnCtx.fillStyle = `rgba(${or[0]},${or[1]},${or[2]},${ga})`; nnCtx.fill(); }
+        }
+      }
+      // Circle
+      nnCtx.beginPath(); nnCtx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      const fa = p * 0.85;
+      if (isMlpOff) { nnCtx.fillStyle = `rgba(${_rgb.surface[0]},${_rgb.surface[1]},${_rgb.surface[2]},${fa * 0.3})`; }
+      else if (Math.abs(val) < 0.05) { nnCtx.fillStyle = `rgba(${tr[0]},${tr[1]},${tr[2]},${fa * 0.12})`; }
+      else { nnCtx.fillStyle = valToColor(val, fa); }
+      nnCtx.fill();
+      // Stroke
+      const isHov = hoverNeuron && hoverNeuron.layer === ci && hoverNeuron.index === ni;
+      nnCtx.strokeStyle = isHov ? getC("--blue") : `rgba(${tr[0]},${tr[1]},${tr[2]},${0.3 + p * 0.4})`;
+      nnCtx.lineWidth = isHov ? 2.5 : 0.8;
+      nnCtx.stroke();
+      // Backward ring
+      if (bp > 0 && simGradients) {
+        const gv = Math.abs(simGradients[ci][ni]);
+        const ra = bp * 0.9 * Math.min(1, gv + 0.3);
+        nnCtx.beginPath(); nnCtx.arc(n.x, n.y, n.r + 2, 0, Math.PI * 2);
+        nnCtx.strokeStyle = `rgba(${or[0]},${or[1]},${or[2]},${ra})`;
+        nnCtx.lineWidth = 1.5 + gv * 2; nnCtx.stroke();
+      }
+    }
+  }
+
+  // Head brackets
+  if (neurons[6] && neurons[6].length === 16) {
+    const hp = fP(COLS[6].stage);
+    if (hp > 0.1) {
+      const hN = neurons[6];
+      nnCtx.font = "9px monospace"; nnCtx.textAlign = "right";
+      for (let g = 0; g < 4; g++) {
+        const f = hN[g * 4], l = hN[g * 4 + 3], bx = f.x - f.r - 5;
+        nnCtx.strokeStyle = `rgba(${pr[0]},${pr[1]},${pr[2]},${0.35 * hp})`;
+        nnCtx.lineWidth = 0.8; nnCtx.beginPath();
+        nnCtx.moveTo(bx, f.y); nnCtx.lineTo(bx - 3, f.y); nnCtx.lineTo(bx - 3, l.y); nnCtx.lineTo(bx, l.y); nnCtx.stroke();
+        nnCtx.fillStyle = `rgba(${pr[0]},${pr[1]},${pr[2]},${0.5 * hp})`;
+        nnCtx.fillText("H" + g, bx - 5, (f.y + l.y) / 2 + 3);
+      }
+    }
+  }
+
+  // Column labels
+  nnCtx.textAlign = "center"; nnCtx.font = "10px monospace";
+  const labelY = h - 8;
+  for (let ci = 0; ci < COLS.length; ci++) {
+    if (!neurons[ci] || !neurons[ci].length) continue;
+    const x = neurons[ci][0].x;
+    const rgb = _rgb[COLS[ci].color] || _rgb.text;
+    const lines = COLS[ci].label.split("\n");
+    lines.forEach((line, i) => {
+      nnCtx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${i === 0 ? 0.9 : 0.55})`;
+      nnCtx.fillText(line, x, labelY + i * 12 - (lines.length - 1) * 6);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 10. DRAW LOSS CHART
+// ═══════════════════════════════════════════════════════════════════
+function drawLossChart() {
+  const w = lossCanvas.clientWidth, h = lossCanvas.clientHeight;
+  if (w === 0) return;
+  const d = window.devicePixelRatio || 1;
+  lossCanvas.width = w * d; lossCanvas.height = h * d;
+  lossCtx.setTransform(d, 0, 0, d, 0, 0);
+  lossCtx.clearRect(0, 0, w, h);
+  lossCtx.fillStyle = getC("--surface"); lossCtx.fillRect(0, 0, w, h);
+  const hist = model.lossHistory;
+  if (hist.length < 2) { lossCtx.fillStyle = getC("--text-dim"); lossCtx.font = "10px monospace"; lossCtx.textAlign = "center"; lossCtx.fillText("Aucune donnée", w/2, h/2 + 3); return; }
+  const pad = 4;
+  const maxL = Math.max(...hist.slice(0, 10), 4);
+  const minL = Math.max(0, Math.min(...hist) - 0.2);
+  lossCtx.strokeStyle = getC("--green"); lossCtx.lineWidth = 1.5; lossCtx.beginPath();
+  for (let i = 0; i < hist.length; i++) {
+    const x = pad + (i / (hist.length - 1)) * (w - pad * 2);
+    const y = pad + (1 - (hist[i] - minL) / (maxL - minL)) * (h - pad * 2);
+    if (i === 0) lossCtx.moveTo(x, y); else lossCtx.lineTo(x, y);
+  }
+  lossCtx.stroke();
+  // Latest value
+  const last = hist[hist.length - 1];
+  lossCtx.fillStyle = getC("--text"); lossCtx.font = "bold 10px monospace"; lossCtx.textAlign = "right";
+  lossCtx.fillText(last.toFixed(2), w - pad, pad + 10);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 11. PHASE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════
+const EXPLAIN_TEXTS = {
+  waiting: `<b>Bienvenue !</b> Ce playground montre le voyage complet d'un micro-GPT : de la tokenisation à la génération. Le moteur autograd et l'optimiseur Adam sont portés fidèlement — c'est du <b>vrai entraînement</b>. Clique sur <b>▶ Lancer la démo</b>.`,
+  intro: `<b>L'architecture</b> — 13 colonnes représentent les 13 étapes du calcul. De gauche à droite : <b class="p">Embedding</b> → <b class="p">Attention</b> (4 têtes) → <b class="o">MLP</b> → <b>Sortie</b>. Les arcs pointillés <span class="p">violets</span> sont les connexions résiduelles (skip).`,
+  tokenize: `<b>Tokenisation</b> — Chaque lettre devient un nombre (token). Le modèle ne comprend que des nombres : <b>a=0, b=1, … z=25, ⟨S⟩=26</b>. Le token spécial ⟨S⟩ marque le début et la fin de chaque nom.`,
+  forward: `<b>Propagation avant</b> — Le signal traverse les 13 couches de gauche à droite. <span class="g">Vert = valeur positive</span>, <span class="r">rouge = négative</span>. À la fin : des probabilités pour le prochain token.`,
+  loss: `<b>Calcul de la perte</b> — Le modèle a prédit une distribution de probabilités. On compare avec la vraie réponse. Plus la probabilité du bon token est faible, plus la <b>perte</b> (loss) est élevée. Avant l'entraînement, c'est quasi du hasard.`,
+  backward: `<b>Rétropropagation</b> — Le signal d'erreur remonte de droite à gauche (<span class="o">orange</span>). Chaque poids reçoit son « blâme » : de combien devrait-il bouger pour réduire l'erreur ? C'est l'autograd.`,
+  train: `<b>Entraînement</b> — Le modèle répète le cycle forward → loss → backward → mise à jour (Adam). La courbe de perte descend : le modèle <b>apprend</b> à prédire les prochaines lettres des prénoms.`,
+  infer: `<b>Inférence</b> — Le modèle entraîné génère de nouveaux noms. À chaque position, il calcule les probabilités et <b>échantillonne</b> un token. Le nom se construit lettre par lettre jusqu'au token ⟨S⟩ (fin).`,
+  idle: `<b>Démo terminée !</b> Explore le réseau (survole les neurones), entraîne davantage (<b>Entraîner ×100</b>), ou génère de nouveaux noms (<b>Générer</b>). Réinitialise pour tout recommencer.`,
+};
+
+function setPhase(p) {
+  phase = p; phaseStart = performance.now();
+  document.getElementById("phase-display").textContent = { waiting: "En attente", intro: "Architecture", tokenize: "Tokenisation", forward: "Forward →", loss: "Perte", backward: "← Backward", train: "Entraînement", infer: "Inférence", idle: "Terminé ✓" }[p] || p;
+  document.getElementById("explain").innerHTML = EXPLAIN_TEXTS[p] || "";
+
+  if (p === "tokenize") {
+    demoName = NAMES[Math.floor(Math.random() * NAMES.length)];
+    demoTokens = tokenize(demoName);
+    document.getElementById("name-display").textContent = demoName;
+  }
+  if (p === "forward") { currentTrace = runForwardTrace(demoName); }
+  if (p === "backward") { simGradients = simulateGrads(); }
+  if (p === "train") { trainTarget = model.totalStep + 200; }
+  if (p === "infer") { startInfer(); }
+}
+
+function updateTokenDisplay(upTo) {
+  const container = document.getElementById("token-container");
+  let html = '<div class="token-list">';
+  const max = upTo !== undefined ? upTo : demoTokens.length;
+  for (let i = 0; i < demoTokens.length; i++) {
+    const cls = i < max ? "tok active" : "tok";
+    html += `<span class="${cls}">${tokenLabel(demoTokens[i])}<span class="tid">${demoTokens[i]}</span></span>`;
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function startInfer() {
+  inferKeys = Array.from({ length: N_LAYER }, () => []);
+  inferVals = Array.from({ length: N_LAYER }, () => []);
+  inferTid = BOS; inferPos = 0; inferName = ""; inferNames = []; inferDone = false; inferLastTime = 0;
+}
+
+function inferOneStep() {
+  const { logits, trace } = gptForward(inferTid, inferPos, inferKeys, inferVals, model, true);
+  currentTrace = trace;
+  const scaled = logits.map(l => new Val(l.data / 0.8));
+  const probs = softmax(scaled);
+  const pd = probs.map(p => p.data);
+  const r = model.rng();
+  let cum = 0, chosen = vocabSize - 1;
+  for (let i = 0; i < vocabSize; i++) { cum += pd[i]; if (r < cum) { chosen = i; break; } }
+  if (chosen === BOS || inferPos >= BLOCK_SIZE - 1) {
+    inferNames.push(inferName || "∅");
+    if (inferNames.length >= 3) { inferDone = true; }
+    else { inferKeys = Array.from({ length: N_LAYER }, () => []); inferVals = Array.from({ length: N_LAYER }, () => []); inferTid = BOS; inferPos = 0; inferName = ""; }
+  } else {
+    inferName += uchars[chosen]; inferTid = chosen; inferPos++;
+  }
+  updateGenDisplay();
+}
+
+function updateGenDisplay() {
+  const el = document.getElementById("gen-display");
+  const all = [...inferNames];
+  if (!inferDone && inferName) all.push(inferName + "…");
+  el.innerHTML = all.length ? all.map(n => `<div class="gen-name">${n}</div>`).join("") : "Aucun — entraîne d'abord !";
+}
+
+function updateStepDisplay() {
+  document.getElementById("step-display").textContent = "Étape " + model.totalStep;
+  const pct = Math.min(100, (model.totalStep / Math.max(trainTarget, 1)) * 100);
+  document.getElementById("progress-fill").style.width = pct + "%";
+  const hist = model.lossHistory;
+  if (hist.length) document.getElementById("loss-display").textContent = "Loss : " + hist[hist.length - 1].toFixed(3) + " (étape " + model.totalStep + ")";
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 12. ANIMATION LOOP
+// ═══════════════════════════════════════════════════════════════════
+let rafId = 0;
+function loop(ts) {
+  const now = ts || performance.now();
+  const elapsed = now - phaseStart;
+
+  // Phase transitions (auto-play)
+  if (autoPlay) {
+    switch (phase) {
+      case "intro":
+        if (elapsed > 2500) setPhase("tokenize");
+        break;
+      case "tokenize":
+        updateTokenDisplay(Math.floor(elapsed / 350));
+        if (elapsed > demoTokens.length * 350 + 600) setPhase("forward");
+        break;
+      case "forward":
+        if (elapsed > FWD_DURATION + 600) setPhase("loss");
+        break;
+      case "loss":
+        if (elapsed > 2800) setPhase("backward");
+        break;
+      case "backward":
+        if (elapsed > BWD_DURATION + 600) setPhase("train");
+        break;
+      case "train": {
+        const tStart = performance.now();
+        while (model.totalStep < trainTarget && performance.now() - tStart < 14) {
+          trainStep(model, trainTarget);
+        }
+        updateStepDisplay(); drawLossChart();
+        if (model.totalStep % 40 === 0) currentTrace = runForwardTrace(demoName);
+        if (model.totalStep >= trainTarget) setPhase("infer");
+        break;
+      }
+      case "infer":
+        if (!inferDone && now - inferLastTime > 350) { inferOneStep(); inferLastTime = now; }
+        if (inferDone && elapsed > inferNames.length * 350 + 2000) setPhase("idle");
+        break;
+      case "idle":
+        autoPlay = false;
+        document.getElementById("btn-play").textContent = "▶ Relancer";
+        break;
+    }
+  }
+
+  // Manual training queue
+  if (!autoPlay && phase !== "train" && trainTarget > model.totalStep) {
+    const tStart = performance.now();
+    while (model.totalStep < trainTarget && performance.now() - tStart < 14) {
+      trainStep(model, Math.max(trainTarget, 1000));
+    }
+    updateStepDisplay(); drawLossChart();
+    if (model.totalStep >= trainTarget) {
+      currentTrace = runForwardTrace(demoName || "emma");
+      document.getElementById("phase-display").textContent = "Prêt";
+    }
+  }
+
+  // Manual infer
+  if (!autoPlay && phase === "infer" && !inferDone && now - inferLastTime > 300) {
+    inferOneStep(); inferLastTime = now;
+    if (inferDone) { phase = "idle"; document.getElementById("phase-display").textContent = "Prêt"; }
+  }
+
+  // Render NN
+  let fwdE = null, bwdE = 0;
+  if (phase === "intro" || phase === "waiting") { fwdE = null; }
+  else if (phase === "forward") { fwdE = elapsed; }
+  else if (phase === "backward") { fwdE = 99999; bwdE = elapsed; }
+  else { fwdE = 99999; }
+  drawNN(fwdE, bwdE);
+
+  rafId = requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 13. HOVER
+// ═══════════════════════════════════════════════════════════════════
+function findNeuron(mx, my) {
+  let closest = null, bestD = Infinity;
+  for (let ci = 0; ci < neurons.length; ci++) {
+    for (let ni = 0; ni < neurons[ci].length; ni++) {
+      const n = neurons[ci][ni];
+      const d = Math.hypot(mx - n.x, my - n.y);
+      if (d < n.r * 3 && d < bestD) { closest = { layer: ci, index: ni }; bestD = d; }
+    }
+  }
+  return closest;
+}
+nnCanvas.addEventListener("mousemove", (e) => {
+  const rect = nnCanvas.getBoundingClientRect();
+  hoverNeuron = findNeuron(e.clientX - rect.left, e.clientY - rect.top);
+});
+nnCanvas.addEventListener("mouseleave", () => { hoverNeuron = null; });
+nnCanvas.addEventListener("touchstart", (e) => { e.preventDefault(); const t = e.touches[0]; const r = nnCanvas.getBoundingClientRect(); hoverNeuron = findNeuron(t.clientX - r.left, t.clientY - r.top); }, { passive: false });
+nnCanvas.addEventListener("touchmove", (e) => { e.preventDefault(); const t = e.touches[0]; const r = nnCanvas.getBoundingClientRect(); hoverNeuron = findNeuron(t.clientX - r.left, t.clientY - r.top); }, { passive: false });
+nnCanvas.addEventListener("touchend", () => { hoverNeuron = null; });
+
+// ═══════════════════════════════════════════════════════════════════
+// 14. CONTROLS
+// ═══════════════════════════════════════════════════════════════════
+document.getElementById("btn-play").addEventListener("click", function() {
+  if (autoPlay) {
+    autoPlay = false; this.textContent = "▶ Reprendre";
+  } else {
+    if (phase === "idle" || phase === "waiting") {
+      model = createModel();
+      currentTrace = null; simGradients = null;
+      document.getElementById("step-display").textContent = "Étape 0";
+      document.getElementById("loss-display").textContent = "—";
+      document.getElementById("progress-fill").style.width = "0%";
+      document.getElementById("gen-display").innerHTML = "Aucun — entraîne d'abord !";
+      drawLossChart();
+    }
+    autoPlay = true; this.textContent = "⏸ Pause";
+    setPhase("intro");
+  }
+});
+
+document.getElementById("btn-train").addEventListener("click", function() {
+  if (autoPlay) return;
+  trainTarget = model.totalStep + 100;
+  if (!demoName) { demoName = "emma"; demoTokens = tokenize(demoName); }
+  document.getElementById("name-display").textContent = demoName;
+  updateTokenDisplay();
+  document.getElementById("phase-display").textContent = "Entraînement…";
+});
+
+document.getElementById("btn-gen").addEventListener("click", function() {
+  if (autoPlay) return;
+  startInfer(); inferLastTime = 0;
+  phase = "infer";
+  document.getElementById("phase-display").textContent = "Inférence…";
+  document.getElementById("explain").innerHTML = EXPLAIN_TEXTS.infer;
+});
+
+document.getElementById("btn-reset").addEventListener("click", function() {
+  autoPlay = false;
+  model = createModel(); currentTrace = null; simGradients = null; trainTarget = 0;
+  phase = "waiting"; demoName = ""; demoTokens = [];
+  document.getElementById("btn-play").textContent = "▶ Lancer la démo";
+  document.getElementById("name-display").textContent = "—";
+  document.getElementById("token-container").innerHTML = "";
+  document.getElementById("step-display").textContent = "Étape 0";
+  document.getElementById("loss-display").textContent = "—";
+  document.getElementById("progress-fill").style.width = "0%";
+  document.getElementById("gen-display").innerHTML = "Aucun — entraîne d'abord !";
+  document.getElementById("phase-display").textContent = "En attente";
+  document.getElementById("explain").innerHTML = EXPLAIN_TEXTS.waiting;
+  drawLossChart();
+});
+
+document.getElementById("btn-theme").addEventListener("click", function() {
+  const html = document.documentElement;
+  const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  this.textContent = next === "dark" ? "Thème clair" : "Thème sombre";
+});
+
+window.addEventListener("resize", () => { drawLossChart(); });
+
+// ═══════════════════════════════════════════════════════════════════
+// 15. INIT
+// ═══════════════════════════════════════════════════════════════════
+drawLossChart();
+rafId = requestAnimationFrame(loop);
+</script>
+</body>
+</html>
