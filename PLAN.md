@@ -586,72 +586,102 @@ Audit systématique des 7 composants animés/interactifs : cohérence visuelle, 
 
 ### 18. Page d'accueil — présentation de l'app
 
-> **État** : à faire. Problématiques à résoudre au démarrage.
+> **État** : à faire. Design validé.
 
 **Constat** : l'app s'ouvre directement sur page 1 (Tokenisation) — entrée abrupte, pas de contexte ni d'accroche. Un élève de 10-14 ans qui arrive ne sait pas ce qu'il va explorer ni pourquoi.
 
-**Objectif** : page d'accueil (ou modal) pédagogique et engageante — donne envie de continuer.
+**Objectif** : page d'accueil pédagogique et engageante — donne envie de continuer.
 
-**Problématiques à résoudre** :
+**ADR — page dédiée (page 0), pas modal** :
 
-- Page dédiée (page 0 dans la sidebar) ou modal/overlay au premier lancement ?
-- Contenu : pitch court ("Tu vas construire un cerveau artificiel qui invente des prénoms"), aperçu visuel du parcours, bouton "Commencer"
-- Doit-on montrer un aperçu du résultat (nom généré) pour accrocher ?
-- Sidebar : la page d'accueil remplace-t-elle le titre actuel ou s'ajoute-t-elle ?
-- Persistance : afficher une seule fois (localStorage) ou toujours accessible ?
+- _Cohérence sidebar_ : la section 21 prévoit 9 entrées avec "0 Accueil" en première position + séparateur. Une modal casserait cette structure.
+- _Toujours accessible_ : l'ado peut revenir à l'accueil pour se re-situer dans le parcours. Une modal first-launch ne le permet pas.
+- _Pas de state localStorage_ : pas de logique "déjà vu / pas vu" à gérer.
+- _Mobile_ : une page scroll normalement ; une modal demande focus trap, fermeture, overlay.
+- _Bouton "Commencer"_ : naturel sur une page (`setPage("tokenizer")`), artificiel sur un dismiss de modal.
+- _Rejet de l'alternative modal_ : forcer un ado de 12 ans à lire un écran bloquant ne fonctionne pas.
+
+**Contenu prévu** :
+
+- Pitch court : "Tu vas construire un cerveau artificiel qui invente des prénoms"
+- Aperçu visuel du parcours (8 étapes numérotées)
+- Bouton "Commencer" → page 1
+- Optionnel : aperçu du résultat (nom généré) comme accroche
 
 ### 19. Page modèle complet — visualisation architecture intégrale
 
-> **État** : à faire. Problématiques à résoudre au démarrage.
+> **État** : à faire. Design validé.
 
 **Constat** : `playground-full.html` montre les 13 colonnes fidèles au graphe de calcul complet, mais c'est un prototype standalone. L'intégrer dans l'app donnerait une vue d'ensemble que la page 3 (5 colonnes simplifiées) ne couvre pas.
 
-**Objectif** : page dédiée montrant l'architecture complète du modèle, avec les vrais poids/activations.
+**Objectif** : page 7 = **récompense visuelle**. Full spectacle, animations over the top. Pédagogie minimale — ceux qui ont skip les explications y retourneront d'eux-mêmes.
 
-**Problématiques à résoudre** :
+**ADR — décisions validées** :
 
-- Layout horizontal (scroll, comme le playground) ou vertical (empilé, plus mobile-friendly) ?
-- Ton : rappels pédagogiques intégrés (légendes, annotations) ou aire de jeu libre (exploration autonome) ?
-- Positionnement dans le parcours : après la page Attention (page 4.5) ? Après l'entraînement (page 5.5) ? Dernière page avant la conclusion ?
-- Résidus et skip connections : comment les rendre lisibles sans surcharger ?
-- Backward animation : inclure ici (port de `playground.html` phase backward) ou réserver à la page Entraînement ?
-- 13 colonnes × responsive : seuil minimum viable ? Fallback mobile ?
+1. **Layout horizontal desktop + message mobile** : scroll horizontal sur desktop. Sur mobile (<768px) : message "Utilise un écran plus large" — 13 colonnes ne passent pas en 375px, inutile de forcer.
+2. **Ton hybride léger** : intro courte en haut + noms de couches visibles dans le canvas (Emb, Attn, Résidu, MLP, LN, Probs). Pas d'annotations lourdes ni de tooltips pédagogiques.
+3. **Page 7 (après Inférence, avant Conclusion)** : zoom-out après le parcours complet. L'ado a vu les 6 étapes isolément, maintenant il voit tout assemblé. Ne touche pas à la numérotation 1-6.
+4. **Résidus : arcs Bézier + flash animé** : arcs courbes `var(--green)` semi-transparent au-dessus du canvas en idle (structure visible). Flash lumineux pendant le forward animé quand le signal traverse un résidu (spectacle).
+5. **Forward par défaut, bouton "Voir le backward"** : forward = récompense garantie. Backward (gradients en rouge/orange qui redescendent) = bonus pour les curieux. Donne une raison de revenir.
+6. **Nouveau composant FullNNDiagram** : dédié 13 colonnes, indépendant de NNDiagram (5 colonnes page 3). Copie les patterns (IO/RO/MO/getCssVar/parseColor) mais pas de prop boolean ni de hook partagé — les layouts et animations sont trop différents. Données réelles du modèle (stateDict, traces), jamais simulées.
 
 ### 20. Page de conclusion — ce que les vrais GPT font en plus
 
-> **État** : à faire. Problématiques à résoudre au démarrage.
+> **État** : à faire. Design validé.
 
-**Constat** : l'app montre un modèle à 4 192 paramètres. Les vrais GPT en ont des milliards. L'élève doit comprendre ce qui manque, pour situer ce qu'il a appris dans le paysage réel.
+**Constat** : l'app montre un modèle à 4 192 paramètres. Les vrais LLM (GPT-5 etc.) en ont des centaines de milliards. L'élève doit comprendre ce qui manque, pour situer ce qu'il a appris dans le paysage réel.
 
-**Objectif** : page finale qui liste honnêtement les différences entre microGPT et les vrais modèles, avec un ton motivant ("tu as compris les bases, voici ce que les ingénieurs ajoutent").
+**Objectif** : page finale pédagogique — "tu as compris les fondations, voici ce que les ingénieurs ajoutent". Honnête et motivant, pas simpliste ni décourageant.
 
-**Problématiques à résoudre** :
+**ADR — décisions validées** :
 
-- Contenu : quelles différences exposer ? Candidates :
-  - Taille (4K → 175B paramètres, vocabulaire 27 → 50K tokens)
-  - BPE tokenizer (sous-mots vs lettres)
-  - Multi-couches (1 → 96 layers), multi-têtes (4 → 96 heads)
-  - Normalisation (LayerNorm), dropout, learning rate scheduling
-  - RLHF / instruction tuning (alignement)
-  - Fenêtre de contexte (8 → 128K tokens)
-  - Infrastructure (GPU clusters, mois d'entraînement)
-- Format : liste annotée ? Tableau comparatif ? Infographie interactive ?
-- Fonctions et étapes du pipeline réel à nommer explicitement (embedding, attention, FFN, softmax, sampling, beam search…)
-- Lien vers tuto-llm / microgpt-ts-fr pour aller plus loin ?
-- Ton : ne pas décourager ("c'est pareil en plus grand") vs être honnête ("il manque beaucoup")
+1. **Tableau comparatif "Notre microGPT / Les vrais LLM"** avec micro-analogies sous chaque ligne :
+   - Paramètres : 4 192 → centaines de milliards
+   - Vocabulaire : 27 lettres → 50 000+ sous-mots (BPE)
+   - Couches : 1 → 96+, têtes : 4 → 96+
+   - Contexte : 8 positions → 128K+ tokens
+   - Normalisation, dropout, learning rate scheduling
+   - RLHF / instruction tuning (alignement)
+   - Infrastructure : 1 navigateur → clusters GPU, mois d'entraînement
+   - Chaque ligne a une analogie concrète pour ados 10-14 ans
+2. **Ton "fondations + ajouts"** : l'intro valorise le parcours accompli (7 pages), le tableau montre factuellement les différences sans rabaisser.
+3. **Section "Aller plus loin" en bas** : 3-4 liens annotés :
+   - Guide Karpathy (migré depuis la sidebar, mention "en anglais, pour les plus motivés")
+   - tuto-llm (cours pédagogique associé)
+   - microgpt-ts-fr (fork de référence)
+4. **Format** : composant React simple (pas de Canvas), table HTML sémantique + texte. Pas d'animation — le spectacle c'est la page 7.
 
 ### 21. Sidebar — rôle et contenu
 
-> **État** : à résoudre. Problématiques à résoudre au démarrage.
+> **État** : design validé. Implémentation à faire.
 
 **Constat** : la sidebar actuelle contient une section de référence (doc upstream) héritée du fork. Avec l'ajout de nouvelles pages (accueil, modèle complet, conclusion), sa structure doit être repensée.
 
-**Problématiques à résoudre** :
+**ADR — décisions validées** :
 
-- La doc de référence upstream : conserver telle quelle ? Adapter ? Supprimer ? Déplacer dans une page dédiée "Référence" ?
-- Navigation : suffisante pour 6 pages, mais 9-10 pages nécessitent-elles un regroupement (ex: "Comprendre" / "Explorer" / "Aller plus loin") ?
-- Indicateur de progression : utile pour le public cible ? (ex: pastilles vertes sur pages visitées)
-- Mobile : le hamburger menu actuel tient-il avec plus d'entrées ?
+1. **Lien guide Karpathy → page Conclusion** : supprimé de la sidebar, sera intégré dans la page 8 (section 20). Le guide est en anglais, pas adapté au public cible 10-14 ans.
+2. **Séparateurs visuels sans headers** : `border-top: 1px solid var(--border)` entre 3 blocs (Accueil | Étapes 1-6 | Aller plus loin 7-8). Pas de labels de groupe — la numérotation suffit.
+3. **Pastilles visitées** : dot `●` 6px `var(--green)` à droite du label. State `Set<string>` en localStorage clé `microgpt-visited`. Marqué au `setPage(id)`. Pas de reset.
+4. **Hamburger inchangé** : 9 entrées + picker + theme tiennent sur mobile, scroll si besoin.
+5. **Footer raccourci** : "Basé sur microgpt.py de Karpathy." — suppression du disclaimer IA.
+
+**Structure finale** :
+
+```
+0  Accueil
+── séparateur ──
+1  Tokenisation
+2  Plongements (wte/wpe)
+3  Propagation
+4  Attention
+5  Entraînement
+6  Inférence
+── séparateur ──
+7  Modèle complet
+8  Conclusion
+```
+
+**Fichiers impactés** : `src/App.tsx` (PAGES, séparateurs, pastilles, footer), `src/styles.css` (`.visited-dot`, séparateur). Pas de nouveau composant.
 
 ---
 
