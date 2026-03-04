@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useMemo } from "react";
+import { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import { pca2d, topSimilarPairs } from "../utils/pca";
 import { parseColor } from "../utils/parseColor";
 import { getCssVar } from "../utils/getCssVar";
@@ -14,6 +14,7 @@ const INTERP_MS = 200;
 const GHOST_MAX = 5;
 const CONSTELLATION_K = 80;
 const HOVER_THRESHOLD = 30;
+const IO_THRESHOLD = 0.3; // IntersectionObserver reveal threshold
 
 function easeInOut(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
@@ -60,7 +61,6 @@ interface AnimState {
   ghostTrail: number[][][];
   frameCount: number;
   stepLabel: string;
-  projections: number[][][]; // M-1: pre-computed PCA per snapshot
 }
 
 export default function PCAScatterPlot({
@@ -78,6 +78,7 @@ export default function PCAScatterPlot({
   // C-1: highlightLetter in ref — avoids draw/observer recreation on hover
   const highlightRef = useRef(highlightLetter ?? -1);
   highlightRef.current = highlightLetter ?? -1;
+  const [hasRevealed, setHasRevealed] = useState(false);
 
   // Cache idle PCA projection — recomputed only when wteData changes
   const idleProjected = useMemo(() => pca2d(wteData), [wteData]);
@@ -116,6 +117,7 @@ export default function PCAScatterPlot({
       const textColor = getCssVar("--text");
 
       const labelDarkRgb = parseColor(getCssVar("--bg"));
+      const haloRgb = parseColor(surface2Color);
       const borderRgb = parseColor(borderColor);
       const cyanRgb = parseColor(cyanColor);
       const orangeRgb = parseColor(orangeColor);
@@ -147,26 +149,26 @@ export default function PCAScatterPlot({
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, w, h);
 
-      // ── Layer 2: Vignette ─────────────────────────────────────────
+      // ── Layer 2: Vignette (atmosphere — matches playground-pca.html) ─
       const cx = w / 2,
         cy = h / 2;
       const minDim = Math.min(w, h);
       const maxDim = Math.max(w, h);
       const g1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, minDim * 0.35);
-      g1.addColorStop(0, "rgba(255,255,255,0.02)");
+      g1.addColorStop(0, "rgba(255,255,255,0.025)");
       g1.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = g1;
       ctx.fillRect(0, 0, w, h);
       const g2 = ctx.createRadialGradient(
         cx,
         cy,
-        maxDim * 0.3,
+        minDim * 0.3,
         cx,
         cy,
         maxDim * 0.65,
       );
       g2.addColorStop(0, "rgba(0,0,0,0)");
-      g2.addColorStop(1, "rgba(0,0,0,0.15)");
+      g2.addColorStop(1, "rgba(0,0,0,0.35)");
       ctx.fillStyle = g2;
       ctx.fillRect(0, 0, w, h);
 
@@ -331,10 +333,14 @@ export default function PCAScatterPlot({
         }
 
         // ── Layer 10: Letter labels ─────────────────────────────────
-        ctx.fillStyle = `rgba(${labelDarkRgb[0]},${labelDarkRgb[1]},${labelDarkRgb[2]},0.9)`;
-        ctx.font = `${isHover ? "bold " : ""}${isBos ? 16 : 12}px monospace`;
+        ctx.fillStyle = `rgb(${labelDarkRgb[0]},${labelDarkRgb[1]},${labelDarkRgb[2]})`;
+        ctx.font = `bold ${isBos ? 16 : 12}px monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
+        // Halo for readability on colored dots
+        ctx.strokeStyle = `rgba(${haloRgb[0]},${haloRgb[1]},${haloRgb[2]},0.7)`;
+        ctx.lineWidth = 3;
+        ctx.strokeText(isBos ? "⊕" : label, sx, sy + 0.5);
         ctx.fillText(isBos ? "⊕" : label, sx, sy + 0.5);
       }
 
@@ -436,7 +442,7 @@ export default function PCAScatterPlot({
   const drawRef = useRef(draw);
   drawRef.current = draw;
 
-  // ── Animation ───────────────────────────────────────────────────
+  // ── Animation (16D interpolation → pca2d each frame) ────────────
   const startAnimation = useCallback(() => {
     if (snapshots.length < 3) return;
     if (
@@ -449,9 +455,6 @@ export default function PCAScatterPlot({
 
     if (animRef.current) cancelAnimationFrame(animRef.current.frameId);
 
-    // M-1: pre-compute PCA for all snapshots (avoids pca2d at 60fps)
-    const projections = snapshots.map((s) => pca2d(s.wte));
-
     animRef.current = {
       frameId: 0,
       fromIdx: 0,
@@ -460,7 +463,6 @@ export default function PCAScatterPlot({
       ghostTrail: [],
       frameCount: 0,
       stepLabel: `Étape ${snapshots[0].step}`,
-      projections,
     };
 
     const tick = (now: number) => {
@@ -471,13 +473,15 @@ export default function PCAScatterPlot({
       const t = Math.min(1, elapsed / INTERP_MS);
       const ease = easeInOut(t);
 
-      // M-1: interpolate in 2D (pre-computed projections)
-      const fromProj = anim.projections[anim.fromIdx];
-      const toProj = anim.projections[anim.toIdx];
-      const proj = fromProj.map((p, i) => [
-        p[0] + (toProj[i][0] - p[0]) * ease,
-        p[1] + (toProj[i][1] - p[1]) * ease,
-      ]);
+      // Interpolate embeddings in 16D (organic particle movement)
+      const fromEmb = snapshots[anim.fromIdx].wte;
+      const toEmb = snapshots[anim.toIdx].wte;
+      const interpEmb = fromEmb.map((row, i) =>
+        row.map((v, j) => v + (toEmb[i][j] - v) * ease),
+      );
+
+      // Recompute PCA on interpolated 16D data (axes rotate naturally)
+      const proj = pca2d(interpEmb);
 
       // Ghost trail
       anim.frameCount++;
@@ -491,13 +495,8 @@ export default function PCAScatterPlot({
       const toStep = snapshots[anim.toIdx].step;
       anim.stepLabel = `Étape ${Math.round(fromStep + (toStep - fromStep) * ease)}`;
 
-      // Use "to" snapshot embeddings for constellation lines
-      drawRef.current(
-        proj,
-        snapshots[anim.toIdx].wte,
-        anim.stepLabel,
-        anim.ghostTrail,
-      );
+      // Use interpolated embeddings for constellation lines too
+      drawRef.current(proj, interpEmb, anim.stepLabel, anim.ghostTrail);
 
       if (t >= 1) {
         anim.fromIdx++;
@@ -567,6 +566,34 @@ export default function PCAScatterPlot({
 
   // ── Effects ───────────────────────────────────────────────────────
 
+  // IntersectionObserver — first reveal (same pattern as NNDiagram)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || hasRevealed) return;
+    if (typeof IntersectionObserver === "undefined") {
+      // jsdom fallback: draw static immediately
+      setHasRevealed(true);
+      drawRef.current();
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHasRevealed(true);
+          io.disconnect();
+        }
+      },
+      { threshold: IO_THRESHOLD },
+    );
+    io.observe(canvas);
+    return () => io.disconnect();
+  }, [hasRevealed]);
+
+  // Draw on reveal + data change + highlight change
+  useEffect(() => {
+    if (hasRevealed && !animRef.current) draw();
+  }, [hasRevealed, draw, highlightLetter]);
+
   // C-1: Observers in stable effect (created once, use drawRef)
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -596,11 +623,6 @@ export default function PCAScatterPlot({
       mo?.disconnect();
     };
   }, []);
-
-  // Redraw on data change or highlight change
-  useEffect(() => {
-    if (!animRef.current) draw();
-  }, [draw, highlightLetter]);
 
   // F-2: Cancel in-flight animation when snapshots change (e.g. dataset reset)
   useEffect(() => {

@@ -34,9 +34,10 @@ export default memo(function EmbeddingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- model mutable: identity=reset, totalStep=training
     [model, model.totalStep],
   );
-   
+
   const wteSnapshots = useMemo(
     () => getWteSnapshots(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- model mutable: identity=reset, totalStep=new snapshots
     [model, model.totalStep],
   );
 
@@ -213,7 +214,7 @@ export default memo(function EmbeddingsPage() {
         </div>
         <div className="label-dim" style={{ marginBottom: 8 }}>
           {model.totalStep === 0
-            ? "Poids aléatoires — les lettres sont éparpillées au hasard"
+            ? "Valeurs aléatoires — les lettres sont éparpillées au hasard — reviens après avoir entraîné le modèle à l'étape 5 pour voir les regroupements"
             : `Entraîné (${model.totalStep} étapes) — les lettres similaires se regroupent`}
         </div>
         <div className="explain">
