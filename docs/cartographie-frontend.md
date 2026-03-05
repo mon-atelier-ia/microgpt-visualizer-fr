@@ -149,34 +149,52 @@ Tout le site est en monospace. Pas de font-face custom chargée.
 │ │  h1       │ │   <Suspense fallback="Chargement…">│ │
 │ │  subtitle │ │     {activePage}                   │ │
 │ │ <nav>     │ │   </Suspense>                      │ │
-│ │  6 pages  │ │ </ErrorBoundary>                   │ │
+│ │  9 pages  │ │ </ErrorBoundary>                   │ │
+│ │  (3 blocs)│ │                                    │ │
 │ │ dataset   │ │                                    │ │
 │ │  picker   │ │                                    │ │
-│ │ guide-link│ │                                    │ │
 │ │ theme     │ │                                    │ │
 │ │  picker   │ │                                    │ │
-│ │ community │ │                                    │ │
-│ │  note     │ │                                    │ │
+│ │ footer    │ │                                    │ │
 │ └──────────┘ └────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────┘
 ```
 
 ### Sidebar
 
-| Section        | Détail                                                                                 |
-| -------------- | -------------------------------------------------------------------------------------- |
-| Header         | `h1` "MicroGPT" (`--blue`), subtitle "Explorateur visuel — @karpathy"                  |
-| Nav            | 6 boutons numérotés (1-6), `.active` = `--blue` border-left + bg                       |
-| Dataset picker | 6 boutons (label + title=description), dialog de confirmation si entraînement en cours |
-| Guide link     | Lien externe `📖 Lire le guide officiel` → `--blue` bg                                 |
-| Theme picker   | 2 boutons (Sombre/Clair) avec SVGs (lune/soleil)                                       |
-| Community note | Texte fixe avec lien vers Karpathy gist, `margin-top: auto`                            |
+| Section        | Détail                                                                                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Header         | `h1` "MicroGPT" (`--blue`), subtitle "Explorateur visuel — @karpathy"                                                                                                          |
+| Nav            | 9 boutons numérotés (0-8), 3 blocs séparés par `.nav-sep` (`border-top`). `.active` = `--blue` border-left + bg. Pastille `.visited-dot` (6px `--green`) si page déjà visitée. |
+| Dataset picker | 6 boutons (label + title=description), dialog de confirmation si entraînement en cours                                                                                         |
+| Theme picker   | 2 boutons (Sombre/Clair) avec SVGs (lune/soleil)                                                                                                                               |
+| Footer         | "Basé sur microgpt.py de Karpathy." — `margin-top: auto`                                                                                                                       |
+
+**Structure nav 3 blocs :**
+
+```
+0  Accueil
+── séparateur (.nav-sep) ──
+1  Tokenisation
+2  Plongements (wte/wpe)
+3  Propagation
+4  Attention
+5  Entraînement
+6  Inférence
+── séparateur (.nav-sep) ──
+7  Modèle complet
+8  Conclusion
+```
+
+**Visited dots** : `Set<string>` dans localStorage (clé `microgpt-visited`). Marqué au changement de page. Dot affiché si `visited.has(p.id) && page !== p.id`.
 
 ### Navigation
 
-Pas de router. `page` state dans `App.tsx`, rendu conditionnel : `{page === "tokenizer" && <TokenizerPage />}`.
+Pas de router. `page` state dans `App.tsx` (défaut `"home"`), rendu conditionnel : `{page === "tokenizer" && <TokenizerPage />}`.
 
-Les 6 pages sont lazy-loadées (`React.lazy`). Fallback : `<div class="panel loading-fallback" role="status">Chargement…</div>`.
+Les 9 pages sont lazy-loadées (`React.lazy`). Fallback : `<div class="panel loading-fallback" role="status">Chargement…</div>`.
+
+HomePage a un prop `onStart` qui appelle `handlePageChange("tokenizer")`.
 
 ### Dialog de confirmation (changement dataset)
 
@@ -280,14 +298,13 @@ Variante `.token-flow--animated` : applique `@keyframes tokenSlideIn` sur les `.
 App
 ├── TermProvider (Context: openModal)
 │   ├── Sidebar (inline dans App)
-│   │   ├── Nav (6 boutons)
+│   │   ├── Nav (9 boutons, 3 blocs, visited dots)
 │   │   ├── DatasetPicker (6 boutons)
-│   │   ├── GuideLink
 │   │   └── ThemePicker (2 boutons)
 │   ├── <dialog> confirmation dataset
 │   ├── ErrorBoundary
 │   │   └── Suspense
-│   │       └── {page} (1 des 6 pages)
+│   │       └── {page} (1 des 9 pages)
 │   │           ├── PageSection (wrapper <section>)
 │   │           └── ... (composants spécifiques à la page)
 │   └── <dialog> glossaire modal (singleton dans TermProvider)
@@ -306,12 +323,15 @@ App
 
 | Page            | État local                                                       |
 | --------------- | ---------------------------------------------------------------- |
+| HomePage        | _(aucun — reçoit `onStart` prop)_                                |
 | TokenizerPage   | `input: string`                                                  |
 | EmbeddingsPage  | `hoverRow`, `hoverRowWpe`, `selectedChar`, `selectedPos`         |
 | ForwardPassPage | `char`, `pos`                                                    |
 | AttentionPage   | `input`, `selectedPos`, `selectedHead`, `activeHead`, `hoverSrc` |
 | TrainingPage    | `training`, `lastResult`, `stopRef`, `rafRef`                    |
 | InferencePage   | `temperature`, `results[]`, `activeTrace`, `activeStep`          |
+| FullModelPage   | _(stub — à compléter avec FullNNDiagram)_                        |
+| ConclusionPage  | _(aucun — statique)_                                             |
 
 ### 6.4 Données dérivées (useMemo)
 
@@ -546,6 +566,56 @@ App
 
 - Liste ordonnée 5 étapes
 - Termes : `bos`, `echantillonnage`, `distribution`, `temperature`, `token`, `generation-autoregressive`
+
+### 7.0 Page 0 : Accueil
+
+**ID** : `home` | **Titre** : `Bienvenue`
+
+**Pitch** :
+
+- `<p class="home-pitch">` : "Tu vas construire un cerveau artificiel qui invente des prénoms…"
+- Pas de `<Term>` — zéro jargon technique
+
+**Grille 8 étapes** :
+
+- `.home-steps` : `display: grid; grid-template-columns: 1fr 1fr`
+- 8 `.home-step` (flex row) : `.home-step-num` (cercle 28px `--border`) + `<strong>` label + `.home-step-desc` desc
+- Correspondance 1:1 avec les 8 pages (Tokenisation → Conclusion)
+
+**Bouton** :
+
+- `.home-start-btn` : `<button type="button">Commencer</button>` → `onStart()` → `handlePageChange("tokenizer")`
+- Style : `--blue` bg, 16px, 14px 48px padding
+
+---
+
+### 7.7 Page 7 : Modèle complet (stub)
+
+**ID** : `fullmodel` | **Titre** : `7. Modèle complet`
+
+> Stub actuel. FullNNDiagram Canvas 2D 13 colonnes à implémenter (Task 5 du plan).
+
+---
+
+### 7.8 Page 8 : Conclusion
+
+**ID** : `conclusion` | **Titre** : `8. Conclusion`
+
+**Description** : _Tu as compris les fondations : tokenisation, plongements, propagation, attention, entraînement et inférence..._
+
+**Panneau 1 — "Notre microGPT vs les vrais LLM"**
+
+- `.conclusion-table` : `<table>` sémantique, 3 colonnes (Concept, Notre microGPT, Les vrais LLM), 8 lignes
+- Concepts : Paramètres, Vocabulaire, Couches, Têtes d'attention, Contexte, Normalisation, Alignement, Infrastructure
+- `.conclusion-analogies` : 8 `<p>` avec `<strong>concept</strong> — <em>analogie</em>`
+- Analogies adaptées 10-14 ans (vélo vs fusée, étage vs gratte-ciel, etc.)
+
+**Panneau 2 — "Aller plus loin"**
+
+- `.conclusion-links` : `<ul>` avec 3 `<li>` contenant `<a target="_blank">` :
+  - Guide officiel MicroGPT (karpathy.github.io)
+  - tuto-llm (cours FR)
+  - microgpt-ts-fr (code TypeScript)
 
 ---
 
@@ -1043,7 +1113,7 @@ export function getWteSnapshots(): WteSnapshot[]; // {step, wte}[]
 
 ## 17. Tests existants
 
-133 tests dans 24 fichiers. Framework : Vitest + jsdom + @testing-library/react.
+139 tests dans 26 fichiers. Framework : Vitest + jsdom + @testing-library/react.
 
 | Fichier test               | Nb  | Cible                                            |
 | -------------------------- | --- | ------------------------------------------------ |
@@ -1070,6 +1140,8 @@ export function getWteSnapshots(): WteSnapshot[]; // {step, wte}[]
 | parseColor.test.ts         | 5   | hex6, rgb, rgba, hex3, fallback                  |
 | EmbeddingsPage.test.tsx    | 4   | PCA canvas, wrap, hover, badge                   |
 | NNDiagram.test.tsx         | 2   | Canvas role/aria-label, Rejouer                  |
+| HomePage.test.tsx          | 3   | Pitch+button, onStart callback, 8 steps          |
+| ConclusionPage.test.tsx    | 3   | 8 rows table, Karpathy link, fondations text     |
 
 ---
 
@@ -1090,3 +1162,6 @@ export function getWteSnapshots(): WteSnapshot[]; // {step, wte}[]
 | BertViz état lifté                            | Click source token → met à jour TOUS les panneaux de la page        |
 | rAF loop + cleanup                            | C-6 pattern : cancelAnimationFrame dans stop() ET useEffect cleanup |
 | Stable keys (module counter)                  | R-3 : `nextResultId++` pour InferencePage results                   |
+| Visited dots (localStorage)                   | `Set<string>` persisté, dot vert si page visitée et non-active      |
+| Sidebar 3 blocs avec `.nav-sep`               | Séparateurs visuels (border-top) entre Accueil / Étapes / Synthèse  |
+| HomePage sans `<Term>`                        | Zéro jargon technique sur la page d'accueil — public 10-14 ans      |

@@ -137,11 +137,11 @@ Ensemble, ils forment une paire pedagogique complete pour tuto-llm :
 
 ```
 src/
-├── App.tsx                        # 251 lignes — shell, routing, theme, TermProvider, lazy, ErrorBoundary
+├── App.tsx                        # ~290 lignes — shell, routing (9 pages), theme, TermProvider, lazy, ErrorBoundary, visited dots
 ├── main.tsx                       #   5 lignes — point d'entrée React
 ├── modelStore.ts                  #  76 lignes — useSyncExternalStore + useModel() hook + wteSnapshots (A-1)
 ├── modelStore.test.ts             # 107 lignes — 8 tests (useModel shape, reset, dataset switch, notify, unsubscribe, getModelTotalStep, wteSnapshot deep-copy, reset clears)
-├── styles.css                     # ~1 908 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion, barchart, attn-matrix, bv-*, pca-canvas-wrap
+├── styles.css                     # ~2 000 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion, barchart, attn-matrix, bv-*, pca-canvas-wrap, home-*, conclusion-*, nav-sep, visited-dot
 ├── data/
 │   ├── glossary.ts                # 314 lignes — 30 définitions (Tier 1 + Tier 2)
 │   └── glossary.test.ts           # 121 lignes — 8 tests intégrité données
@@ -191,7 +191,12 @@ src/
 │   ├── TrainingPage.tsx           # 237 lignes — boucle rAF, loss chart
 │   ├── TrainingPage.test.tsx      #  37 lignes — 2 tests (rAF cleanup, stop)
 │   ├── InferencePage.tsx          # 259 lignes — génération, trace, probas
-│   └── InferencePage.test.tsx     #  95 lignes — 6 tests (W-2, W-4, R-3)
+│   ├── InferencePage.test.tsx     #  95 lignes — 6 tests (W-2, W-4, R-3)
+│   ├── HomePage.tsx               #  49 lignes — page 0 : pitch, 8 étapes, bouton Commencer
+│   ├── HomePage.test.tsx          #  29 lignes — 3 tests (pitch, onStart, 8 steps)
+│   ├── FullModelPage.tsx          #  14 lignes — page 7 : stub (FullNNDiagram à venir)
+│   ├── ConclusionPage.tsx         # 139 lignes — page 8 : tableau comparatif + liens
+│   └── ConclusionPage.test.tsx    #  26 lignes — 3 tests (8 rows, Karpathy link, fondations)
 ├── utils/
 │   ├── charStats.ts               #  59 lignes — statistiques dataset (fréquence, bigrammes)
 │   ├── charStats.test.ts          #  30 lignes — 5 tests
@@ -233,25 +238,28 @@ docs/
 ├── plans/
 │ ├── 2026-03-01-embeddings-page-vivante-design.md # Design EmbeddingsPage vivante
 │ ├── 2026-03-01-embeddings-page-vivante-plan.md # Plan d'implémentation
-│ └── 2026-03-03-pca-embeddings.md # Plan PCA scatter plot (8 tasks)
+│ ├── 2026-03-03-pca-embeddings.md # Plan PCA scatter plot (8 tasks)
+│ ├── 2026-03-05-sidebar-and-new-pages-design.md # Design sidebar + 3 nouvelles pages
+│ └── 2026-03-05-sidebar-and-new-pages-plan.md # Plan d'implémentation (8 tasks)
 
-**Total : ~6 900 lignes src (hors data blobs), 44 fichiers source + 24 fichiers test. 133 tests. 6 playgrounds standalone.**
+**Total : ~7 100 lignes src (hors data blobs), 48 fichiers source + 26 fichiers test. 139 tests. 8 playgrounds standalone.**
 
 ### Constats clés
 
 - **Zero Tailwind** : styling 100% CSS custom (`styles.css`, ~1 500 lignes, CSS vars dark/light)
 - **Zero librairie UI** : pas de shadcn, Radix, MUI — `<div>` + classes CSS + `<dialog>` natif
 - **Zero librairie chart** : LossChart = Canvas 2D pur, Heatmap = `<table>` HTML
-- **Zero routeur** : `useState("tokenizer")` + rendu conditionnel dans App.tsx
+- **Zero routeur** : `useState("home")` + rendu conditionnel dans App.tsx (9 pages)
 - **Zero feature Vite-spécifique** : pas de `import.meta.env`, pas de `?raw`, pas de glob
 - **Thème** : hook custom `useTheme()` avec `data-theme` sur `<html>` + `localStorage`, scrollbars thématiques
 - **Training** : boucle `requestAnimationFrame` (5 steps/frame), pas de Web Worker
 - **Attention** : boucle multi-token côté page (KV cache pattern), matrice T×T `<table>` sémantique
 - **Model sharing** : `useSyncExternalStore` dans `modelStore.ts`, hook `useModel()` (A-1 corrigé)
 - **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
-- **Tests** : Vitest + jsdom + @testing-library/react (133 tests, 24 fichiers)
+- **Tests** : Vitest + jsdom + @testing-library/react (139 tests, 26 fichiers)
 - **ErrorBoundary** : class component, `window.location.reload()`, sidebar hors boundary
-- **Code splitting** : `React.lazy()` + `Suspense` → 6+ chunks JS séparés
+- **Code splitting** : `React.lazy()` + `Suspense` → 9+ chunks JS séparés
+- **Visited dots** : `Set<string>` dans localStorage (`microgpt-visited`), dot vert 6px `var(--green)`
 - **CSS** : 20 classes utilitaires + BEM + `.sr-only` + `prefers-reduced-motion`. Inline styles réduits de 64 à 7 (pages originales) + 8 (AttentionPage, dont 2 dynamiques)
 - **Accessibilité** : WCAG 2.1 AA ~95 %, labels sur tous inputs/selects, `:focus-visible`, `aria-label` canvas/table
 
@@ -584,9 +592,9 @@ Audit systématique des 7 composants animés/interactifs : cohérence visuelle, 
 - 7 inline styles dynamiques conservés (couleurs/opacité calculés au runtime)
 - 3 `!important` légitimes (1 `.row-label` override inline, 2 `prefers-reduced-motion`)
 
-### 18. Page d'accueil — présentation de l'app
+### 18. Page d'accueil — présentation de l'app — FAIT
 
-> **État** : à faire. Design validé.
+> **État** : FAIT. Commit `c303cc0`.
 
 **Constat** : l'app s'ouvre directement sur page 1 (Tokenisation) — entrée abrupte, pas de contexte ni d'accroche. Un élève de 10-14 ans qui arrive ne sait pas ce qu'il va explorer ni pourquoi.
 
@@ -610,7 +618,7 @@ Audit systématique des 7 composants animés/interactifs : cohérence visuelle, 
 
 ### 19. Page modèle complet — visualisation architecture intégrale
 
-> **État** : à faire. Design validé.
+> **État** : stub créé (`FullModelPage.tsx`). FullNNDiagram à implémenter (Task 5 du plan). Design validé.
 
 **Constat** : `playground-full.html` montre les 13 colonnes fidèles au graphe de calcul complet, mais c'est un prototype standalone. L'intégrer dans l'app donnerait une vue d'ensemble que la page 3 (5 colonnes simplifiées) ne couvre pas.
 
@@ -625,9 +633,9 @@ Audit systématique des 7 composants animés/interactifs : cohérence visuelle, 
 5. **Forward par défaut, bouton "Voir le backward"** : forward = récompense garantie. Backward (gradients en rouge/orange qui redescendent) = bonus pour les curieux. Donne une raison de revenir.
 6. **Nouveau composant FullNNDiagram** : dédié 13 colonnes, indépendant de NNDiagram (5 colonnes page 3). Copie les patterns (IO/RO/MO/getCssVar/parseColor) mais pas de prop boolean ni de hook partagé — les layouts et animations sont trop différents. Données réelles du modèle (stateDict, traces), jamais simulées.
 
-### 20. Page de conclusion — ce que les vrais GPT font en plus
+### 20. Page de conclusion — ce que les vrais GPT font en plus — FAIT
 
-> **État** : à faire. Design validé.
+> **État** : FAIT. Commit `c303cc0`.
 
 **Constat** : l'app montre un modèle à 4 192 paramètres. Les vrais LLM (GPT-5 etc.) en ont des centaines de milliards. L'élève doit comprendre ce qui manque, pour situer ce qu'il a appris dans le paysage réel.
 
@@ -651,9 +659,9 @@ Audit systématique des 7 composants animés/interactifs : cohérence visuelle, 
    - microgpt-ts-fr (fork de référence)
 4. **Format** : composant React simple (pas de Canvas), table HTML sémantique + texte. Pas d'animation — le spectacle c'est la page 7.
 
-### 21. Sidebar — rôle et contenu
+### 21. Sidebar — rôle et contenu — FAIT
 
-> **État** : design validé. Implémentation à faire.
+> **État** : FAIT. Commit `07e6b79`.
 
 **Constat** : la sidebar actuelle contient une section de référence (doc upstream) héritée du fork. Avec l'ajout de nouvelles pages (accueil, modèle complet, conclusion), sa structure doit être repensée.
 
