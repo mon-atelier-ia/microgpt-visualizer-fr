@@ -1071,3 +1071,128 @@ git commit -m "docs: update README, PLAN, fork-changes for sections 18-21"
 ```bash
 git push
 ```
+
+---
+
+### Task 7 (nice-to-have): Bouton partager + QR code modal
+
+**Files:**
+
+- Modify: `src/App.tsx` — add share button in sidebar footer
+- Modify: `src/styles.css` — share button + modal styles
+
+**Goal:** Bouton icône "partager" dans le footer sidebar. Au clic, ouvre un `<dialog>` modal affichant un QR code vers `https://microgpt-visualizer-fr.vercel.app` (URL production stable Vercel — pointe toujours vers le dernier déploiement main).
+
+**Implementation:**
+
+- QR code généré côté client via Canvas API (lib `qrcode-generator` ~4KB gzip, zero deps) ou API inline
+- `<dialog>` natif HTML (même pattern que TermProvider) : fermeture par clic backdrop + bouton × + Escape
+- Icône SVG inline (share icon) dans un `<button>` sidebar footer
+- URL hardcodée (pas d'env var) : l'URL `<project>.vercel.app` est stable par design Vercel
+
+**Step 1: Install qrcode-generator**
+
+```bash
+pnpm add qrcode-generator
+```
+
+**Step 2: Add share button + dialog in App.tsx sidebar footer**
+
+```tsx
+// In sidebar footer, next to "Basé sur microgpt.py de Karpathy."
+<button type="button" className="share-btn" onClick={() => shareDialogRef.current?.showModal()}>
+  <svg ...share icon... />
+</button>
+<dialog ref={shareDialogRef} className="share-dialog" onClick={handleBackdropClick}>
+  <div className="share-dialog-content">
+    <canvas ref={qrCanvasRef} width={200} height={200} />
+    <p>Scanne pour ouvrir sur ton téléphone</p>
+    <button type="button" onClick={() => shareDialogRef.current?.close()}>Fermer</button>
+  </div>
+</dialog>
+```
+
+**Step 3: Generate QR code on dialog open**
+
+```typescript
+useEffect(() => {
+  const canvas = qrCanvasRef.current;
+  if (!canvas) return;
+  const qr = qrcode(0, "M");
+  qr.addData("https://microgpt-visualizer-fr.vercel.app");
+  qr.make();
+  // Draw on canvas using qr.getModuleCount() + qr.isDark(row, col)
+}, []);
+```
+
+**Step 4: Add CSS**
+
+```css
+.share-btn {
+  /* icon button in footer */
+}
+.share-dialog {
+  /* native <dialog> backdrop */
+}
+.share-dialog-content {
+  /* centered card */
+}
+```
+
+**Step 5: Commit**
+
+```bash
+git add src/App.tsx src/styles.css package.json pnpm-lock.yaml
+git commit -m "feat: add share button with QR code modal in sidebar"
+```
+
+---
+
+### Task 8 (nice-to-have): Console Easter Egg — signature P-A.G
+
+**Files:**
+
+- Modify: `index.html` — add `<script>` console easter egg
+
+**Goal:** Quand un curieux ouvre la console (Fn+F12), il voit un dessin ASCII stylisé affichant "P-A.G" avec les couleurs oklch du thème de l'app.
+
+**Reference:** Pattern copié de `C:\Dev\Easter_eggs\Miami_circuit_easter-egg\miami-circuit-button.html` (lignes 316-326).
+
+**Implementation:**
+
+```html
+<script>
+  // Console Easter Egg
+  console.log(`
+  ██████╗         █████╗    ██████╗
+  ██╔══██╗       ██╔══██╗   ██╔════╝
+  ██████╔╝       ███████║   ██║  ███╗
+  ██╔═══╝ █████╗ ██╔══██║   ██║   ██║
+  ██║     ╚════╝ ██║  ██║ ▄ ╚██████╔╝
+  ╚═╝            ╚═╝  ╚═╝ ▀  ╚═════╝
+  `);
+  console.log(
+    "%c microGPT visualizer-fr — par P-A.G ",
+    "background: oklch(0.75 0.18 155); color: oklch(0.25 0 0); padding: 6px 12px; border-radius: 4px; font-weight: bold; font-family: monospace;",
+  );
+  console.log(
+    "%c Curieux ? Le code est open-source → github.com/mon-atelier-ia ",
+    "color: oklch(0.65 0.15 250); font-size: 11px;",
+  );
+</script>
+```
+
+- oklch(0.75 0.18 155) = vert du thème (--green)
+- oklch(0.65 0.15 250) = bleu du thème (--blue)
+- Placé dans `index.html` avant `</body>` (pas dans React — exécution immédiate)
+
+**Step 1: Add script to index.html**
+
+**Step 2: Verify in browser console (Fn+F12)**
+
+**Step 3: Commit**
+
+```bash
+git add index.html
+git commit -m "feat: add P-A.G ASCII art console easter egg"
+```

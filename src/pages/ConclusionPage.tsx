@@ -62,7 +62,7 @@ const ConclusionPage = memo(function ConclusionPage() {
     <PageSection id="conclusion" title="8. Conclusion">
       <p className="page-desc">
         Tu as compris les <strong>fondations</strong> : tokenisation,
-        plongements, attention, propagation, entraînement et inférence. Les
+        plongements, propagation, attention, entraînement et inférence. Les
         vrais LLM comme GPT-5 font exactement la même chose — voici ce que les
         ingénieurs ajoutent par-dessus.
       </p>
