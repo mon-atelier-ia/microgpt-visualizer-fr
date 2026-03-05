@@ -4,20 +4,26 @@ import { resetModel, getModelTotalStep } from "./modelStore";
 import TermProvider from "./components/TermProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
 
+const HomePage = lazy(() => import("./pages/HomePage"));
 const TokenizerPage = lazy(() => import("./pages/TokenizerPage"));
 const EmbeddingsPage = lazy(() => import("./pages/EmbeddingsPage"));
 const ForwardPassPage = lazy(() => import("./pages/ForwardPassPage"));
 const AttentionPage = lazy(() => import("./pages/AttentionPage"));
 const TrainingPage = lazy(() => import("./pages/TrainingPage"));
 const InferencePage = lazy(() => import("./pages/InferencePage"));
+const FullModelPage = lazy(() => import("./pages/FullModelPage"));
+const ConclusionPage = lazy(() => import("./pages/ConclusionPage"));
 
 const PAGES = [
-  { id: "tokenizer", num: 1, label: "Tokenisation" },
-  { id: "embeddings", num: 2, label: "Plongements (wte/wpe)" },
-  { id: "forward", num: 3, label: "Propagation" },
-  { id: "attention", num: 4, label: "Attention" },
-  { id: "training", num: 5, label: "Entraînement" },
-  { id: "inference", num: 6, label: "Inférence" },
+  { id: "home", num: 0, label: "Accueil", sep: false },
+  { id: "tokenizer", num: 1, label: "Tokenisation", sep: true },
+  { id: "embeddings", num: 2, label: "Plongements (wte/wpe)", sep: false },
+  { id: "forward", num: 3, label: "Propagation", sep: false },
+  { id: "attention", num: 4, label: "Attention", sep: false },
+  { id: "training", num: 5, label: "Entraînement", sep: false },
+  { id: "inference", num: 6, label: "Inférence", sep: false },
+  { id: "fullmodel", num: 7, label: "Modèle complet", sep: true },
+  { id: "conclusion", num: 8, label: "Conclusion", sep: false },
 ];
 
 function useTheme() {
@@ -36,13 +42,21 @@ function useTheme() {
 }
 
 export default function App() {
-  const [page, setPage] = useState("tokenizer");
+  const [page, setPage] = useState("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   // datasetId is UI-only state (sidebar active button). The store tracks
   // its own currentDatasetId for resetModel(). Both are set together in
   // handleDatasetChange to keep them in sync.
   const [datasetId, setDatasetId] = useState(DEFAULT_DATASET_ID);
   const [pendingDatasetId, setPendingDatasetId] = useState<string | null>(null);
+  const [visited, setVisited] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("microgpt-visited");
+      return saved ? new Set(JSON.parse(saved) as string[]) : new Set<string>();
+    } catch {
+      return new Set<string>();
+    }
+  });
   const confirmRef = useRef<HTMLDialogElement>(null);
   const { theme, toggle: toggleTheme } = useTheme();
 
@@ -74,6 +88,13 @@ export default function App() {
   const handlePageChange = (pageId: string) => {
     setPage(pageId);
     setMobileMenuOpen(false);
+    setVisited((prev) => {
+      if (prev.has(pageId)) return prev;
+      const next = new Set(prev);
+      next.add(pageId);
+      localStorage.setItem("microgpt-visited", JSON.stringify([...next]));
+      return next;
+    });
   };
 
   return (
@@ -105,11 +126,14 @@ export default function App() {
             {PAGES.map((p) => (
               <button
                 key={p.id}
-                className={page === p.id ? "active" : ""}
+                className={`${page === p.id ? "active" : ""} ${p.sep ? "nav-sep" : ""}`}
                 onClick={() => handlePageChange(p.id)}
               >
                 <span className="num">{p.num}</span>
                 <span>{p.label}</span>
+                {visited.has(p.id) && page !== p.id && (
+                  <span className="visited-dot" aria-label="déjà visitée" />
+                )}
               </button>
             ))}
           </nav>
@@ -126,14 +150,6 @@ export default function App() {
               </button>
             ))}
           </div>
-          <a
-            href="https://karpathy.github.io/2026/02/12/microgpt/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="guide-link"
-          >
-            📖 Lire le guide officiel
-          </a>
           <div className="theme-picker">
             <button
               className={`theme-btn ${theme === "dark" ? "active" : ""}`}
@@ -179,7 +195,7 @@ export default function App() {
             </button>
           </div>
           <div className="community-note">
-            Construit avec l'aide de l'IA. Peut contenir des erreurs. Basé sur{" "}
+            Basé sur{" "}
             <a
               href="https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95"
               target="_blank"
@@ -208,12 +224,17 @@ export default function App() {
                 </div>
               }
             >
+              {page === "home" && (
+                <HomePage onStart={() => handlePageChange("tokenizer")} />
+              )}
               {page === "tokenizer" && <TokenizerPage />}
               {page === "embeddings" && <EmbeddingsPage />}
               {page === "forward" && <ForwardPassPage />}
               {page === "attention" && <AttentionPage />}
               {page === "training" && <TrainingPage />}
               {page === "inference" && <InferencePage />}
+              {page === "fullmodel" && <FullModelPage />}
+              {page === "conclusion" && <ConclusionPage />}
             </Suspense>
           </ErrorBoundary>
         </main>

@@ -145,6 +145,19 @@ body {
   background: var(--blue);
   color: var(--bg);
 }
+.sidebar nav button.nav-sep {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.visited-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  margin-left: auto;
+  flex-shrink: 0;
+}
 
 /* Dataset picker */
 .dataset-picker {
@@ -1105,28 +1118,6 @@ button.gen-name:focus-visible {
   height: 14px;
 }
 
-.guide-link {
-  display: block;
-  margin: 12px 16px;
-  padding: 10px 14px;
-  background: var(--blue);
-  color: var(--bg);
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: bold;
-  text-align: center;
-  transition: all 0.15s;
-}
-.guide-link:focus-visible {
-  outline: 2px solid var(--blue);
-  outline-offset: 2px;
-}
-.guide-link:hover {
-  filter: brightness(1.15);
-  transform: translateY(-1px);
-}
-
 .community-note {
   font-size: 10px;
   color: var(--text);
@@ -1653,12 +1644,6 @@ button.gen-name:focus-visible {
     height: 12px;
   }
 
-  .guide-link {
-    margin: 12px 16px;
-    padding: 12px 14px;
-    font-size: 12px;
-  }
-
   .community-note {
     font-size: 10px;
     padding: 16px 20px;
@@ -1797,12 +1782,6 @@ button.gen-name:focus-visible {
   .theme-btn svg {
     width: 11px;
     height: 11px;
-  }
-
-  .guide-link {
-    margin: 10px 12px;
-    padding: 10px 12px;
-    font-size: 11px;
   }
 
   .community-note {
