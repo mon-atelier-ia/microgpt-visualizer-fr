@@ -9,6 +9,7 @@ import {
 import qrcode from "qrcode-generator";
 import { DATASETS, DEFAULT_DATASET_ID } from "./datasets";
 import { resetModel, getModelTotalStep } from "./modelStore";
+import { getCssVar } from "./utils/getCssVar";
 import TermProvider from "./components/TermProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -86,12 +87,8 @@ export default function App() {
       canvas.height = size;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      const fg = getComputedStyle(document.documentElement)
-        .getPropertyValue("--text")
-        .trim();
-      const bg = getComputedStyle(document.documentElement)
-        .getPropertyValue("--surface")
-        .trim();
+      const fg = getCssVar("--text");
+      const bg = getCssVar("--surface");
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, size, size);
       ctx.fillStyle = fg;
@@ -349,7 +346,12 @@ export default function App() {
       >
         <div className="share-dialog__content">
           <p className="share-dialog__title">Partager</p>
-          <canvas ref={qrCanvasRef} className="share-dialog__qr" />
+          <canvas
+            ref={qrCanvasRef}
+            className="share-dialog__qr"
+            role="img"
+            aria-label="QR code vers microgpt-visualizer-fr.vercel.app"
+          />
           <p className="share-dialog__url">microgpt-visualizer-fr.vercel.app</p>
           <button
             type="button"
