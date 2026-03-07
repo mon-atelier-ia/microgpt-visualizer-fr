@@ -1,21 +1,21 @@
 /* Dark theme — warm neutral */
 :root,
 [data-theme="dark"] {
-  --bg: #181816;
-  --surface: #222220;
-  --surface2: #2a2a27;
-  --border: #363632;
-  --border-hover: #4a4a44;
-  --text: #cdc8be;
-  --text-dim: #959082;
-  --blue: #c28b4e;
-  --purple: #a08cb4;
-  --cyan: #6a9f9b;
-  --green: #8aaa6b;
-  --red: #bf6a63;
-  --orange: #c4885c;
-  --yellow: #b8a45c;
-  --vector-text: #2c2a25;
+  --bg: oklch(0.208 0.004 106.7);
+  --surface: oklch(0.251 0.004 106.7);
+  --surface2: oklch(0.284 0.005 106.7);
+  --border: oklch(0.331 0.007 106.8);
+  --border-hover: oklch(0.407 0.01 106.8);
+  --text: oklch(0.834 0.015 84.6);
+  --text-dim: oklch(0.654 0.021 90.6);
+  --blue: oklch(0.678 0.103 67.4);
+  --purple: oklch(0.672 0.062 307.4);
+  --cyan: oklch(0.664 0.057 189.9);
+  --green: oklch(0.698 0.094 130.4);
+  --red: oklch(0.619 0.11 25.7);
+  --orange: oklch(0.677 0.095 56.6);
+  --yellow: oklch(0.72 0.095 94.3);
+  --vector-text: oklch(0.285 0.009 88.8);
   --heat-cell-bg: var(--blue);
   --neuron-active-bg: var(--green);
   --loss-bg: var(--red);
@@ -23,21 +23,21 @@
 
 /* Light theme — warm paper */
 [data-theme="light"] {
-  --bg: #f5f1ea;
-  --surface: #fffdf8;
-  --surface2: #ece8e0;
-  --border: #d6d0c5;
-  --border-hover: #b8b2a6;
-  --text: #2c2a25;
-  --text-dim: #6a655d;
-  --blue: #9c6b30;
-  --purple: #7b5ea0;
-  --cyan: #3a7d78;
-  --green: #527a34;
-  --red: #a04040;
-  --orange: #a06830;
-  --yellow: #8a7a2e;
-  --vector-text: #2c2a25;
+  --bg: oklch(0.959 0.01 81.8);
+  --surface: oklch(0.994 0.007 88.6);
+  --surface2: oklch(0.932 0.012 84.6);
+  --border: oklch(0.859 0.016 82.8);
+  --border-hover: oklch(0.765 0.018 84.6);
+  --text: oklch(0.285 0.009 88.8);
+  --text-dim: oklch(0.509 0.014 79.7);
+  --blue: oklch(0.568 0.098 68.5);
+  --purple: oklch(0.539 0.105 303.3);
+  --cyan: oklch(0.545 0.069 188.8);
+  --green: oklch(0.533 0.109 133.6);
+  --red: oklch(0.502 0.128 22.9);
+  --orange: oklch(0.567 0.101 63.1);
+  --yellow: oklch(0.579 0.097 97.3);
+  --vector-text: oklch(0.285 0.009 88.8);
   --heat-cell-bg: var(--blue);
   --neuron-active-bg: var(--green);
   --loss-bg: var(--red);
