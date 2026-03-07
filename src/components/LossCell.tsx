@@ -10,8 +10,8 @@ export default function LossCell({ loss, from, to }: Props) {
     <div
       className="loss-cell"
       style={{
-        background: `rgba(247, 118, 142, ${intensity * 0.3})`,
-        border: `1px solid rgba(247, 118, 142, ${intensity * 0.5})`,
+        background: `color-mix(in oklch, var(--loss-bg) ${Math.round(intensity * 30)}%, transparent)`,
+        border: `1px solid color-mix(in oklch, var(--loss-bg) ${Math.round(intensity * 50)}%, transparent)`,
       }}
     >
       <div>

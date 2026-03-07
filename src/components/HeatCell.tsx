@@ -8,7 +8,7 @@ export default function HeatCell({ value, label }: Props) {
     <div
       className="heat-cell"
       style={{
-        background: `rgba(122, 162, 247, ${value})`,
+        background: `color-mix(in oklch, var(--heat-cell-bg) ${Math.round(value * 100)}%, transparent)`,
         color: value > 0.3 ? "#fff" : "var(--text-dim)",
       }}
     >

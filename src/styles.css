@@ -16,6 +16,9 @@
   --orange: #c4885c;
   --yellow: #b8a45c;
   --vector-text: #2c2a25;
+  --heat-cell-bg: var(--blue);
+  --neuron-active-bg: var(--green);
+  --loss-bg: var(--red);
 }
 
 /* Light theme — warm paper */
@@ -35,6 +38,9 @@
   --orange: #a06830;
   --yellow: #8a7a2e;
   --vector-text: #2c2a25;
+  --heat-cell-bg: var(--blue);
+  --neuron-active-bg: var(--green);
+  --loss-bg: var(--red);
 }
 
 * {

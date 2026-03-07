@@ -10,7 +10,7 @@ export default function NeuronCell({ value, index }: Props) {
       className="neuron-cell"
       style={{
         background: active
-          ? `rgba(158, 206, 106, ${Math.min(1, value * 2)})`
+          ? `color-mix(in oklch, var(--neuron-active-bg) ${Math.round(Math.min(1, value * 2) * 100)}%, transparent)`
           : "var(--surface2)",
         color: active ? "#fff" : "var(--text-dim)",
       }}
