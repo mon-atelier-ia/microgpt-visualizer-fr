@@ -19,6 +19,8 @@
   --heat-cell-bg: var(--blue);
   --neuron-active-bg: var(--green);
   --loss-bg: var(--red);
+  --dot-shadow: oklch(0 0 0);
+  --vignette-glow: oklch(1 0 0);
 }
 
 /* Light theme — warm paper */
@@ -41,6 +43,8 @@
   --heat-cell-bg: var(--blue);
   --neuron-active-bg: var(--green);
   --loss-bg: var(--red);
+  --dot-shadow: oklch(0 0 0);
+  --vignette-glow: oklch(1 0 0);
 }
 
 * {

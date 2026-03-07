@@ -122,6 +122,8 @@ export default function PCAScatterPlot({
       const cyanRgb = parseColor(cyanColor);
       const orangeRgb = parseColor(orangeColor);
       const purpleRgb = parseColor(purpleColor);
+      const shadowRgb = parseColor(getCssVar("--dot-shadow"));
+      const glowRgb = parseColor(getCssVar("--vignette-glow"));
 
       const embData = overrideEmb || wteData;
       const projected = overrideProjected || projRef.current;
@@ -155,8 +157,11 @@ export default function PCAScatterPlot({
       const minDim = Math.min(w, h);
       const maxDim = Math.max(w, h);
       const g1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, minDim * 0.35);
-      g1.addColorStop(0, "rgba(255,255,255,0.025)");
-      g1.addColorStop(1, "rgba(255,255,255,0)");
+      g1.addColorStop(
+        0,
+        `rgba(${glowRgb[0]},${glowRgb[1]},${glowRgb[2]},0.025)`,
+      );
+      g1.addColorStop(1, `rgba(${glowRgb[0]},${glowRgb[1]},${glowRgb[2]},0)`);
       ctx.fillStyle = g1;
       ctx.fillRect(0, 0, w, h);
       const g2 = ctx.createRadialGradient(
@@ -167,8 +172,14 @@ export default function PCAScatterPlot({
         cy,
         maxDim * 0.65,
       );
-      g2.addColorStop(0, "rgba(0,0,0,0)");
-      g2.addColorStop(1, "rgba(0,0,0,0.35)");
+      g2.addColorStop(
+        0,
+        `rgba(${shadowRgb[0]},${shadowRgb[1]},${shadowRgb[2]},0)`,
+      );
+      g2.addColorStop(
+        1,
+        `rgba(${shadowRgb[0]},${shadowRgb[1]},${shadowRgb[2]},0.35)`,
+      );
       ctx.fillStyle = g2;
       ctx.fillRect(0, 0, w, h);
 
@@ -281,7 +292,7 @@ export default function PCAScatterPlot({
         for (let s = 3; s >= 1; s--) {
           ctx.beginPath();
           ctx.arc(sx + 2, sy + 2.5, drawR + s, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0,0,0,${(0.12 / s).toFixed(3)})`;
+          ctx.fillStyle = `rgba(${shadowRgb[0]},${shadowRgb[1]},${shadowRgb[2]},${(0.12 / s).toFixed(3)})`;
           ctx.fill();
         }
 

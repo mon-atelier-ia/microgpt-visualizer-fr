@@ -12,7 +12,7 @@ export default function NeuronCell({ value, index }: Props) {
         background: active
           ? `color-mix(in oklch, var(--neuron-active-bg) ${Math.round(Math.min(1, value * 2) * 100)}%, transparent)`
           : "var(--surface2)",
-        color: active ? "#fff" : "var(--text-dim)",
+        color: active ? "var(--bg)" : "var(--text-dim)",
       }}
       title={`neurone ${index} : ${value.toFixed(4)} ${active ? "(actif)" : "(inactif)"}`}
     >
