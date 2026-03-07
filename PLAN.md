@@ -457,7 +457,7 @@ Page dédiée à l'attention multi-token, insérée comme page 4 (Entraînement 
 
 ### 14. Nice-to-have : bouton partager + QR code modal
 
-> **État** : À faire. Voir `docs/plans/2026-03-05-sidebar-and-new-pages-plan.md` Task 7.
+> **État** : FAIT. Bouton partager dans `community-note`, `<dialog>` QR code via `qrcode-generator`, couleurs theme-reactive via CSS vars, backdrop click + Escape pour fermer.
 
 Bouton icône "partager" dans le footer sidebar. Au clic, `<dialog>` natif avec QR code Canvas vers `https://microgpt-visualizer-fr.vercel.app`. Lib `qrcode-generator` (~4KB gzip).
 

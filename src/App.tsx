@@ -1,4 +1,12 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react";
+import qrcode from "qrcode-generator";
 import { DATASETS, DEFAULT_DATASET_ID } from "./datasets";
 import { resetModel, getModelTotalStep } from "./modelStore";
 import TermProvider from "./components/TermProvider";
@@ -58,7 +66,49 @@ export default function App() {
     }
   });
   const confirmRef = useRef<HTMLDialogElement>(null);
+  const shareRef = useRef<HTMLDialogElement>(null);
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const { theme, toggle: toggleTheme } = useTheme();
+
+  const openShare = useCallback(() => {
+    shareRef.current?.showModal();
+    // Draw QR code after dialog is visible
+    requestAnimationFrame(() => {
+      const canvas = qrCanvasRef.current;
+      if (!canvas) return;
+      const qr = qrcode(0, "M");
+      qr.addData("https://microgpt-visualizer-fr.vercel.app");
+      qr.make();
+      const moduleCount = qr.getModuleCount();
+      const size = 180;
+      const cellSize = size / moduleCount;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const fg = getComputedStyle(document.documentElement)
+        .getPropertyValue("--text")
+        .trim();
+      const bg = getComputedStyle(document.documentElement)
+        .getPropertyValue("--surface")
+        .trim();
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = fg;
+      for (let r = 0; r < moduleCount; r++) {
+        for (let c = 0; c < moduleCount; c++) {
+          if (qr.isDark(r, c)) {
+            ctx.fillRect(
+              c * cellSize,
+              r * cellSize,
+              cellSize + 0.5,
+              cellSize + 0.5,
+            );
+          }
+        }
+      }
+    });
+  }, []);
 
   const handleDatasetChange = (id: string) => {
     if (id === datasetId) return;
@@ -204,6 +254,28 @@ export default function App() {
               microgpt.py de Karpathy
             </a>
             .
+            <button
+              className="share-btn"
+              onClick={openShare}
+              aria-label="Partager"
+              title="Partager via QR code"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+            </button>
           </div>
         </aside>
 
@@ -265,6 +337,27 @@ export default function App() {
               Réinitialiser
             </button>
           </div>
+        </div>
+      </dialog>
+      <dialog
+        ref={shareRef}
+        className="share-dialog"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) shareRef.current?.close();
+        }}
+        onCancel={() => shareRef.current?.close()}
+      >
+        <div className="share-dialog__content">
+          <p className="share-dialog__title">Partager</p>
+          <canvas ref={qrCanvasRef} className="share-dialog__qr" />
+          <p className="share-dialog__url">microgpt-visualizer-fr.vercel.app</p>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => shareRef.current?.close()}
+          >
+            Fermer
+          </button>
         </div>
       </dialog>
     </TermProvider>

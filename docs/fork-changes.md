@@ -237,6 +237,7 @@ Commits: `4ea6c80`, `226e502`, `8c63af0`, `441b85b`, `e13fcdc`, `c6e7c2c`, `8baa
 
 ## Divers
 
-| Change                                   | Fichier(s)   | Justification                                                                        |
-| ---------------------------------------- | ------------ | ------------------------------------------------------------------------------------ |
-| Console easter egg P-A.G (ASCII + oklch) | `index.html` | ASCII art + styled console.log visible dans DevTools. Exécution immédiate, pas React |
+| Change                                   | Fichier(s)              | Justification                                                                                                                                   |
+| ---------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Console easter egg P-A.G (ASCII + oklch) | `index.html`            | ASCII art + styled console.log visible dans DevTools. Exécution immédiate, pas React                                                            |
+| Bouton partager + QR code modal          | `App.tsx`, `styles.css` | Icône partager dans footer sidebar, `<dialog>` natif avec QR code Canvas (`qrcode-generator`), couleurs theme-reactive, backdrop click + Escape |
