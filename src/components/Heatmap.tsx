@@ -2,26 +2,10 @@ import { useCallback, useRef } from "react";
 import { Value } from "../engine/autograd";
 import { getCssVar } from "../utils/getCssVar";
 import { parseColor } from "../utils/parseColor";
+import { valToColor } from "../utils/valToColor";
 
 const DISPLAY_DECIMALS = 2;
 const TOOLTIP_DECIMALS = 4;
-
-/** Interpolate between neutral and target color based on value polarity. */
-function valToColor(
-  v: number,
-  scale: number,
-  negRgb: [number, number, number],
-  posRgb: [number, number, number],
-  neutralRgb: [number, number, number],
-): string {
-  const t = Math.max(-1, Math.min(1, v / scale));
-  const base = t < 0 ? negRgb : posRgb;
-  const a = Math.abs(t);
-  const r = Math.round(neutralRgb[0] * (1 - a) + base[0] * a);
-  const g = Math.round(neutralRgb[1] * (1 - a) + base[1] * a);
-  const b = Math.round(neutralRgb[2] * (1 - a) + base[2] * a);
-  return `rgb(${r},${g},${b})`;
-}
 
 interface Props {
   matrix: Value[][];
@@ -115,10 +99,10 @@ export default function Heatmap({
               {row.slice(0, colCount).map((cell, c) => {
                 const v = cell.data;
                 const bg = valToColor(
-                  v,
-                  0.3,
-                  palette.neg,
+                  v / 0.3,
+                  1,
                   palette.pos,
+                  palette.neg,
                   palette.neutral,
                 );
                 return (
@@ -170,7 +154,7 @@ export function VectorBar({
             key={i}
             className="vector-cell"
             style={{
-              background: valToColor(v, maxAbs * 0.8, neg, pos, neutral),
+              background: valToColor(v / (maxAbs * 0.8), 1, pos, neg, neutral),
               color: text,
             }}
             title={`dim${i}: ${v.toFixed(TOOLTIP_DECIMALS)}`}
