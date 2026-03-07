@@ -330,7 +330,7 @@ App
 | AttentionPage   | `input`, `selectedPos`, `selectedHead`, `activeHead`, `hoverSrc` |
 | TrainingPage    | `training`, `lastResult`, `stopRef`, `rafRef`                    |
 | InferencePage   | `temperature`, `results[]`, `activeTrace`, `activeStep`          |
-| FullModelPage   | _(stub — à compléter avec FullNNDiagram)_                        |
+| FullModelPage   | _(aucun — trace via useMemo, passé à FullNNDiagram)_             |
 | ConclusionPage  | _(aucun — statique)_                                             |
 
 ### 6.4 Données dérivées (useMemo)
@@ -589,11 +589,38 @@ App
 
 ---
 
-### 7.7 Page 7 : Modèle complet (stub)
+### 7.7 Page 7 : Modèle complet
 
 **ID** : `fullmodel` | **Titre** : `7. Modèle complet`
 
-> Stub actuel. FullNNDiagram Canvas 2D 13 colonnes à implémenter (Task 5 du plan).
+**Description** : _Voici toute la machine assemblée — les 16 couches que tu as explorées une par une dans les étapes précédentes._
+
+**FullNNDiagram** — Canvas 2D, 16 colonnes, 17 edges, 2 arcs résiduels (Bézier dashed), 12 stages d'animation.
+
+| Col | Label       | Taille | Donnée trace | Couleur  | Section   |
+| --- | ----------- | ------ | ------------ | -------- | --------- |
+| 0   | Token Emb   | 16     | tokEmb       | --cyan   | Embedding |
+| 1   | Pos Emb     | 16     | posEmb       | --cyan   | Embedding |
+| 2   | Add         | 16     | combined     | --text   | —         |
+| 3   | Norm        | 16     | afterNorm    | --text   | —         |
+| 4   | Norm (attn) | 16     | preAttnNorm  | --text   | —         |
+| 5   | Q           | 16     | q            | --purple | Attention |
+| 6   | K           | 16     | k            | --purple | Attention |
+| 7   | V           | 16     | v            | --purple | Attention |
+| 8   | 4 Tetes     | 16     | headOutputs  | --purple | Attention |
+| 9   | Apres Attn  | 16     | afterAttn    | --purple | Attention |
+| 10  | Norm (mlp)  | 16     | preMlpNorm   | --text   | —         |
+| 11  | MLP (x4)    | 64     | mlpHidden    | --orange | MLP       |
+| 12  | ReLU        | 64     | masked       | --orange | MLP       |
+| 13  | Apres MLP   | 16     | afterMlp     | --orange | MLP       |
+| 14  | Logits      | 27     | logits       | --blue   | Sortie    |
+| 15  | Probs       | 27     | probs        | --blue   | Sortie    |
+
+Residuels : Norm(3)→ApresAttn(9) `+res₁`, ApresAttn(9)→ApresMLP(13) `+res₂`.
+
+Animations : forward (vert, stage-by-stage 180ms), pause ("Erreur"), backward optionnel (orange, stages inverses). Gradients backward simulés (sin hash). `prefers-reduced-motion` respecté.
+
+**ADR** : `preAttnNorm` et `preMlpNorm` ajoutés à `ForwardTrace` pour fidélité architecturale du diagramme complet. Non propagés aux pages individuelles (VectorsPanel, AttentionPage) — rmsnorm ne change que l'échelle, faible valeur pédagogique pour le public 10-14 ans, risque de surcharge visuelle.
 
 ---
 

@@ -176,8 +176,10 @@ src/
 │   ├── ErrorBoundary.test.tsx     #  52 lignes — 3 tests (render, catch, reload)
 │   ├── FlowDiagram.tsx            # 123 lignes — sous-composant ForwardPassPage (C-4)
 │   ├── VectorsPanel.tsx           #  41 lignes — sous-composant ForwardPassPage (C-4)
-│   ├── NNDiagram.tsx              # ~300 lignes — Canvas 2D réseau de neurones interactif (section 16)
+│   ├── NNDiagram.tsx              # ~170 lignes — Canvas 2D réseau de neurones 5 colonnes (section 16), utilise hooks partagés
 │   ├── NNDiagram.test.tsx         #  40 lignes — 2 tests (canvas role/aria-label, bouton Rejouer)
+│   ├── FullNNDiagram.tsx          # ~1 090 lignes — Canvas 2D architecture complète 16 colonnes + 5 effets waow (section 19)
+│   ├── FullNNDiagram.test.tsx     #  47 lignes — 3 tests (canvas role/aria-label "16 couches", Rejouer, backward toggle)
 │   ├── PCAScatterPlot.tsx         # 641 lignes — Canvas 2D scatter plot PCA wte (section 17)
 │   └── MLPActivationPanel.tsx     #  46 lignes — sous-composant ForwardPassPage (C-4)
 ├── pages/
@@ -194,9 +196,12 @@ src/
 │   ├── InferencePage.test.tsx     #  95 lignes — 6 tests (W-2, W-4, R-3)
 │   ├── HomePage.tsx               #  49 lignes — page 0 : pitch, 8 étapes, bouton Commencer
 │   ├── HomePage.test.tsx          #  29 lignes — 3 tests (pitch, onStart, 8 steps)
-│   ├── FullModelPage.tsx          #  14 lignes — page 7 : stub (FullNNDiagram à venir)
+│   ├── FullModelPage.tsx          #  52 lignes — page 7 : modèle complet (FullNNDiagram avec trace réelle)
+│   ├── FullModelPage.test.tsx     #  55 lignes — 3 tests (titre, canvas, message mobile)
 │   ├── ConclusionPage.tsx         # 139 lignes — page 8 : tableau comparatif + liens
 │   └── ConclusionPage.test.tsx    #  26 lignes — 3 tests (8 rows, Karpathy link, fondations)
+├── hooks/
+│   └── useCanvasObservers.ts      #  92 lignes — IO/RO/MO triple pattern partagé (NNDiagram + FullNNDiagram)
 ├── utils/
 │   ├── charStats.ts               #  59 lignes — statistiques dataset (fréquence, bigrammes)
 │   ├── charStats.test.ts          #  30 lignes — 5 tests
@@ -206,7 +211,10 @@ src/
 │   ├── pca.ts                     #  96 lignes — PCA 2D (centrage, covariance, vecteurs propres)
 │   ├── pca.test.ts                #  76 lignes — 6 tests (identité, corrélation, forme sortie, taille, ≥2 lignes, vide)
 │   ├── parseColor.ts              #  15 lignes — parse hex/rgb/rgba → [r,g,b]
-│   └── parseColor.test.ts         #  25 lignes — 5 tests (hex6, rgb, rgba, hex3, fallback)
+│   ├── parseColor.test.ts         #  25 lignes — 5 tests (hex6, rgb, rgba, hex3, fallback)
+│   ├── valToColor.ts              #  18 lignes — interpolation vert/rouge par valeur (Canvas)
+│   ├── canvasInteraction.ts       #  52 lignes — findClosestNeuron + makeTouchHandlers (Canvas)
+│   └── getCssVar.ts               #   3 lignes — getComputedStyle wrapper
 ├── engine/                        # 464 lignes — LECTURE SEULE (upstream)
 │   ├── autograd.ts                #  98 lignes — classe Value, backward
 │   ├── autograd.test.ts           #  48 lignes — 5 tests (arithmétique, backward, diamond)
@@ -242,7 +250,7 @@ docs/
 │ ├── 2026-03-05-sidebar-and-new-pages-design.md # Design sidebar + 3 nouvelles pages
 │ └── 2026-03-05-sidebar-and-new-pages-plan.md # Plan d'implémentation (8 tasks)
 
-**Total : ~7 100 lignes src (hors data blobs), 48 fichiers source + 26 fichiers test. 139 tests. 8 playgrounds standalone.**
+**Total : ~8 000 lignes src (hors data blobs), 53 fichiers source + 28 fichiers test. 145 tests. 8 playgrounds standalone.**
 
 ### Constats clés
 
@@ -256,8 +264,9 @@ docs/
 - **Attention** : boucle multi-token côté page (KV cache pattern), matrice T×T `<table>` sémantique
 - **Model sharing** : `useSyncExternalStore` dans `modelStore.ts`, hook `useModel()` (A-1 corrigé)
 - **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
-- **Tests** : Vitest + jsdom + @testing-library/react (139 tests, 26 fichiers)
+- **Tests** : Vitest + jsdom + @testing-library/react (145 tests, 28 fichiers)
 - **ErrorBoundary** : class component, `window.location.reload()`, sidebar hors boundary
+- **Canvas shared hooks** : `useCanvasObservers` (IO/RO/MO), `canvasInteraction`, `valToColor` partagés entre NNDiagram et FullNNDiagram
 - **Code splitting** : `React.lazy()` + `Suspense` → 9+ chunks JS séparés
 - **Visited dots** : `Set<string>` dans localStorage (`microgpt-visited`), dot vert 6px `var(--green)`
 - **CSS** : 20 classes utilitaires + BEM + `.sr-only` + `prefers-reduced-motion`. Inline styles réduits de 64 à 7 (pages originales) + 8 (AttentionPage, dont 2 dynamiques)
@@ -616,22 +625,42 @@ Audit systématique des 7 composants animés/interactifs : cohérence visuelle, 
 - Bouton "Commencer" → page 1
 - Optionnel : aperçu du résultat (nom généré) comme accroche
 
-### 19. Page modèle complet — visualisation architecture intégrale
+### 19. Page modèle complet — visualisation architecture intégrale — FAIT
 
-> **État** : stub créé (`FullModelPage.tsx`). FullNNDiagram à implémenter (Task 5 du plan). Design validé.
+> **État** : FAIT. Commits `345827a`, `40dc76a`.
 
-**Constat** : `playground-full.html` montre les 13 colonnes fidèles au graphe de calcul complet, mais c'est un prototype standalone. L'intégrer dans l'app donnerait une vue d'ensemble que la page 3 (5 colonnes simplifiées) ne couvre pas.
+**Composant** : `FullNNDiagram.tsx` (~1 090 lignes) — Canvas 2D indépendant montrant l'architecture complète en **16 colonnes** (évolution de 13 après audit de fidélité contre `model.ts`).
 
-**Objectif** : page 7 = **récompense visuelle**. Full spectacle, animations over the top. Pédagogie minimale — ceux qui ont skip les explications y retourneront d'eux-mêmes.
+**Réalisé** :
 
-**ADR — décisions validées** :
+- ✅ 16 colonnes : TokEmb, PosEmb, Add, Norm, Norm(attn), Q, K, V, 4 Têtes, Après Attn, Norm(mlp), MLP(×4), ReLU, Après MLP, Logits, Probs
+- ✅ 17 connexions (one2one + dense), 2 arcs résiduels Bézier avec flash pendant forward
+- ✅ 12 stages d'animation forward (180ms/stage, 250ms fade), backward optionnel (orange)
+- ✅ Section labels en haut (Embedding, Attention, MLP, Sortie) avec underlines colorées
+- ✅ Brackets H0-H3 sur colonne "4 Têtes"
+- ✅ Hover interactif : neurone le plus proche → stroke bleu + connexions colorées
+- ✅ `useCanvasObservers` partagé (IO/RO/MO) — extrait de NNDiagram dans `src/hooks/`
+- ✅ `prefers-reduced-motion` respecté (skip animation, état final immédiat)
+- ✅ Mobile <768px : canvas masqué, message "Utilise un écran plus large"
+- ✅ Desktop : `min-width: 900px`, `overflow-x: auto` pour scroll horizontal
+- ✅ Données 100% réelles via `gptForward(…, true).trace!` — jamais simulées
+- ✅ 6 tests (3 FullNNDiagram + 3 FullModelPage)
 
-1. **Layout horizontal desktop + message mobile** : scroll horizontal sur desktop. Sur mobile (<768px) : message "Utilise un écran plus large" — 13 colonnes ne passent pas en 375px, inutile de forcer.
-2. **Ton hybride léger** : intro courte en haut + noms de couches visibles dans le canvas (Emb, Attn, Résidu, MLP, LN, Probs). Pas d'annotations lourdes ni de tooltips pédagogiques.
-3. **Page 7 (après Inférence, avant Conclusion)** : zoom-out après le parcours complet. L'ado a vu les 6 étapes isolément, maintenant il voit tout assemblé. Ne touche pas à la numérotation 1-6.
-4. **Résidus : arcs Bézier + flash animé** : arcs courbes `var(--green)` semi-transparent au-dessus du canvas en idle (structure visible). Flash lumineux pendant le forward animé quand le signal traverse un résidu (spectacle).
-5. **Forward par défaut, bouton "Voir le backward"** : forward = récompense garantie. Backward (gradients en rouge/orange qui redescendent) = bonus pour les curieux. Donne une raison de revenir.
-6. **Nouveau composant FullNNDiagram** : dédié 13 colonnes, indépendant de NNDiagram (5 colonnes page 3). Copie les patterns (IO/RO/MO/getCssVar/parseColor) mais pas de prop boolean ni de hook partagé — les layouts et animations sont trop différents. Données réelles du modèle (stateDict, traces), jamais simulées.
+**5 effets « waow »** (objectif design doc : "Page 7 = full spectacle, animations over the top") :
+
+1. **Particules forward** : dots lumineux (r=2) + traînées 3 points le long des connexions pendant la propagation avant. Couleur = section destination.
+2. **Shockwave** : anneau expansif (10→50px) au centre de chaque colonne quand le wavefront arrive. Alpha sinusoïdale, stroke dégressive.
+3. **Finale Probs** : halo bleu pulsant sur le neurone gagnant (argmax probs) + label caractère/pourcentage via `tokenLabel()`. Statique en idle.
+4. **Éclairs résiduels** : 3 polylignes dentelées le long des arcs Bézier résiduels pendant le flash. Jitter déterministe (refresh 30ms), couleur pourpre.
+5. **Cascade backward** : particules orange en sens inverse (droite→gauche) pendant la rétropropagation. DRY — même helper `drawFlowParticles()`.
+
+4 helpers partagés : `jitter()`, `lerpXY()`, `evalQuadBezier()`, `drawFlowParticles()`. Tous gated sur `phase === "forward"` ou `"backward"` → respectent `prefers-reduced-motion` (phase = "idle" → skippés).
+
+**ADR — 13→16 colonnes** : le plan prévoyait 13 colonnes (port de `playground-full.html`). L'audit de fidélité contre `model.ts` a révélé 3 rmsnorm manquants : initial (afterNorm), pré-attention (preAttnNorm), pré-MLP (preMlpNorm). La colonne "Add+Norm" a été scindée en "Add" + "Norm", et 2 colonnes Norm(attn)/Norm(mlp) ajoutées. ForwardTrace étendu avec `preAttnNorm` et `preMlpNorm` (2 lignes `if (trace)` ajoutées dans la boucle `gptForward`).
+
+**ADR — pas de propagation aux autres pages** : les 2 champs rmsnorm ne sont PAS propagés aux pages 3-4. Raison : rmsnorm ne fait que rescaler (les vecteurs visuellement quasi identiques aux inputs). Signal/bruit faible pour la cible 10-14 ans. Voir `memory/decisions.md`.
+
+**ADR — `weights` prop retiré** : le plan prévoyait un prop `weights` avec les matrices wq/wk/wv/etc. L'implémentation utilise des types de connexion (`one2one`/`dense`) avec alpha calibré, suffisant visuellement et plus simple.
 
 ### 20. Page de conclusion — ce que les vrais GPT font en plus — FAIT
 
