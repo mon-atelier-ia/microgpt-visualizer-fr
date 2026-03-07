@@ -167,7 +167,7 @@ export default function App() {
         <aside className={`sidebar ${mobileMenuOpen ? "mobile-open" : ""}`}>
           <header>
             <h1>MicroGPT</h1>
-            <div className="subtitle">Explorateur visuel &mdash; @karpathy</div>
+            <div className="subtitle">Explorateur visuel</div>
           </header>
           <nav>
             {PAGES.map((p) => (
@@ -242,15 +242,17 @@ export default function App() {
             </button>
           </div>
           <div className="community-note">
-            Basé sur{" "}
-            <a
-              href="https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              microgpt.py de Karpathy
-            </a>
-            .
+            <span>
+              Basé sur{" "}
+              <a
+                href="https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                microgpt.py d'Andrej Karpathy
+              </a>
+              .
+            </span>
             <button
               className="share-btn"
               onClick={openShare}

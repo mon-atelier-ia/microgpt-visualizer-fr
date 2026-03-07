@@ -1165,14 +1165,17 @@ button.gen-name:focus-visible {
 }
 
 .community-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 10px;
   color: var(--text);
-  padding: 14px 16px;
+  padding: 10px 16px;
   line-height: 1.6;
   border-top: 1px solid var(--border);
   margin-top: auto;
   background: var(--surface2);
-  border-radius: 0 0 0 0;
 }
 .community-note a {
   color: var(--blue);
@@ -1439,29 +1442,32 @@ button.gen-name:focus-visible {
 
 /* ───── Share button + dialog ───── */
 .share-btn {
-  display: inline-flex;
+  flex-shrink: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 24px;
   background: none;
-  border: none;
+  border: 1px solid var(--border);
   color: var(--text-dim);
   cursor: pointer;
-  padding: 2px;
-  margin-left: 6px;
-  vertical-align: middle;
-  border-radius: 4px;
-  transition: color 0.15s;
+  border-radius: 6px;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 .share-btn:hover {
   color: var(--blue);
+  border-color: var(--blue);
 }
 .share-btn:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
 }
 .share-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
 }
 .share-dialog {
   max-width: 280px;
