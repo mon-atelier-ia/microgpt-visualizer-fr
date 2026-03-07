@@ -22,4 +22,54 @@ describe("parseColor", () => {
   it("fallback pour chaîne vide", () => {
     expect(parseColor("")).toEqual([128, 128, 128]);
   });
+
+  it("parse oklch() basique", () => {
+    // oklch(0.7 0.15 150) ≈ sRGB (76, 184, 106)
+    const [r, g, b] = parseColor("oklch(0.7 0.15 150)");
+    expect(r).toBeGreaterThanOrEqual(60);
+    expect(r).toBeLessThanOrEqual(90);
+    expect(g).toBeGreaterThanOrEqual(170);
+    expect(g).toBeLessThanOrEqual(200);
+    expect(b).toBeGreaterThanOrEqual(90);
+    expect(b).toBeLessThanOrEqual(120);
+  });
+
+  it("parse oklch() avec espaces variés", () => {
+    const [r, g, b] = parseColor("oklch(0.5 0.2 30)");
+    expect(r).toBeGreaterThanOrEqual(0);
+    expect(r).toBeLessThanOrEqual(255);
+    expect(g).toBeGreaterThanOrEqual(0);
+    expect(g).toBeLessThanOrEqual(255);
+    expect(b).toBeGreaterThanOrEqual(0);
+    expect(b).toBeLessThanOrEqual(255);
+  });
+
+  it("parse oklch() achromatic (C=0)", () => {
+    const [r, g, b] = parseColor("oklch(0.5 0 0)");
+    expect(r).toBe(g);
+    expect(g).toBe(b);
+    expect(r).toBeGreaterThanOrEqual(95);
+    expect(r).toBeLessThanOrEqual(125);
+  });
+
+  it("parse oklch() noir (L=0)", () => {
+    expect(parseColor("oklch(0 0 0)")).toEqual([0, 0, 0]);
+  });
+
+  it("parse oklch() blanc (L=1)", () => {
+    const [r, g, b] = parseColor("oklch(1 0 0)");
+    expect(r).toBe(255);
+    expect(g).toBe(255);
+    expect(b).toBe(255);
+  });
+
+  it("parse oklch() clamp out-of-gamut", () => {
+    const [r, g, b] = parseColor("oklch(0.9 0.4 150)");
+    expect(r).toBeGreaterThanOrEqual(0);
+    expect(r).toBeLessThanOrEqual(255);
+    expect(g).toBeGreaterThanOrEqual(0);
+    expect(g).toBeLessThanOrEqual(255);
+    expect(b).toBeGreaterThanOrEqual(0);
+    expect(b).toBeLessThanOrEqual(255);
+  });
 });
