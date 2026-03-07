@@ -5,17 +5,17 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 > Fork français de [enescang/microgpt-visualizer](https://github.com/enescang/microgpt-visualizer) par [mon-atelier-ia](https://github.com/mon-atelier-ia).
 > Production : **https://microgpt-visualizer-fr.vercel.app**
 
-## Fonctionnalités
+## Fonctionnalités — 9 pages interactives
 
+- **Accueil** — Pitch et parcours en 8 étapes pour guider l'élève
 - **Tokenisation** — Observe comment un texte est découpé en tokens (caractère par caractère)
 - **Plongements** — Visualise comment les tokens deviennent des vecteurs de 16 dimensions, bar chart interactif au survol avec statistiques du dataset
 - **Propagation** — Parcours étape par étape la propagation dans le transformer
 - **Attention** — Visualise les matrices d'attention multi-token (Q, K, V, 4 têtes, masque causal, BertViz interactif)
 - **Entraînement** — Regarde le modèle apprendre en temps réel (courbe de loss, heatmaps)
 - **Inférence** — Génère des noms et observe les prédictions à chaque position
-- **Moteur autograd** — Différentiation automatique intégrée, transparente et éducative
-- **Playground réseau de neurones** — Visualisation Canvas 2D du réseau (forward + backward animés)
-- **Démo complète** — Playground standalone avec vrai autograd, entraînement Adam et génération de noms
+- **Modèle complet** — Diagramme Canvas 2D du réseau entier (16 colonnes, 5 effets visuels animés, forward + backward)
+- **Conclusion** — Tableau comparatif microGPT vs vrais LLM, liens pour aller plus loin
 
 ## Différences avec l'original
 
@@ -23,7 +23,7 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 - Glossaire pédagogique intégré (30 termes avec analogies pour 10-14 ans)
 - 6 jeux de données dont 5 francophones (prénoms simples, prénoms top 1K, prénoms INSEE 14K, pokémon, dinosaures)
 - Accessibilité WCAG 2.1 AA (navigation clavier, contrastes, labels, `prefers-reduced-motion`)
-- 133 tests (composants, engine, accessibilité, store, intégrité des données)
+- 145 tests (composants, engine, accessibilité, store, intégrité des données)
 - ErrorBoundary avec message français et bouton de rechargement
 - Code splitting (`React.lazy` + `Suspense`)
 - Documentation architecture réseau de neurones ([`docs/architecture-nn.md`](docs/architecture-nn.md))
@@ -61,39 +61,39 @@ L'application est accessible sur `http://localhost:5173`
 | `pnpm build`   | Build de production                                |
 | `pnpm preview` | Aperçu local du build de production                |
 | `pnpm lint`    | ESLint                                             |
-| `pnpm test`    | Vitest (133 tests)                                 |
+| `pnpm test`    | Vitest (145 tests)                                 |
 
 ## Structure du projet
 
 ```
 src/
-├── components/     # Composants UI réutilisables (Heatmap, AttnMatrix, LossChart, EmbeddingBarChart, Term…)
-├── pages/          # Pages principales
+├── components/     # Composants UI (Heatmap, AttnMatrix, LossChart, FullNNDiagram, Term…)
+├── pages/          # 9 pages
+│   ├── HomePage.tsx
 │   ├── TokenizerPage.tsx
 │   ├── EmbeddingsPage.tsx
 │   ├── ForwardPassPage.tsx
 │   ├── AttentionPage.tsx
 │   ├── TrainingPage.tsx
-│   └── InferencePage.tsx
+│   ├── InferencePage.tsx
+│   ├── FullModelPage.tsx
+│   └── ConclusionPage.tsx
 ├── engine/         # Moteur ML (code upstream, read-only)
 │   ├── autograd.ts # Différentiation automatique
 │   ├── model.ts    # Implémentation du GPT
 │   ├── data.ts     # Données d'entraînement
 │   └── random.ts   # PRNG déterministe
-├── utils/          # Utilitaires (charStats, classifyHead, headExplanation)
+├── hooks/          # Hooks partagés (useCanvasObservers)
+├── utils/          # Utilitaires (charStats, classifyHead, valToColor, canvasInteraction…)
 ├── data/           # Glossaire pédagogique
 ├── datasets/       # 6 jeux de données (EN + FR)
-└── App.tsx         # Composant racine
+└── App.tsx         # Composant racine (routing 9 pages, sidebar, visited dots)
 
 docs/
-├── architecture-nn.md  # Spécification réseau (~4 192 paramètres, 13 couches)
+├── architecture-nn.md  # Spécification réseau (~4 192 paramètres, 16 couches)
 ├── audit-frontend.md   # Audit qualité frontend
 ├── audit-iso.md        # Audit ISO (25010, 40500, 9241-110)
 └── fork-changes.md     # Registre divergences upstream
-
-playground.html           # Visualisation réseau de neurones (5 colonnes, forward+backward)
-playground-full.html      # Visualisation fidèle (13 colonnes, résidus, têtes)
-playground-complete.html  # Démo complète : vrai autograd, entraînement, inférence
 ```
 
 ## Stack technique
@@ -158,17 +158,17 @@ An interactive web application for visualizing and understanding how GPT (Genera
 > French fork of [enescang/microgpt-visualizer](https://github.com/enescang/microgpt-visualizer) by [mon-atelier-ia](https://github.com/mon-atelier-ia).
 > Production: **https://microgpt-visualizer-fr.vercel.app**
 
-## Features
+## Features — 9 interactive pages
 
-- **Tokenizer Visualization** — See how text is broken down into tokens
-- **Embeddings Explorer** — Visualize how tokens are converted to vector representations, with interactive bar chart and dataset statistics on hover
+- **Home** — Pitch and 8-step guided journey
+- **Tokenizer** — See how text is broken down into tokens
+- **Embeddings** — Visualize how tokens are converted to vector representations, with interactive bar chart and dataset statistics on hover
 - **Propagation** — Step through the transformer's forward propagation
 - **Attention** — Visualize multi-token attention matrices (Q, K, V, 4 heads, causal mask, interactive BertViz)
-- **Training Process** — Watch the model learn in real-time with loss charts and heatmaps
-- **Inference Mode** — Generate text and see predictions as they happen
-- **Custom Autograd Engine** — Built-in automatic differentiation for transparency
-- **Neural Network Playground** — Canvas 2D neural network visualization (animated forward + backward passes)
-- **Complete Demo** — Standalone playground with real autograd, Adam training and name generation
+- **Training** — Watch the model learn in real-time with loss charts and heatmaps
+- **Inference** — Generate text and see predictions as they happen
+- **Full Model** — Canvas 2D diagram of the entire network (16 columns, 5 animated visual effects, forward + backward)
+- **Conclusion** — Comparison table microGPT vs real LLMs, further reading links
 
 ## Getting Started
 
