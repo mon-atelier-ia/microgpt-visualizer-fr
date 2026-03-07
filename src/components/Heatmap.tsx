@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { Value } from "../engine/autograd";
 import { getCssVar } from "../utils/getCssVar";
 import { parseColor } from "../utils/parseColor";
@@ -40,14 +40,13 @@ export default function Heatmap({
 }: Props) {
   const rowsRef = useRef<(HTMLTableRowElement | null)[]>([]);
 
-  // Read theme palette for heatmap colors (future-proof for oklch)
-  const palette = useMemo(() => {
-    const neg = parseColor(getCssVar("--red"));
-    const pos = parseColor(getCssVar("--green"));
-    const neutral = parseColor(getCssVar("--surface2"));
-    const text = getCssVar("--vector-text");
-    return { neg, pos, neutral, text };
-  }, [matrix]); // re-read on data change (theme may have changed)
+  // Read theme palette for heatmap colors — no memo (getCssVar is cheap,
+  // must re-read on every render to react to theme toggle)
+  const neg = parseColor(getCssVar("--red"));
+  const pos = parseColor(getCssVar("--green"));
+  const neutral = parseColor(getCssVar("--surface2"));
+  const text = getCssVar("--vector-text");
+  const palette = { neg, pos, neutral, text };
 
   // Roving tabindex: Arrow Up/Down/Home/End to navigate rows (W-1)
   const handleKeyDown = useCallback(
