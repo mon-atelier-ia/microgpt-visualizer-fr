@@ -21,10 +21,12 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 
 - Interface entièrement en français (labels, glossaire, messages)
 - Glossaire pédagogique intégré (30 termes avec analogies pour 10-14 ans)
-- 6 jeux de données dont 5 francophones (prénoms simples, prénoms top 1K, prénoms INSEE 14K, pokémon, dinosaures)
+- 6 jeux de données dont 5 francophones (prénoms simples, prénoms top 1K, prénoms INSEE 33K, pokémon, dinosaures)
 - Accessibilité WCAG 2.1 AA (navigation clavier, contrastes, labels, `prefers-reduced-motion`)
-- 145 tests (composants, engine, accessibilité, store, intégrité des données)
+- 148 tests (composants, engine, accessibilité, store, intégrité des données)
 - ErrorBoundary avec message français et bouton de rechargement
+- Bouton partager avec QR code (modal `<dialog>`)
+- Easter egg console (ASCII art P-A.G)
 - Code splitting (`React.lazy` + `Suspense`)
 - Documentation architecture réseau de neurones ([`docs/architecture-nn.md`](docs/architecture-nn.md))
 
@@ -61,7 +63,7 @@ L'application est accessible sur `http://localhost:5173`
 | `pnpm build`   | Build de production                                |
 | `pnpm preview` | Aperçu local du build de production                |
 | `pnpm lint`    | ESLint                                             |
-| `pnpm test`    | Vitest (145 tests)                                 |
+| `pnpm test`    | Vitest (148 tests)                                 |
 
 ## Structure du projet
 

@@ -137,7 +137,8 @@ Ensemble, ils forment une paire pedagogique complete pour tuto-llm :
 
 ```
 src/
-├── App.tsx                        # ~290 lignes — shell, routing (9 pages), theme, TermProvider, lazy, ErrorBoundary, visited dots
+├── App.tsx                        # ~360 lignes — shell, routing (9 pages), theme, TermProvider, lazy, ErrorBoundary, visited dots, share QR dialog
+├── App.share.test.tsx             #  40 lignes — 3 tests (share button, dialog open, QR canvas a11y)
 ├── main.tsx                       #   5 lignes — point d'entrée React
 ├── modelStore.ts                  #  76 lignes — useSyncExternalStore + useModel() hook + wteSnapshots (A-1)
 ├── modelStore.test.ts             # 107 lignes — 8 tests (useModel shape, reset, dataset switch, notify, unsubscribe, getModelTotalStep, wteSnapshot deep-copy, reset clears)
@@ -250,7 +251,7 @@ docs/
 │ ├── 2026-03-05-sidebar-and-new-pages-design.md # Design sidebar + 3 nouvelles pages
 │ └── 2026-03-05-sidebar-and-new-pages-plan.md # Plan d'implémentation (8 tasks)
 
-**Total : ~8 000 lignes src (hors data blobs), 53 fichiers source + 28 fichiers test. 145 tests. 8 playgrounds standalone.**
+**Total : ~8 300 lignes src (hors data blobs), 54 fichiers source + 29 fichiers test. 148 tests. 9 playgrounds standalone.**
 
 ### Constats clés
 
@@ -264,7 +265,7 @@ docs/
 - **Attention** : boucle multi-token côté page (KV cache pattern), matrice T×T `<table>` sémantique
 - **Model sharing** : `useSyncExternalStore` dans `modelStore.ts`, hook `useModel()` (A-1 corrigé)
 - **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
-- **Tests** : Vitest + jsdom + @testing-library/react (145 tests, 28 fichiers)
+- **Tests** : Vitest + jsdom + @testing-library/react (148 tests, 29 fichiers)
 - **ErrorBoundary** : class component, `window.location.reload()`, sidebar hors boundary
 - **Canvas shared hooks** : `useCanvasObservers` (IO/RO/MO), `canvasInteraction`, `valToColor` partagés entre NNDiagram et FullNNDiagram
 - **Code splitting** : `React.lazy()` + `Suspense` → 9+ chunks JS séparés

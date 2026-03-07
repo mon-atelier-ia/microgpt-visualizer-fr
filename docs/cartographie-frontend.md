@@ -164,7 +164,7 @@ Tout le site est en monospace. Pas de font-face custom chargée.
 
 | Section        | Détail                                                                                                                                                                         |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Header         | `h1` "MicroGPT" (`--blue`), subtitle "Explorateur visuel — @karpathy"                                                                                                          |
+| Header         | `h1` "MicroGPT" (`--blue`), subtitle "Explorateur visuel"                                                                                                                      |
 | Nav            | 9 boutons numérotés (0-8), 3 blocs séparés par `.nav-sep` (`border-top`). `.active` = `--blue` border-left + bg. Pastille `.visited-dot` (6px `--green`) si page déjà visitée. |
 | Dataset picker | 6 boutons (label + title=description), dialog de confirmation si entraînement en cours                                                                                         |
 | Theme picker   | 2 boutons (Sombre/Clair) avec SVGs (lune/soleil)                                                                                                                               |
@@ -1140,7 +1140,7 @@ export function getWteSnapshots(): WteSnapshot[]; // {step, wte}[]
 
 ## 17. Tests existants
 
-139 tests dans 26 fichiers. Framework : Vitest + jsdom + @testing-library/react.
+148 tests dans 29 fichiers. Framework : Vitest + jsdom + @testing-library/react.
 
 | Fichier test               | Nb  | Cible                                            |
 | -------------------------- | --- | ------------------------------------------------ |
