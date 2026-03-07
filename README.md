@@ -94,6 +94,8 @@ docs/
 ├── audit-frontend.md   # Audit qualité frontend
 ├── audit-iso.md        # Audit ISO (25010, 40500, 9241-110)
 └── fork-changes.md     # Registre divergences upstream
+
+playground*.html          # 9 playgrounds standalone (réseau, autograd, démo complète…)
 ```
 
 ## Stack technique

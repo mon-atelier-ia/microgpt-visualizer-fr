@@ -455,6 +455,18 @@ Page dédiée à l'attention multi-token, insérée comme page 4 (Entraînement 
 - Le graphe de 4 192 nœuds
 - La notation mathématique
 
+### 14. Nice-to-have : bouton partager + QR code modal
+
+> **État** : À faire. Voir `docs/plans/2026-03-05-sidebar-and-new-pages-plan.md` Task 7.
+
+Bouton icône "partager" dans le footer sidebar. Au clic, `<dialog>` natif avec QR code Canvas vers `https://microgpt-visualizer-fr.vercel.app`. Lib `qrcode-generator` (~4KB gzip).
+
+### 15. Nice-to-have : console easter egg P-A.G — FAIT
+
+> **État** : FAIT. Commit `6e9963e`.
+
+ASCII art P-A.G + styled console.log (oklch colors) dans `index.html`. Exécution immédiate au chargement, visible dans DevTools (F12).
+
 **Référence** : guide Karpathy section "Autograd" — exemple `a=2, b=3, c=a*b, L=c+a` + analogie voiture/vélo/piéton. Voir `docs/reference-microgpt-karpathy.md` section 4.
 
 ### 14. Playground BertViz + classifieur de têtes — FAIT
