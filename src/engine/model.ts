@@ -22,7 +22,7 @@ export const uchars = [...new Set(allDocs.join(""))].sort();
 export const BOS = uchars.length;
 export const vocabSize = uchars.length + 1;
 export const charToId: Record<string, number> = Object.fromEntries(
-  uchars.map((c, i) => [c, i])
+  uchars.map((c, i) => [c, i]),
 );
 
 export function tokenize(name: string): number[] {
@@ -49,10 +49,10 @@ function makeMatrix(
   nout: number,
   nin: number,
   rng: () => number,
-  std = 0.08
+  std = 0.08,
 ): Value[][] {
   return Array.from({ length: nout }, () =>
-    Array.from({ length: nin }, () => new Value(gaussRandom(rng) * std))
+    Array.from({ length: nin }, () => new Value(gaussRandom(rng) * std)),
   );
 }
 
@@ -101,7 +101,7 @@ export function linear(x: Value[], w: Value[][]): Value[] {
 }
 
 export function softmax(logits: Value[]): Value[] {
-  const maxVal = Math.max(...logits.map((v) => v.data));
+  const maxVal = Math.max(...logits.map((val) => val.data));
   const exps = logits.map((v) => v.sub(maxVal).exp());
   const total = vSum(exps);
   return exps.map((e) => e.div(total));
@@ -121,11 +121,13 @@ export interface ForwardTrace {
   posEmb: number[];
   combined: number[];
   afterNorm: number[];
+  preAttnNorm: number[]; // rmsnorm before Q/K/V (in-layer)
   q: number[];
   k: number[];
   v: number[];
   attnWeights: number[][]; // [head][time]
   afterAttn: number[];
+  preMlpNorm: number[]; // rmsnorm before MLP (in-layer)
   mlpHidden: number[];
   mlpActiveMask: boolean[];
   afterMlp: number[];
@@ -139,7 +141,7 @@ export function gptForward(
   keys: Value[][][],
   values: Value[][][],
   state: ModelState,
-  trace = false
+  trace = false,
 ): { logits: Value[]; trace?: ForwardTrace } {
   const { stateDict } = state;
   const tokEmb = stateDict.wte[tokenId];
@@ -150,18 +152,19 @@ export function gptForward(
     ? {
         tokenId,
         posId,
-        tokEmb: tokEmb.map((v) => v.data),
-        posEmb: posEmb.map((v) => v.data),
-        combined: x.map((v) => v.data),
+        tokEmb: tokEmb.map((val) => val.data),
+        posEmb: posEmb.map((val) => val.data),
+        combined: x.map((val) => val.data),
       }
     : {};
 
   x = rmsnorm(x);
-  if (trace) t.afterNorm = x.map((v) => v.data);
+  if (trace) t.afterNorm = x.map((val) => val.data);
 
   for (let li = 0; li < N_LAYER; li++) {
     const xRes = x;
     x = rmsnorm(x);
+    if (trace) t.preAttnNorm = x.map((val) => val.data);
     const q = linear(x, stateDict[`layer${li}.attn_wq`]);
     const k = linear(x, stateDict[`layer${li}.attn_wk`]);
     const v = linear(x, stateDict[`layer${li}.attn_wv`]);
@@ -169,9 +172,9 @@ export function gptForward(
     values[li].push(v);
 
     if (trace) {
-      t.q = q.map((v) => v.data);
-      t.k = k.map((v) => v.data);
-      t.v = v.map((v) => v.data);
+      t.q = q.map((val) => val.data);
+      t.k = k.map((val) => val.data);
+      t.v = v.map((val) => val.data);
     }
 
     const xAttn: Value[] = [];
@@ -183,7 +186,7 @@ export function gptForward(
       const kH = keys[li].map((ki) => ki.slice(hs, hs + HEAD_DIM));
       const vH = values[li].map((vi) => vi.slice(hs, hs + HEAD_DIM));
       const attnLogits = kH.map((kht) =>
-        vSum(qH.map((qj, j) => qj.mul(kht[j]))).div(Math.sqrt(HEAD_DIM))
+        vSum(qH.map((qj, j) => qj.mul(kht[j]))).div(Math.sqrt(HEAD_DIM)),
       );
       const attnW = softmax(attnLogits);
 
@@ -198,31 +201,52 @@ export function gptForward(
 
     x = linear(xAttn, stateDict[`layer${li}.attn_wo`]);
     x = vAdd(x, xRes);
-    if (trace) t.afterAttn = x.map((v) => v.data);
+    if (trace) t.afterAttn = x.map((val) => val.data);
 
     const xRes2 = x;
     x = rmsnorm(x);
+    if (trace) t.preMlpNorm = x.map((val) => val.data);
     x = linear(x, stateDict[`layer${li}.mlp_fc1`]);
 
     if (trace) {
-      t.mlpHidden = x.map((v) => v.data);
-      t.mlpActiveMask = x.map((v) => v.data > 0);
+      t.mlpHidden = x.map((val) => val.data);
+      t.mlpActiveMask = x.map((val) => val.data > 0);
     }
 
     x = x.map((xi) => xi.relu());
     x = linear(x, stateDict[`layer${li}.mlp_fc2`]);
     x = vAdd(x, xRes2);
-    if (trace) t.afterMlp = x.map((v) => v.data);
+    if (trace) t.afterMlp = x.map((val) => val.data);
   }
 
   const logits = linear(x, stateDict.lm_head);
   if (trace) {
-    t.logits = logits.map((v) => v.data);
-    const probs = softmax(logits);
-    t.probs = probs.map((p) => p.data);
+    const traceProbs = softmax(logits);
+    return {
+      logits,
+      trace: {
+        tokenId: t.tokenId!,
+        posId: t.posId!,
+        tokEmb: t.tokEmb!,
+        posEmb: t.posEmb!,
+        combined: t.combined!,
+        afterNorm: t.afterNorm!,
+        preAttnNorm: t.preAttnNorm!,
+        q: t.q!,
+        k: t.k!,
+        v: t.v!,
+        attnWeights: t.attnWeights!,
+        afterAttn: t.afterAttn!,
+        preMlpNorm: t.preMlpNorm!,
+        mlpHidden: t.mlpHidden!,
+        mlpActiveMask: t.mlpActiveMask!,
+        afterMlp: t.afterMlp!,
+        logits: logits.map((val) => val.data),
+        probs: traceProbs.map((p) => p.data),
+      },
+    };
   }
-
-  return { logits, trace: trace ? (t as ForwardTrace) : undefined };
+  return { logits };
 }
 
 // ─── Train one step ───
@@ -241,7 +265,7 @@ const LR0 = 0.01,
 
 export function trainStep(
   state: ModelState,
-  totalTargetSteps: number
+  totalTargetSteps: number,
 ): TrainStepResult {
   const doc = state.docs[state.totalStep % state.docs.length];
   const tokens = tokenize(doc);
@@ -265,11 +289,13 @@ export function trainStep(
 
   const lrT = LR0 * (1 - state.totalStep / totalTargetSteps);
   for (let i = 0; i < state.params.length; i++) {
-    state.adamM[i] = BETA1 * state.adamM[i] + (1 - BETA1) * state.params[i].grad;
-    state.adamV[i] = BETA2 * state.adamV[i] + (1 - BETA2) * state.params[i].grad ** 2;
+    state.adamM[i] =
+      BETA1 * state.adamM[i] + (1 - BETA1) * state.params[i].grad;
+    state.adamV[i] =
+      BETA2 * state.adamV[i] + (1 - BETA2) * state.params[i].grad ** 2;
     const mHat = state.adamM[i] / (1 - BETA1 ** (state.totalStep + 1));
     const vHat = state.adamV[i] / (1 - BETA2 ** (state.totalStep + 1));
-    state.params[i].data -= lrT * mHat / (Math.sqrt(vHat) + EPS);
+    state.params[i].data -= (lrT * mHat) / (Math.sqrt(vHat) + EPS);
     state.params[i].grad = 0;
   }
 
@@ -290,7 +316,7 @@ export interface InferenceStep {
 
 export function generateName(
   state: ModelState,
-  temperature = 0.5
+  temperature = 0.5,
 ): { name: string; steps: InferenceStep[] } {
   const keys: Value[][][] = Array.from({ length: N_LAYER }, () => []);
   const vals: Value[][][] = Array.from({ length: N_LAYER }, () => []);

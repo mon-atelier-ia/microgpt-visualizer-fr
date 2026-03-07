@@ -1,6 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useRef, useCallback, memo } from "react";
 import { getCssVar } from "../utils/getCssVar";
 import { parseColor } from "../utils/parseColor";
+import { valToColor } from "../utils/valToColor";
+import { useCanvasObservers } from "../hooks/useCanvasObservers";
+import {
+  findClosestNeuron,
+  makeTouchHandlers,
+} from "../utils/canvasInteraction";
 
 // ── Config ──────────────────────────────────────────────────────────
 const N_HEAD = 4;
@@ -8,6 +14,7 @@ const HEAD_DIM = 4;
 const ATTN_COL = 1;
 const ANIM_LAYER_DELAY = 350;
 const ANIM_FADE_DURATION = 300;
+const DORMANT_ALPHA = 0.06;
 
 const COL_COLORS: string[] = [
   "--cyan", // Embedding
@@ -54,21 +61,6 @@ export interface NNDiagramProps {
 }
 
 // ── Pure helpers ────────────────────────────────────────────────────
-function valToColor(
-  v: number,
-  alpha: number,
-  greenRgb: number[],
-  redRgb: number[],
-  neutralRgb: number[],
-): string {
-  const t = Math.max(-1, Math.min(1, v));
-  const base = t < 0 ? redRgb : greenRgb;
-  const a = Math.abs(t);
-  const r = Math.round(neutralRgb[0] * (1 - a) + base[0] * a);
-  const g = Math.round(neutralRgb[1] * (1 - a) + base[1] * a);
-  const b = Math.round(neutralRgb[2] * (1 - a) + base[2] * a);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
 
 function computePositions(
   w: number,
@@ -118,7 +110,7 @@ function forwardProgress(layerIndex: number, elapsed: number): number {
 }
 
 // ── Component ───────────────────────────────────────────────────────
-export default function NNDiagram({
+const NNDiagram = memo(function NNDiagram({
   combined,
   afterAttn,
   mlpHidden,
@@ -131,9 +123,8 @@ export default function NNDiagram({
   const neuronsRef = useRef<NeuronPos[][]>([]);
   const animRef = useRef(0);
   const hoverRef = useRef<HoverInfo | null>(null);
-  const phaseRef = useRef<"dormant" | "forward" | "idle">("dormant");
+  const phaseRef = useRef<string>("dormant");
   const animStartRef = useRef(0);
-  const [hasRevealed, setHasRevealed] = useState(false);
 
   const layers = [16, 16, 64, 16, probs.length];
   const activations = [combined, afterAttn, mlpHidden, afterMlp, probs];
@@ -200,7 +191,6 @@ export default function NNDiagram({
       }
 
       // Per-layer forward progress (dormant = 0.06 → ghost outlines)
-      const DORMANT_ALPHA = 0.06;
       function fwdP(li: number): number {
         if (phaseRef.current === "idle") return 1;
         if (phaseRef.current === "dormant") return DORMANT_ALPHA;
@@ -351,9 +341,6 @@ export default function NNDiagram({
           if (isHovered) {
             ctx.strokeStyle = blueColor;
             ctx.lineWidth = 2;
-          } else if (li === ATTN_COL) {
-            ctx.strokeStyle = `rgba(${colRgb[0]},${colRgb[1]},${colRgb[2]},${strokeAlpha})`;
-            ctx.lineWidth = 1;
           } else {
             ctx.strokeStyle = `rgba(${colRgb[0]},${colRgb[1]},${colRgb[2]},${strokeAlpha})`;
             ctx.lineWidth = 1;
@@ -422,105 +409,23 @@ export default function NNDiagram({
     [combined, afterAttn, mlpHidden, mlpActiveMask, afterMlp, probs, weights],
   );
 
-  // ── Start animation ──────────────────────────────────────────
-  const startAnimation = useCallback(() => {
-    const prefersReducedMotion =
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    cancelAnimationFrame(animRef.current);
-    if (prefersReducedMotion) {
-      phaseRef.current = "idle";
-      draw();
-    } else {
-      phaseRef.current = "forward";
-      animStartRef.current = performance.now();
-      animRef.current = requestAnimationFrame(draw);
-    }
-  }, [draw]);
-
-  // ── IntersectionObserver — first reveal ──────────────────────
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || hasRevealed) return;
-    if (typeof IntersectionObserver === "undefined") {
-      // jsdom fallback: draw static immediately
-      phaseRef.current = "idle";
-      setHasRevealed(true);
-      draw();
-      return;
-    }
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setHasRevealed(true);
-          startAnimation();
-          io.disconnect();
-        }
-      },
-      { threshold: 0.3 },
-    );
-    io.observe(canvas);
-    return () => io.disconnect();
-  }, [hasRevealed, startAnimation, draw]);
-
-  // ── Re-animate on data change (after first reveal) ───────────
-  useEffect(() => {
-    if (!hasRevealed) return;
-    startAnimation();
-    return () => cancelAnimationFrame(animRef.current);
-  }, [hasRevealed, startAnimation]);
-
-  // ── ResizeObserver ────────────────────────────────────────────
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    if (typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => {
-      if (phaseRef.current !== "forward") draw();
-    });
-    ro.observe(canvas.parentElement!);
-    return () => ro.disconnect();
-  }, [draw]);
-
-  // ── MutationObserver — theme change ──────────────────────────
-  useEffect(() => {
-    if (typeof MutationObserver === "undefined") return;
-    const observer = new MutationObserver(() => {
-      if (phaseRef.current !== "forward") draw();
-    });
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-    return () => observer.disconnect();
-  }, [draw]);
+  const { startAnimation } = useCanvasObservers(
+    canvasRef,
+    animRef,
+    phaseRef,
+    animStartRef,
+    draw,
+  );
 
   // ── Hover detection ──────────────────────────────────────────
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-      const neurons = neuronsRef.current;
-
-      let closest: HoverInfo | null = null;
-      let closestDist = Infinity;
-
-      for (let li = 0; li < neurons.length; li++) {
-        for (let ni = 0; ni < neurons[li].length; ni++) {
-          const n = neurons[li][ni];
-          const dx = mx - n.x;
-          const dy = my - n.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < n.r * 3 && dist < closestDist) {
-            closest = { layer: li, index: ni };
-            closestDist = dist;
-          }
-        }
-      }
-
+      const result = findClosestNeuron(e, canvas, neuronsRef.current);
+      const closest: HoverInfo | null = result
+        ? { layer: result.group, index: result.index }
+        : null;
       const changed =
         JSON.stringify(closest) !== JSON.stringify(hoverRef.current);
       hoverRef.current = closest;
@@ -542,19 +447,7 @@ export default function NNDiagram({
         aria-label="Diagramme du réseau de neurones — 5 couches avec activations et connexions"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        onTouchStart={(e) => {
-          e.preventDefault();
-          handleMouseMove(
-            e.touches[0] as unknown as React.MouseEvent<HTMLCanvasElement>,
-          );
-        }}
-        onTouchMove={(e) => {
-          e.preventDefault();
-          handleMouseMove(
-            e.touches[0] as unknown as React.MouseEvent<HTMLCanvasElement>,
-          );
-        }}
-        onTouchEnd={handleMouseLeave}
+        {...makeTouchHandlers(handleMouseMove, handleMouseLeave)}
       />
       <button
         type="button"
@@ -565,4 +458,6 @@ export default function NNDiagram({
       </button>
     </>
   );
-}
+});
+
+export default NNDiagram;
