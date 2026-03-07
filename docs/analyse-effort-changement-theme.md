@@ -1,6 +1,6 @@
 # Analyse gain/effort — Changement de thème frontend
 
-> Date : 2026-03-07
+> Date : 2026-03-08
 > Projet : microgpt-visualizer-fr
 > Stack actuel : React 19 + TypeScript + Vite + CSS custom pur (1 fichier `styles.css`, ~2 140 lignes)
 > Zéro dépendance UI runtime (pas de Tailwind, pas de shadcn, pas de CSS-in-JS)
@@ -17,7 +17,7 @@
 | CSS total             | 2 140 lignes, 1 fichier                             | Monolithique mais zéro CSS mort détecté        |
 | CSS bundle (prod)     | 27.7 KB (5.9 KB gzip)                               | Bon — tout le CSS est utile                    |
 | JS bundle principal   | 646 KB (202 KB gzip)                                | Lourd (datasets inlinés), indépendant du thème |
-| Custom properties     | 17 variables, 2 palettes                            | Architecture saine pour le theming             |
+| Custom properties     | 20 variables (17 + 3 sémantiques), 2 palettes oklch | Architecture oklch complète                    |
 | Usages `var(--*)` CSS | ~222                                                | Bon découplage couleurs/composants             |
 | Usages `var(--*)` JSX | ~21 inline styles                                   | Raisonnable (tous dynamiques/conditionnels)    |
 | Lectures runtime JS   | ~87 (`getCssVar`/`parseColor`)                      | Nécessaires pour les 6 Canvas                  |
@@ -25,7 +25,7 @@
 | Dead CSS              | 0 classe inutilisée                                 | Pas de bloat                                   |
 | `!important`          | 4 (justifiés)                                       | 1 override inline, 3 reduced-motion            |
 | Composants Canvas     | 6 (dessin JS, thème-réactifs)                       | Point de couplage fort                         |
-| RGB hardcodés         | 3 composants + `valToColor()` + ~50 Canvas `rgba()` | **Point bloquant pour oklch**                  |
+| RGB hardcodés         | 0 (éliminés Phase 0)                                | Résolu — CSS vars + oklch interpolation        |
 
 ### 1.2 Forces de l'architecture actuelle
 
@@ -84,7 +84,7 @@ Le Canvas 2D API (`ctx.fillStyle`, `ctx.strokeStyle`) accepte oklch dans les nav
 
 ---
 
-## 3. Phase 0 — Socle commun (réutilisable A1 et A2)
+## 3. Phase 0 — Socle commun (réutilisable A1 et A2) — FAIT
 
 > Ce socle est un **gain net indépendant** : il améliore le code actuel sans engager de choix A1 ou A2. Il peut être mergé sur `main` et utilisé tel quel.
 
@@ -100,7 +100,7 @@ Le Canvas 2D API (`ctx.fillStyle`, `ctx.strokeStyle`) accepte oklch dans les nav
 | P0-6 | Vérifier contraste WCAG AA (2 thèmes)                                              | —                                                | 30min                |
 | P0-7 | Tests : parseColor oklch, valToColor oklch, Canvas 6 composants, 9 pages visuelles | Tests existants + nouveaux                       | 1h                   |
 
-**Effort total Phase 0 : 0.5-1 jour** (Claude Code + solo dev)
+**Effort total Phase 0 : 0.5-1 jour** (Claude Code + solo dev) — **FAIT le 2026-03-08** (172 tests, 7 commits)
 
 ### 3.2 Gains nets de Phase 0 (indépendants de A1/A2)
 
