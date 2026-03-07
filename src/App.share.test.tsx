@@ -29,10 +29,10 @@ describe("Share button + QR code dialog", () => {
     expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalled();
   });
 
-  it("QR canvas has role=img and aria-label", () => {
+  it("QR SVG has role=img and aria-label", () => {
     render(<App />);
-    const canvas = screen.getAllByRole("img", { name: /qr code/i });
-    expect(canvas.length).toBeGreaterThanOrEqual(1);
-    expect(canvas[0].tagName).toBe("CANVAS");
+    const svgs = screen.getAllByRole("img", { name: /qr code/i });
+    expect(svgs.length).toBeGreaterThanOrEqual(1);
+    expect(svgs[0].tagName.toLowerCase()).toBe("svg");
   });
 });

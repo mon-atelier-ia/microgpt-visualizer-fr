@@ -1498,8 +1498,11 @@ button.gen-name:focus-visible {
   color: var(--blue);
 }
 .share-dialog__qr {
+  width: 180px;
+  height: 180px;
   border-radius: 8px;
-  image-rendering: pixelated;
+  color: var(--text);
+  background: var(--surface);
 }
 .share-dialog__url {
   font-size: 11px;

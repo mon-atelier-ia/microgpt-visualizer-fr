@@ -1,15 +1,6 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  lazy,
-  Suspense,
-} from "react";
-import qrcode from "qrcode-generator";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { DATASETS, DEFAULT_DATASET_ID } from "./datasets";
 import { resetModel, getModelTotalStep } from "./modelStore";
-import { getCssVar } from "./utils/getCssVar";
 import TermProvider from "./components/TermProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -68,44 +59,7 @@ export default function App() {
   });
   const confirmRef = useRef<HTMLDialogElement>(null);
   const shareRef = useRef<HTMLDialogElement>(null);
-  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const { theme, toggle: toggleTheme } = useTheme();
-
-  const openShare = useCallback(() => {
-    shareRef.current?.showModal();
-    // Draw QR code after dialog is visible
-    requestAnimationFrame(() => {
-      const canvas = qrCanvasRef.current;
-      if (!canvas) return;
-      const qr = qrcode(0, "M");
-      qr.addData("https://microgpt-visualizer-fr.vercel.app");
-      qr.make();
-      const moduleCount = qr.getModuleCount();
-      const size = 180;
-      const cellSize = size / moduleCount;
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      const fg = getCssVar("--text");
-      const bg = getCssVar("--surface");
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, size, size);
-      ctx.fillStyle = fg;
-      for (let r = 0; r < moduleCount; r++) {
-        for (let c = 0; c < moduleCount; c++) {
-          if (qr.isDark(r, c)) {
-            ctx.fillRect(
-              c * cellSize,
-              r * cellSize,
-              cellSize + 0.5,
-              cellSize + 0.5,
-            );
-          }
-        }
-      }
-    });
-  }, []);
 
   const handleDatasetChange = (id: string) => {
     if (id === datasetId) return;
@@ -255,7 +209,7 @@ export default function App() {
             </span>
             <button
               className="share-btn"
-              onClick={openShare}
+              onClick={() => shareRef.current?.showModal()}
               aria-label="Partager"
               title="Partager via QR code"
             >
@@ -348,12 +302,15 @@ export default function App() {
       >
         <div className="share-dialog__content">
           <p className="share-dialog__title">Partager</p>
-          <canvas
-            ref={qrCanvasRef}
+          <svg
             className="share-dialog__qr"
             role="img"
             aria-label="QR code vers microgpt-visualizer-fr.vercel.app"
-          />
+            viewBox="0 0 29 29"
+            fill="currentColor"
+          >
+            <path d="M0 0h7v1h-7zM11 0h3v1h-3zM16 0h5v1h-5zM22 0h7v1h-7zM0 1h1v1h-1zM6 1h1v1h-1zM9 1h4v1h-4zM14 1h3v1h-3zM20 1h1v1h-1zM22 1h1v1h-1zM28 1h1v1h-1zM0 2h1v1h-1zM2 2h3v1h-3zM6 2h1v1h-1zM8 2h2v1h-2zM11 2h1v1h-1zM15 2h2v1h-2zM18 2h1v1h-1zM22 2h1v1h-1zM24 2h3v1h-3zM28 2h1v1h-1zM0 3h1v1h-1zM2 3h3v1h-3zM6 3h1v1h-1zM8 3h1v1h-1zM11 3h3v1h-3zM15 3h1v1h-1zM17 3h1v1h-1zM22 3h1v1h-1zM24 3h3v1h-3zM28 3h1v1h-1zM0 4h1v1h-1zM2 4h3v1h-3zM6 4h1v1h-1zM8 4h2v1h-2zM13 4h1v1h-1zM16 4h5v1h-5zM22 4h1v1h-1zM24 4h3v1h-3zM28 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM8 5h1v1h-1zM11 5h6v1h-6zM18 5h1v1h-1zM20 5h1v1h-1zM22 5h1v1h-1zM28 5h1v1h-1zM0 6h7v1h-7zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h7v1h-7zM8 7h1v1h-1zM10 7h1v1h-1zM20 7h1v1h-1zM0 8h1v1h-1zM2 8h5v1h-5zM9 8h1v1h-1zM12 8h4v1h-4zM17 8h1v1h-1zM20 8h1v1h-1zM22 8h5v1h-5zM2 9h4v1h-4zM7 9h1v1h-1zM12 9h1v1h-1zM16 9h2v1h-2zM19 9h6v1h-6zM28 9h1v1h-1zM1 10h1v1h-1zM5 10h2v1h-2zM8 10h1v1h-1zM10 10h1v1h-1zM12 10h1v1h-1zM15 10h1v1h-1zM17 10h2v1h-2zM20 10h1v1h-1zM22 10h1v1h-1zM1 11h2v1h-2zM4 11h1v1h-1zM7 11h1v1h-1zM10 11h3v1h-3zM14 11h1v1h-1zM18 11h2v1h-2zM22 11h1v1h-1zM24 11h2v1h-2zM27 11h1v1h-1zM0 12h1v1h-1zM3 12h1v1h-1zM5 12h2v1h-2zM9 12h1v1h-1zM13 12h5v1h-5zM20 12h1v1h-1zM23 12h1v1h-1zM25 12h2v1h-2zM2 13h1v1h-1zM5 13h1v1h-1zM7 13h1v1h-1zM14 13h1v1h-1zM16 13h1v1h-1zM18 13h7v1h-7zM28 13h1v1h-1zM0 14h2v1h-2zM3 14h2v1h-2zM6 14h2v1h-2zM9 14h4v1h-4zM15 14h2v1h-2zM20 14h1v1h-1zM23 14h1v1h-1zM25 14h2v1h-2zM7 15h1v1h-1zM12 15h1v1h-1zM15 15h2v1h-2zM22 15h1v1h-1zM24 15h1v1h-1zM27 15h1v1h-1zM2 16h1v1h-1zM5 16h2v1h-2zM9 16h2v1h-2zM13 16h3v1h-3zM17 16h1v1h-1zM19 16h1v1h-1zM25 16h2v1h-2zM0 17h1v1h-1zM2 17h2v1h-2zM5 17h1v1h-1zM12 17h1v1h-1zM14 17h1v1h-1zM16 17h1v1h-1zM19 17h2v1h-2zM22 17h3v1h-3zM26 17h1v1h-1zM28 17h1v1h-1zM0 18h1v1h-1zM2 18h2v1h-2zM5 18h4v1h-4zM11 18h2v1h-2zM15 18h1v1h-1zM17 18h2v1h-2zM21 18h1v1h-1zM23 18h2v1h-2zM26 18h1v1h-1zM0 19h1v1h-1zM2 19h1v1h-1zM4 19h2v1h-2zM7 19h1v1h-1zM9 19h3v1h-3zM16 19h1v1h-1zM18 19h4v1h-4zM27 19h1v1h-1zM0 20h1v1h-1zM2 20h1v1h-1zM4 20h1v1h-1zM6 20h4v1h-4zM11 20h1v1h-1zM15 20h4v1h-4zM20 20h5v1h-5zM26 20h3v1h-3zM8 21h1v1h-1zM10 21h2v1h-2zM13 21h1v1h-1zM16 21h5v1h-5zM24 21h5v1h-5zM0 22h7v1h-7zM12 22h4v1h-4zM19 22h2v1h-2zM22 22h1v1h-1zM24 22h3v1h-3zM0 23h1v1h-1zM6 23h1v1h-1zM8 23h1v1h-1zM10 23h1v1h-1zM13 23h1v1h-1zM16 23h1v1h-1zM19 23h2v1h-2zM24 23h1v1h-1zM0 24h1v1h-1zM2 24h3v1h-3zM6 24h1v1h-1zM8 24h3v1h-3zM12 24h1v1h-1zM14 24h1v1h-1zM17 24h1v1h-1zM20 24h5v1h-5zM26 24h3v1h-3zM0 25h1v1h-1zM2 25h3v1h-3zM6 25h1v1h-1zM8 25h2v1h-2zM11 25h1v1h-1zM18 25h2v1h-2zM25 25h4v1h-4zM0 26h1v1h-1zM2 26h3v1h-3zM6 26h1v1h-1zM8 26h2v1h-2zM11 26h1v1h-1zM14 26h2v1h-2zM17 26h1v1h-1zM19 26h2v1h-2zM22 26h6v1h-6zM0 27h1v1h-1zM6 27h1v1h-1zM9 27h2v1h-2zM12 27h2v1h-2zM18 27h1v1h-1zM20 27h1v1h-1zM23 27h3v1h-3zM27 27h1v1h-1zM0 28h7v1h-7zM8 28h1v1h-1zM10 28h3v1h-3zM14 28h4v1h-4zM21 28h1v1h-1zM23 28h1v1h-1zM26 28h1v1h-1z" />
+          </svg>
           <p className="share-dialog__url">microgpt-visualizer-fr.vercel.app</p>
           <button
             type="button"
