@@ -1,8 +1,8 @@
 # Audit ISO — microgpt-visualizer-fr
 
-> Date : 2026-02-27 (révisé 2026-02-28, scores mis à jour 2026-02-28, CSS/tests 2026-02-28, playgrounds 2026-02-28)
+> Date : 2026-02-27 (révisé 2026-02-28, scores mis à jour 2026-02-28, CSS/tests 2026-02-28, playgrounds 2026-02-28, màj 2026-03-07)
 > Auditeur : Claude Opus 4.6 (assisté par 4 agents parallèles)
-> Périmètre : `src/` (pages, components, styles, App, engine read-only). Playgrounds (`playground.html`, `playground-full.html`) hors périmètre (prototypes standalone).
+> Périmètre : `src/` (pages, components, styles, App, engine read-only). Playgrounds (9 fichiers `playground*.html`) hors périmètre (prototypes standalone).
 > Commit de référence : `89a4ec8` (main), scores révisés après `b0b3ad9`
 
 ---
@@ -45,9 +45,9 @@
 
 ### Modérées — ✅ TOUS CORRIGÉS
 
-| #        | Norme    | Problème                                                     | Fix                                                                                                 |
-| -------- | -------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| ~~UX-1~~ | 9241-110 | ~~Changement dataset sans confirmation de réinitialisation~~ | ✅ `window.confirm()` si `totalStep > 0`. `getModelTotalStep()` getter non-réactif dans modelStore. |
+| #        | Norme    | Problème                                                     | Fix                                                                                                                |
+| -------- | -------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| ~~UX-1~~ | 9241-110 | ~~Changement dataset sans confirmation de réinitialisation~~ | ✅ Native `<dialog>` de confirmation si `totalStep > 0`. `getModelTotalStep()` getter non-réactif dans modelStore. |
 
 ### Mineures (0) — ✅ TOUS CORRIGÉS OU RETIRÉS
 
@@ -92,7 +92,7 @@
 | Navigation clavier    | 5/5   | Roving tabindex, 9 `:focus-visible`, Escape dismiss, `<dialog>` natif   |
 | Landmarks sémantiques | 5/5   | `<main>`, `<aside>`, `<nav>`, `<header>`, `<section aria-labelledby>`   |
 | Récupérabilité        | 5/5   | ErrorBoundary FR, `resetModel()`, reload, rAF cleanup                   |
-| Tests                 | 4,5/5 | 133 tests, 24 fichiers. Composants + engine + pages + store + données   |
+| Tests                 | 4,5/5 | 148 tests, 29 fichiers. Composants + engine + pages + store + données   |
 | Glossaire pédagogique | 4,5/5 | 30 termes (16 Tier 1 + 14 Tier 2), analogies adaptées 10-14 ans         |
 | Code splitting        | 4,5/5 | `React.lazy()` + `Suspense`, 6 chunks 4-7 KB chacun                     |
 
@@ -106,13 +106,13 @@
 
 - (+) Séparation claire `engine/` (read-only) / `pages/` / `components/`
 - (+) TermProvider context pattern isolé et réutilisable
-- (+) `PageSection`, `ProbabilityBar`, `EmbeddingBarChart`, `ErrorBoundary`, `HeatCell`, `NeuronCell`, `LossCell` composants partagés
+- (+) `PageSection`, `ProbabilityBar`, `EmbeddingBarChart`, `ErrorBoundary`, `HeatCell`, `NeuronCell`, `LossCell`, `NNDiagram`, `FullNNDiagram`, `PCAScatterPlot` composants partagés
 - (+) ~~A-1~~ : corrigé — `useSyncExternalStore` dans `modelStore.ts`
 - (+) ~~C-4~~ : corrigé — `ForwardPassPage` décomposé en 4 sous-composants (144 LOC, 5 niveaux JSX)
 
 #### Testabilité (4/5)
 
-- (+) 133 tests, 24 fichiers de tests
+- (+) 148 tests, 29 fichiers de tests
 - (+) Composants isolés testables (Term, Heatmap, ProbabilityBar)
 - (+) Engine : 11 smoke tests (autograd, model, random) ajoutés
 - (-) Pages à couverture variable (TrainingPage : 2 tests, InferencePage : 6 tests)
@@ -129,7 +129,8 @@
 #### Confidentialité (5/5)
 
 - Aucune donnée utilisateur collectée
-- Pas de cookies, pas de localStorage, pas de tracking
+- Pas de cookies, pas de tracking
+- localStorage utilisé uniquement pour les pastilles "page visitée" (clé `microgpt-visited`, `Set<string>`) — aucune donnée personnelle
 - Application 100 % client-side, zéro appel réseau
 
 #### Intégrité (5/5)
@@ -151,7 +152,7 @@
 
 #### Utilisation des ressources (5/5)
 
-- (+) Zéro dépendance externe (canvas natif, pas de chart lib)
+- (+) Zéro dépendance externe (QR code = SVG statique inline, canvas natif, pas de chart lib)
 - (+) rAF cleanup systématique (C-6 corrigé)
 - (+) ~~MIN-1~~ : LossChart deps non redondantes (faux positif retiré — `.push()` in-place nécessite `.length`)
 
@@ -161,7 +162,7 @@
 
 - (+) ErrorBoundary avec fallback français et bouton rechargement
 - (+) `resetModel()` pour réinitialisation propre
-- (+) ~~UX-1~~ : `window.confirm()` avant changement dataset si `totalStep > 0`
+- (+) ~~UX-1~~ : native `<dialog>` de confirmation avant changement dataset si `totalStep > 0`
 
 #### Tolérance aux fautes (4,5/5)
 
@@ -200,7 +201,7 @@
 
 #### Adéquation à la tâche (4,5/5)
 
-- (+) 6 pages couvrent le pipeline complet (tokenization → attention → inference)
+- (+) 9 pages couvrent le pipeline complet (Accueil → Tokenisation → … → Modèle complet → Conclusion)
 - (+) Glossaire intégré avec 30 termes et analogies pour 10-14 ans
 - (+) Visualisations interactives (heatmap navigable, training animé)
 - (+) Playgrounds réseau de neurones (Canvas 2D) : visualisation neurones/connexions, animation forward+backward
@@ -209,7 +210,7 @@
 
 - (+) Labels en français, aide contextuelle via tooltips glossaire
 - (+) Feedback visuel entraînement (courbe de perte, compteur d'étapes)
-- (+) ~~UX-1~~ : `window.confirm()` avant changement dataset si entraînement en cours
+- (+) ~~UX-1~~ : native `<dialog>` de confirmation avant changement dataset si entraînement en cours
 
 #### Conformité aux attentes utilisateur (4,5/5)
 
@@ -221,7 +222,7 @@
 
 - (+) ErrorBoundary avec message français
 - (+) `resetModel()` accessible
-- (+) `window.confirm()` protège contre perte de progression entraînement
+- (+) Native `<dialog>` de confirmation protège contre perte de progression entraînement
 
 #### Personnalisabilité (4/5)
 
@@ -233,7 +234,7 @@
 
 #### Apprentissage (4,5/5)
 
-- (+) Progression pédagogique logique (Tokenizer → Embeddings → Forward → Attention → Training → Inference)
+- (+) Progression pédagogique logique (Accueil → Tokenisation → Plongements → Propagation → Attention → Entraînement → Inférence → Modèle complet → Conclusion)
 - (+) Glossaire Tier 1 (base) / Tier 2 (avancé) avec analogies adaptées
 - (+) Layout réordonné (pages 3+4) : feedback visuel immédiat après les contrôles (proximité cause→effet)
 - (-) Pas de navigation "Suivant → Page X" en bas de page
@@ -242,21 +243,21 @@
 
 ## Roadmap recommandée
 
-### Phase 4B — Maintenabilité
+### Phase 4B — Maintenabilité — ✅ FAIT
 
-| Priorité | #   | Action                                                         | Norme       |
-| -------- | --- | -------------------------------------------------------------- | ----------- |
-| 1        | A-1 | Refactoriser `useRef` + `forceUpdate` → `useSyncExternalStore` | 25010 Maint |
-| 2        | C-4 | Décomposer `ForwardPassPage` en 5 sous-composants              | 25010 Maint |
-| 3        | P-1 | `manualChunks` dans vite.config pour datasets (optionnel)      | 25010 Perf  |
+| Priorité | #   | Action                                                         | Norme       | Statut |
+| -------- | --- | -------------------------------------------------------------- | ----------- | ------ |
+| 1        | A-1 | Refactoriser `useRef` + `forceUpdate` → `useSyncExternalStore` | 25010 Maint | ✅     |
+| 2        | C-4 | Décomposer `ForwardPassPage` en 5 sous-composants              | 25010 Maint | ✅     |
+| 3        | P-1 | `manualChunks` dans vite.config pour datasets (optionnel)      | 25010 Perf  | —      |
 
-### Phase 4C — UX pédagogique (optionnel)
+### Phase 4C — UX pédagogique — ✅ FAIT (sauf navigation Suivant)
 
-| Priorité | #     | Action                                                   | Norme    |
-| -------- | ----- | -------------------------------------------------------- | -------- |
-| 4        | UX-1  | Confirmation avant changement dataset si `totalStep > 0` | 9241-110 |
-| 5        | —     | Boutons "Suivant → Page X" au bas de chaque page         | 9241-110 |
-| 6        | MIN-8 | Hint clavier Heatmap ("↑↓ pour naviguer")                | 40500    |
+| Priorité | #     | Action                                                   | Norme    | Statut |
+| -------- | ----- | -------------------------------------------------------- | -------- | ------ |
+| 4        | UX-1  | Confirmation avant changement dataset si `totalStep > 0` | 9241-110 | ✅     |
+| 5        | —     | Boutons "Suivant → Page X" au bas de chaque page         | 9241-110 | —      |
+| 6        | MIN-8 | Hint clavier Heatmap ("↑↓ pour naviguer")                | 40500    | ✅     |
 
 ---
 

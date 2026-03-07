@@ -1,6 +1,6 @@
 # Cartographie Frontend — Spécification de migration
 
-> Document de référence pour reproduire le frontend `microgpt-visualizer-fr` dans un autre stack (ex: Next.js + shadcn/ui + Tailwind). Généré le 2 mars 2026.
+> Document de référence pour reproduire le frontend `microgpt-visualizer-fr` dans un autre stack (ex: Next.js + shadcn/ui + Tailwind). Généré le 2 mars 2026, mis à jour le 7 mars 2026.
 
 ---
 
@@ -34,12 +34,12 @@
 | Framework | React                                             | 19.2      |
 | Langage   | TypeScript                                        | 5.9       |
 | Bundler   | Vite                                              | 7.3       |
-| Styles    | CSS custom (1 fichier `styles.css`, ~1840 lignes) | —         |
+| Styles    | CSS custom (1 fichier `styles.css`, ~2140 lignes) | —         |
 | Tests     | Vitest + jsdom + @testing-library/react           | 4.0       |
 | Linting   | ESLint 9 + Prettier 3                             | —         |
 | Deploy    | Vercel (auto-deploy `main`)                       | Node 24.x |
 
-**Zéro dépendance runtime** hors React/React-DOM. Pas de router, pas de state library, pas de UI framework.
+**Zéro dépendance runtime** hors React/React-DOM. Pas de router, pas de state library, pas de UI framework. Le QR code Partager est un SVG statique inline (pré-généré).
 
 ---
 
@@ -168,7 +168,7 @@ Tout le site est en monospace. Pas de font-face custom chargée.
 | Nav            | 9 boutons numérotés (0-8), 3 blocs séparés par `.nav-sep` (`border-top`). `.active` = `--blue` border-left + bg. Pastille `.visited-dot` (6px `--green`) si page déjà visitée. |
 | Dataset picker | 6 boutons (label + title=description), dialog de confirmation si entraînement en cours                                                                                         |
 | Theme picker   | 2 boutons (Sombre/Clair) avec SVGs (lune/soleil)                                                                                                                               |
-| Footer         | "Basé sur microgpt.py de Karpathy." — `margin-top: auto`                                                                                                                       |
+| Footer         | "Basé sur microgpt.py d'Andrej Karpathy." + bouton Partager (QR code) — `margin-top: auto`, flex row                                                                           |
 
 **Structure nav 3 blocs :**
 
@@ -947,6 +947,13 @@ Tous les éléments interactifs : `outline: 2px solid var(--blue)`, `outline-off
 - Backdrop : `rgba(0,0,0,0.55)` + `backdrop-filter: blur(3px)`
 - Close : Escape (natif), clic backdrop (via `onCancel`), bouton explicite
 
+### 12.6 Share dialog (QR code)
+
+- Native `<dialog class="share-dialog">` ouverte via bouton Partager dans le footer sidebar
+- Contenu : titre "Partager", SVG QR code statique inline (pré-généré, `fill="currentColor"` → thème-réactif), URL texte, bouton Fermer
+- Close : Escape (natif), clic backdrop, bouton explicite
+- `aria-label="Partager"` sur le bouton déclencheur
+
 ---
 
 ## 13. Engine API (read-only)
@@ -988,11 +995,13 @@ interface ForwardTrace {
   posEmb: number[]; // [N_EMBD]
   combined: number[]; // [N_EMBD]
   afterNorm: number[]; // [N_EMBD]
+  preAttnNorm: number[]; // [N_EMBD] — rmsnorm before Q/K/V
   q: number[]; // [N_EMBD]
   k: number[]; // [N_EMBD]
   v: number[]; // [N_EMBD]
   attnWeights: number[][]; // [N_HEAD][T] — PAS T×T !
   afterAttn: number[]; // [N_EMBD]
+  preMlpNorm: number[]; // [N_EMBD] — rmsnorm before MLP
   mlpHidden: number[]; // [N_EMBD * 4 = 64]
   mlpActiveMask: boolean[]; // [64]
   afterMlp: number[]; // [N_EMBD]
@@ -1115,6 +1124,22 @@ interface CharStats {
 }
 ```
 
+### 15.6 `getCssVar(name: string): string`
+
+Raccourci pour `getComputedStyle(document.documentElement).getPropertyValue(name).trim()`. Utilisé par tous les composants Canvas (LossChart, PCAScatterPlot, NNDiagram, FullNNDiagram, AttnMatrix, Heatmap) pour lire les CSS custom properties de façon réactive au thème.
+
+### 15.7 `valToColor(value: number): { background: string; color: string }`
+
+Interpolation RGB runtime : négatif → terracotta (194,131,116), positif → sage vert (138,170,107). Retourne background + foreground (noir/blanc selon luminosité). Utilisé par Heatmap, VectorBar, HeatCell.
+
+### 15.8 `useCanvasObservers(canvasRef, drawFn)`
+
+Hook custom combinant IntersectionObserver (scroll reveal) + ResizeObserver (responsive canvas sizing) + MutationObserver (thème data-theme change). Pattern partagé par NNDiagram et FullNNDiagram.
+
+### 15.9 `canvasInteraction(canvas, nodes, callbacks)`
+
+Utilitaire pour détecter hover/click sur des "nodes" dessinés dans un Canvas 2D (hit-testing par distance). Utilisé par NNDiagram et FullNNDiagram pour l'interactivité tooltip au survol.
+
 ---
 
 ## 16. Store (gestion d'état)
@@ -1169,6 +1194,9 @@ export function getWteSnapshots(): WteSnapshot[]; // {step, wte}[]
 | NNDiagram.test.tsx         | 2   | Canvas role/aria-label, Rejouer                  |
 | HomePage.test.tsx          | 3   | Pitch+button, onStart callback, 8 steps          |
 | ConclusionPage.test.tsx    | 3   | 8 rows table, Karpathy link, fondations text     |
+| FullModelPage.test.tsx     | 3   | PageSection, FullNNDiagram canvas, page-desc     |
+| FullNNDiagram.test.tsx     | 3   | Canvas role/aria-label, légende, animation       |
+| App.share.test.tsx         | 3   | Share button, dialog open, QR canvas             |
 
 ---
 
@@ -1192,3 +1220,7 @@ export function getWteSnapshots(): WteSnapshot[]; // {step, wte}[]
 | Visited dots (localStorage)                   | `Set<string>` persisté, dot vert si page visitée et non-active      |
 | Sidebar 3 blocs avec `.nav-sep`               | Séparateurs visuels (border-top) entre Accueil / Étapes / Synthèse  |
 | HomePage sans `<Term>`                        | Zéro jargon technique sur la page d'accueil — public 10-14 ans      |
+| FullNNDiagram indépendant de NNDiagram        | Layout/animation différents, 16 colonnes vs 7, real data only       |
+| `getCssVar()` + `parseColor()` shared utils   | Canvas thème-réactif sans duplication getComputedStyle              |
+| `useCanvasObservers` hook                     | DRY triple observer (Intersection+Resize+Mutation) pour Canvas      |
+| Share button + QR code (SVG statique inline)  | Zéro dep runtime, pré-généré, dialog native                         |

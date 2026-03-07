@@ -1,6 +1,6 @@
 # Audit frontend — microgpt-visualizer-fr
 
-> Date : 2026-02-27 (révisé 2026-02-28, CSS mis à jour 2026-02-28, playgrounds ajoutés 2026-02-28)
+> Date : 2026-02-27 (révisé 2026-02-28, CSS mis à jour 2026-02-28, playgrounds ajoutés 2026-02-28, màj 2026-03-07)
 > Périmètre : `src/` (pages, components, styles, App). Le répertoire `src/engine/` (code upstream read-only) est mentionné mais non priorisé.
 > Voir aussi : [`docs/audit-iso.md`](audit-iso.md) — audit ISO (25010, 40500, 9241-110), score global 4,5/5.
 
@@ -153,7 +153,7 @@
 | S-1 | ~~Haute~~ | ~~64 inline styles~~ → **7 dynamiques**         | ✅ 24 static extraits en 20 classes utilitaires. 7 dynamiques restants = runtime-computed (inline seule option)         |
 | S-2 | ~~Haute~~ | ~~Pas de classes utilitaires~~                  | ✅ 20 classes utilitaires dans `styles.css` (margin, gap, display, font-size, contrôles, tokens)                        |
 | S-3 | Modéré    | Couleurs hardcodées dans Heatmap                | `valToColor()` utilise des RGB littéraux (`rgb(...)`) au lieu de custom properties                                      |
-| S-4 | Faible    | `styles.css` = ~1 500 lignes en un seul fichier | Pas de découpage (layout, components, utilities, themes). Acceptable pour la taille actuelle mais risque de croissance. |
+| S-4 | Faible    | `styles.css` = ~2 140 lignes en un seul fichier | Pas de découpage (layout, components, utilities, themes). Acceptable pour la taille actuelle mais risque de croissance. |
 
 ---
 
@@ -200,5 +200,5 @@
 | ~~W-8~~ | ~~Contraste `--text-dim` dark theme sous WCAG AA~~ | ~~styles.css~~         | ✅ Corrigé : `#7d786e` → `#959082` (4.52:1 sur surface2, 5.00:1 sur surface, WCAG AA) |
 | R-6     | Types inline vs interface Props                    | InferencePage, Heatmap | Accepté — 1 seul fichier, idiomatique TypeScript pour prop unique                     |
 | P-6     | `valToColor()` non mémorisé                        | Heatmap.tsx            | Accepté — calcul trivial, mémoisation ajouterait de la complexité inutile             |
-| S-4     | CSS monolithique (~1 500 lignes)                   | styles.css             | Accepté — fichier unique acceptable pour cette taille de projet                       |
+| S-4     | CSS monolithique (~2 140 lignes)                   | styles.css             | Accepté — fichier unique acceptable pour cette taille de projet                       |
 | D-4     | Labels violet dupliqués                            | ForwardPassPage        | Accepté — 2 occurrences dans le même fichier, extraction non justifiée                |
