@@ -142,7 +142,7 @@ src/
 ├── main.tsx                       #   5 lignes — point d'entrée React
 ├── modelStore.ts                  #  76 lignes — useSyncExternalStore + useModel() hook + wteSnapshots (A-1)
 ├── modelStore.test.ts             # 107 lignes — 8 tests (useModel shape, reset, dataset switch, notify, unsubscribe, getModelTotalStep, wteSnapshot deep-copy, reset clears)
-├── styles.css                     # ~2 000 lignes — CSS vars, BEM, 20 utility classes, responsive, sr-only, reduced-motion, barchart, attn-matrix, bv-*, pca-canvas-wrap, home-*, conclusion-*, nav-sep, visited-dot
+├── styles.css                     # ~1 030 lignes — foundations: tokens, reset, layout, utilities, responsive (Phase A1: 2 150→1 030)
 ├── data/
 │   ├── glossary.ts                # 314 lignes — 30 définitions (Tier 1 + Tier 2)
 │   └── glossary.test.ts           # 121 lignes — 8 tests intégrité données
@@ -156,14 +156,19 @@ src/
 │   └── dinosaures.ts              # 1 530 dinosaures
 ├── components/
 │   ├── Term.tsx                   #  88 lignes — tooltip WAI-ARIA + lien modal
+│   ├── Term.css                   # ~175 lignes — .term, .term-tooltip, .term-modal + responsive
 │   ├── Term.test.tsx              # 129 lignes — 12 tests composant
 │   ├── TermProvider.tsx           #  88 lignes — contexte + singleton <dialog>
+│   ├── AttentionWeights.css       #  ~85 lignes — .attn-heads, .heat-cell, .attn-matrix
 │   ├── AttnMatrix.tsx             #  71 lignes — matrice attention T×T (table sémantique, compact)
 │   ├── Heatmap.tsx                # 158 lignes — table heatmap + VectorBar (roving tabindex)
+│   ├── Heatmap.css                # ~200 lignes — .heatmap-wrap, table.heatmap, barchart-* + responsive
 │   ├── Heatmap.test.tsx           # 165 lignes — 10 tests roving tabindex, clavier
 │   ├── HeatCell.tsx               #  18 lignes — cellule attention weights
 │   ├── NeuronCell.tsx             #  22 lignes — cellule activation MLP
+│   ├── NeuronCell.css             #  ~15 lignes — .neuron-grid, .neuron-cell
 │   ├── LossCell.tsx               #  25 lignes — cellule per-position loss
+│   ├── LossCell.css               #  ~15 lignes — .loss-cell, .loss-cell__value
 │   ├── LossChart.tsx              # 142 lignes — courbe de loss Canvas 2D + aria-label dynamique
 │   ├── LossChart.test.tsx         #  23 lignes — 2 tests a11y (role="img", aria-label)
 │   ├── ProbabilityBar.tsx         #  45 lignes — barres de probabilité partagées
@@ -171,17 +176,25 @@ src/
 │   ├── PageSection.tsx            #  20 lignes — DRY landmarks (section + h1)
 │   ├── PageSection.test.tsx       #  39 lignes — 3 tests aria-labelledby
 │   ├── BertVizView.tsx            # 187 lignes — SVG Bézier token↔token (composant contrôlé)
+│   ├── BertVizView.css            # ~115 lignes — .bv-container, .bv-column, .bv-svg, .bv-legend-*
 │   ├── EmbeddingBarChart.tsx      #  45 lignes — bar chart 16 dimensions au hover wte
 │   ├── EmbeddingBarChart.test.tsx #  42 lignes — 4 tests (empty, stats, BOS, bars)
 │   ├── ErrorBoundary.tsx          #  40 lignes — class component, French fallback
 │   ├── ErrorBoundary.test.tsx     #  52 lignes — 3 tests (render, catch, reload)
 │   ├── FlowDiagram.tsx            # 123 lignes — sous-composant ForwardPassPage (C-4)
+│   ├── FlowDiagram.css            #  ~95 lignes — .flow, .flow-step, .trace + responsive
 │   ├── VectorsPanel.tsx           #  41 lignes — sous-composant ForwardPassPage (C-4)
 │   ├── NNDiagram.tsx              # ~170 lignes — Canvas 2D réseau de neurones 5 colonnes (section 16), utilise hooks partagés
+│   ├── NNDiagram.css              #  ~35 lignes — .nn-canvas-wrap + responsive
 │   ├── NNDiagram.test.tsx         #  40 lignes — 2 tests (canvas role/aria-label, bouton Rejouer)
 │   ├── FullNNDiagram.tsx          # ~1 090 lignes — Canvas 2D architecture complète 16 colonnes + 5 effets waow (section 19)
+│   ├── FullNNDiagram.css          #  ~45 lignes — .full-nn-canvas-wrap, controls, mobile-msg + responsive
 │   ├── FullNNDiagram.test.tsx     #  47 lignes — 3 tests (canvas role/aria-label "16 couches", Rejouer, backward toggle)
 │   ├── PCAScatterPlot.tsx         # 641 lignes — Canvas 2D scatter plot PCA wte (section 17)
+│   ├── PCAScatterPlot.css         # ~130 lignes — .pca-canvas-wrap, prob-*, gen-name, @keyframes fadeUp + responsive
+│   ├── VectorDisplay.css          #  ~35 lignes — .vector-display, .vector-cell + responsive
+│   ├── ConfirmDialog.css          #  ~35 lignes — .confirm-dialog + sub-selectors
+│   ├── ShareDialog.css            #  ~70 lignes — .share-btn, .share-dialog + sub-elements
 │   └── MLPActivationPanel.tsx     #  46 lignes — sous-composant ForwardPassPage (C-4)
 ├── pages/
 │   ├── TokenizerPage.tsx          # 162 lignes — mapping char→id, tokenisation
@@ -196,10 +209,12 @@ src/
 │   ├── InferencePage.tsx          # 259 lignes — génération, trace, probas
 │   ├── InferencePage.test.tsx     #  95 lignes — 6 tests (W-2, W-4, R-3)
 │   ├── HomePage.tsx               #  49 lignes — page 0 : pitch, 8 étapes, bouton Commencer
+│   ├── HomePage.css               #  ~80 lignes — .home-hero, .home-steps, .home-step + responsive
 │   ├── HomePage.test.tsx          #  29 lignes — 3 tests (pitch, onStart, 8 steps)
 │   ├── FullModelPage.tsx          #  52 lignes — page 7 : modèle complet (FullNNDiagram avec trace réelle)
 │   ├── FullModelPage.test.tsx     #  55 lignes — 3 tests (titre, canvas, message mobile)
 │   ├── ConclusionPage.tsx         # 139 lignes — page 8 : tableau comparatif + liens
+│   ├── ConclusionPage.css         #  ~55 lignes — .conclusion-table, .conclusion-analogies, .conclusion-links
 │   └── ConclusionPage.test.tsx    #  26 lignes — 3 tests (8 rows, Karpathy link, fondations)
 ├── hooks/
 │   └── useCanvasObservers.ts      #  92 lignes — IO/RO/MO triple pattern partagé (NNDiagram + FullNNDiagram)
@@ -257,11 +272,11 @@ docs/
 │ ├── 2026-03-08-phase0-oklch.md # Plan Phase 0 oklch (7 tasks)
 │ └── 2026-03-08-phase-a1-css-refactoring.md # Plan Phase A1 CSS refactoring (7 tasks)
 
-**Total : ~9 100 lignes src (hors data blobs), 52 fichiers source + 35 fichiers test. 192 tests. 10 playgrounds standalone.**
+**Total : ~9 100 lignes src (hors data blobs), 52 fichiers source + 15 CSS composants + 35 fichiers test. 192 tests. 10 playgrounds standalone.**
 
 ### Constats clés
 
-- **Zero Tailwind** : styling 100% CSS custom (`styles.css`, ~1 500 lignes, CSS vars dark/light)
+- **Zero Tailwind** : styling 100% CSS custom (foundations `styles.css` ~1 030 lignes + 15 component CSS files, design tokens, oklch)
 - **Zero librairie UI** : pas de shadcn, Radix, MUI — `<div>` + classes CSS + `<dialog>` natif
 - **Zero librairie chart** : LossChart = Canvas 2D pur, Heatmap = `<table>` HTML
 - **Zero routeur** : `useState("home")` + rendu conditionnel dans App.tsx (9 pages)

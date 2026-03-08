@@ -336,3 +336,7 @@ Le playground a révélé que A1 ne serait pas un simple reskin mais une **refon
 **Effort estimé A1 révisé : 1-2 jours** (Claude Code + solo dev), incluant la restructuration.
 
 **Plan détaillé :** [`docs/plans/2026-03-08-phase-a1-css-refactoring.md`](plans/2026-03-08-phase-a1-css-refactoring.md) — 7 tâches, refactoring structurel sans changement visuel.
+
+### 12. Phase A1 : FAIT
+
+Résultat : `styles.css` 2 150 → 1 030 lignes. 15 fichiers CSS composant co-localisés. ~40 design tokens (spacing, radius, shadows, typography, transitions, z-index, opacity, line-height). Breakpoints 5→3. `filter: brightness()` → oklch hover. Zero changement visuel. 192/192 tests.

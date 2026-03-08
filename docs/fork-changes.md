@@ -248,6 +248,19 @@ Commits: `4ea6c80`, `226e502`, `8c63af0`, `441b85b`, `e13fcdc`, `c6e7c2c`, `8baa
 | 44 nouveaux tests oklch (148→192)                                         | `oklch.test.ts`, `valToColor.test.ts`, 4 fichiers cell/visual-parity | Round-trip, parité visuelle hex↔oklch, bornes, gradient, WCAG contraste, cell no-rgba                                        |
 | `playground-redesign.html` : démo redesign 2026 "Digital Explorer"        | `playground-redesign.html`                                           | Preuve de concept CSS custom + oklch = résultat moderne 2026 sans Tailwind. Décision : A1 validée, A2 rejetée                |
 
+## Phase A1 — refactoring CSS structurel
+
+| Change                                                                      | Fichier(s)                         | Justification                                                                                                      |
+| --------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Design tokens: spacing, radius, shadows, typography, transitions, z-index   | `styles.css`                       | 0 hardcoded values → ~40 tokens (--sp-_, --radius-_, --shadow-_, --font-size-_, --t-_, --z-_, --opacity-_, --lh-_) |
+| Standardize breakpoints 5→3 (900/768/480px)                                 | `styles.css`                       | 5 incohérents (480/500/767/768/900) → 3 standards                                                                  |
+| Replace `filter: brightness(1.15)` with oklch hover colors                  | `styles.css`                       | Hack affectait tous enfants du bouton. `--blue-hover`, `--border-hover-bg`, `--red-hover` tokens oklch             |
+| Split monolithic styles.css (2 150→1 030 lines) into 15 component CSS files | `styles.css`, 15 `.css`, 13 `.tsx` | Co-located CSS per component, `import './X.css'` in each TSX. Vite concatenates in production                      |
+| Clean selectors: remove 2 orphaned classes, add conventions header          | `styles.css`                       | `.btn-toggle--sm`, `.ml-12` dead code removed. BEM-ish + breakpoints + tokens documented in file header            |
+| Centralize keyframes: section headers, co-location verified                 | `styles.css`, `PCAScatterPlot.css` | 3 keyframes organized: 2 in foundations (token flow), 1 co-located (fadeUp). `prefers-reduced-motion` covers all   |
+
+Zero visual changes (pixel-perfect before/after on 9 pages × 2 themes). 192/192 tests pass.
+
 ## Divers
 
 | Change                                         | Fichier(s)              | Justification                                                                                                                                          |
