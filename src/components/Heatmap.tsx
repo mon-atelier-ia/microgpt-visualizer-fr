@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Value } from "../engine/autograd";
 import { getCssVar } from "../utils/getCssVar";
 import { parseColor } from "../utils/parseColor";
@@ -8,6 +8,19 @@ import "./Heatmap.css";
 
 const DISPLAY_DECIMALS = 2;
 const TOOLTIP_DECIMALS = 4;
+
+/** Force re-render when data-theme changes (matches Canvas MutationObserver pattern). */
+function useThemeSignal() {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const obs = new MutationObserver(() => setTick((t) => t + 1));
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    return () => obs.disconnect();
+  }, []);
+}
 
 interface Props {
   matrix: Value[][];
@@ -25,9 +38,10 @@ export default function Heatmap({
   onHoverRow,
 }: Props) {
   const rowsRef = useRef<(HTMLTableRowElement | null)[]>([]);
+  useThemeSignal();
 
-  // Read theme palette for heatmap colors — no memo (getCssVar is cheap,
-  // must re-read on every render to react to theme toggle)
+  // Read theme palette for heatmap colors — re-reads on every render
+  // (getCssVar is cheap; useThemeSignal triggers re-render on theme toggle)
   const neg = parseColor(getCssVar("--red"));
   const pos = parseColor(getCssVar("--green"));
   const neutral = parseColor(getCssVar("--surface2"));
@@ -142,6 +156,7 @@ export function VectorBar({
   values: number[];
   label?: string;
 }) {
+  useThemeSignal();
   const maxAbs = Math.max(...values.map(Math.abs), 0.01);
   const neg = parseColor(getCssVar("--red"));
   const pos = parseColor(getCssVar("--green"));
