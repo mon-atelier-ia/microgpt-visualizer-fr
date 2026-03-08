@@ -1,0 +1,134 @@
+/* ── PCA Scatter Plot ── */
+.pca-canvas-wrap {
+  position: relative;
+  border-radius: var(--radius-8);
+  overflow: hidden;
+  box-shadow: var(--shadow-vignette);
+}
+
+.pca-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 400px;
+  cursor: crosshair;
+  background: var(--surface);
+  border-radius: var(--radius-8);
+}
+
+.pca-canvas-wrap .pca-replay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: var(--z-base);
+}
+
+.prob-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  margin-bottom: 2px;
+}
+.prob-label {
+  width: 36px;
+  text-align: center;
+  font-size: var(--font-size-md);
+  color: var(--cyan);
+  font-weight: bold;
+  flex-shrink: 0;
+}
+.prob-bar-bg {
+  flex: 1;
+  height: 18px;
+  background: var(--surface2);
+  border-radius: var(--radius-3);
+  overflow: hidden;
+}
+.prob-bar {
+  height: 100%;
+  border-radius: var(--radius-3);
+  transition: width var(--t-slow);
+}
+.prob-val {
+  width: 50px;
+  text-align: right;
+  font-size: var(--font-size-2xs);
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.gen-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.gen-name {
+  padding: 5px var(--sp-12);
+  background: var(--surface2);
+  border-radius: var(--radius-5);
+  font-size: var(--font-size-base);
+  color: var(--green);
+  border: 1px solid var(--border-hover);
+  animation: fadeUp var(--t-slow);
+}
+button.gen-name {
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--t-normal);
+}
+button.gen-name:hover {
+  border-color: var(--blue);
+}
+button.gen-name:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.gen-name--active {
+  border-color: var(--blue);
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .pca-canvas-wrap canvas {
+    height: 300px;
+  }
+  .prob-row {
+    height: 22px;
+    gap: var(--sp-4);
+  }
+  .prob-label {
+    width: 32px;
+    font-size: var(--font-size-sm);
+  }
+  .prob-bar-bg {
+    height: 16px;
+  }
+  .prob-val {
+    width: 45px;
+    font-size: var(--font-size-9);
+  }
+  .gen-names {
+    gap: 5px;
+  }
+  .gen-name {
+    padding: var(--sp-4) 10px;
+    font-size: var(--font-size-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .pca-canvas-wrap canvas {
+    height: 220px;
+  }
+}

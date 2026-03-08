@@ -1,5 +1,6 @@
 import { N_HEAD } from "../engine/model";
 import { classifyHead } from "../utils/classifyHead";
+import "./BertVizView.css";
 
 const BOX_H = 44;
 const GAP = 6;

@@ -1,5 +1,6 @@
 import { memo } from "react";
 import PageSection from "../components/PageSection";
+import "./HomePage.css";
 
 interface Props {
   onStart: () => void;

@@ -1,3 +1,5 @@
+import "./LossCell.css";
+
 interface Props {
   loss: number;
   from: string;

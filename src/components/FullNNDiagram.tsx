@@ -8,6 +8,7 @@ import {
   makeTouchHandlers,
 } from "../utils/canvasInteraction";
 import { tokenLabel } from "../engine/model";
+import "./FullNNDiagram.css";
 
 // ── Architecture (16 columns, mirrors model.ts) ─────────────────
 

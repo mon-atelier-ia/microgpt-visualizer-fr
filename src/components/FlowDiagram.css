@@ -1,0 +1,95 @@
+.flow {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: stretch;
+  overflow-x: auto;
+  padding: var(--sp-8) 0;
+}
+.flow-step {
+  flex: 0 0 auto;
+  min-width: 120px;
+  padding: 10px;
+  background: var(--surface2);
+  border-radius: var(--radius-8);
+  border: 1px solid var(--border-hover);
+  font-size: var(--font-size-xs);
+  text-align: center;
+  transition: all var(--t-medium);
+}
+.flow-step:hover {
+  border-color: var(--blue);
+}
+.flow-step .label {
+  color: var(--purple);
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-size: var(--font-size-sm);
+}
+.flow-step .values {
+  color: var(--text-dim);
+  font-size: var(--font-size-2xs);
+  line-height: var(--lh-tight);
+}
+.flow-step .values .highlight {
+  color: var(--green);
+}
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  color: var(--text-dim);
+  font-size: var(--font-size-xl);
+  padding: 0 var(--sp-2);
+}
+
+.trace {
+  font-size: var(--font-size-xs);
+  line-height: var(--lh-loose);
+  color: var(--text-dim);
+  max-height: 250px;
+  overflow-y: auto;
+  padding: var(--sp-8);
+  background: var(--surface2);
+  border-radius: var(--radius-6);
+  margin-top: 8px;
+}
+.trace .picked {
+  color: var(--green);
+  font-weight: bold;
+}
+.trace .candidates {
+  color: var(--cyan);
+}
+
+@media (max-width: 768px) {
+  .flow {
+    gap: 3px;
+    padding: 6px 0;
+  }
+  .flow-step {
+    min-width: 100px;
+    padding: var(--sp-8);
+    font-size: var(--font-size-2xs);
+  }
+  .flow-step .label {
+    font-size: var(--font-size-xs);
+    margin-bottom: 4px;
+  }
+  .flow-step .values {
+    font-size: var(--font-size-9);
+  }
+  .flow-arrow {
+    font-size: var(--font-size-base);
+  }
+  .trace {
+    font-size: var(--font-size-2xs);
+    max-height: 200px;
+    padding: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .flow-step {
+    min-width: 90px;
+    padding: 6px;
+  }
+}

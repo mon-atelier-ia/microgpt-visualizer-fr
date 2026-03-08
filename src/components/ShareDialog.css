@@ -1,0 +1,71 @@
+/* ───── Share button + dialog ───── */
+.share-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  border-radius: var(--radius-6);
+  transition:
+    color var(--t-normal),
+    border-color var(--t-normal);
+}
+.share-btn:hover {
+  color: var(--blue);
+  border-color: var(--blue);
+}
+.share-btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.share-btn svg {
+  width: 12px;
+  height: 12px;
+}
+.share-dialog {
+  max-width: 280px;
+  width: calc(100% - 32px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-12);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+}
+.share-dialog::backdrop {
+  background: var(--overlay);
+  backdrop-filter: blur(var(--blur-md));
+}
+.share-dialog__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--sp-24);
+  gap: var(--sp-12);
+}
+.share-dialog__title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin: 0;
+  color: var(--blue);
+}
+.share-dialog__qr {
+  width: 180px;
+  height: 180px;
+  border-radius: var(--radius-8);
+  color: var(--text);
+  background: var(--surface);
+}
+.share-dialog__url {
+  font-size: var(--font-size-xs);
+  color: var(--text-dim);
+  margin: 0;
+  word-break: break-all;
+  text-align: center;
+}

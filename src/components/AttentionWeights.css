@@ -1,0 +1,80 @@
+.attn-heads {
+  display: flex;
+  gap: var(--sp-24);
+}
+.attn-head-label {
+  font-size: var(--font-size-xs);
+  color: var(--purple);
+  margin-bottom: 4px;
+}
+.attn-head-row {
+  display: flex;
+  gap: var(--sp-2);
+}
+.heat-cell {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-2xs);
+}
+
+/* Attention matrix (T*T grid) */
+.attn-matrix {
+  border-collapse: separate;
+  border-spacing: 2px;
+}
+.attn-matrix td,
+.attn-matrix th {
+  padding: 0;
+}
+.attn-matrix-row--highlight {
+  outline: 2px solid var(--blue);
+  outline-offset: -1px;
+}
+.attn-matrix-label {
+  width: 28px;
+  text-align: center;
+  font-size: var(--font-size-2xs);
+  color: var(--text-dim);
+}
+.attn-matrix-col-label {
+  width: 30px;
+  text-align: center;
+  font-size: var(--font-size-2xs);
+  color: var(--text-dim);
+  font-weight: normal;
+}
+.attn-cell {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-4);
+  text-align: center;
+  font-size: var(--font-size-2xs);
+}
+.attn-cell--masked {
+  background: var(--surface2);
+  color: var(--text-dim);
+  opacity: var(--opacity-disabled);
+}
+.attn-cell--compact {
+  width: 22px;
+  height: 22px;
+  font-size: var(--font-size-7);
+}
+.attn-matrix--compact .attn-matrix-label {
+  width: 20px;
+  font-size: var(--font-size-8);
+}
+.attn-matrix--compact .attn-matrix-col-label {
+  width: 22px;
+  font-size: var(--font-size-8);
+  font-weight: normal;
+}
+.attn-heads-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-16);
+}

@@ -1,5 +1,6 @@
 import { getCssVar } from "../utils/getCssVar";
 import { parseColor } from "../utils/parseColor";
+import "./AttentionWeights.css";
 
 interface Props {
   matrix: number[][];

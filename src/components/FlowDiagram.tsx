@@ -1,5 +1,6 @@
 import { N_HEAD } from "../engine/model";
 import Term from "./Term";
+import "./FlowDiagram.css";
 
 interface Props {
   char: string;

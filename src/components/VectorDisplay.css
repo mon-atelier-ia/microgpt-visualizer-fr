@@ -1,0 +1,33 @@
+.vector-display {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin: var(--sp-4) 0;
+}
+.vector-cell {
+  width: 32px;
+  height: 22px;
+  border-radius: var(--radius-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  color: var(--vector-text);
+}
+
+@media (max-width: 768px) {
+  .vector-cell {
+    width: 28px;
+    height: 20px;
+    font-size: var(--font-size-9);
+  }
+}
+
+@media (max-width: 480px) {
+  .vector-cell {
+    width: 24px;
+    height: 18px;
+    font-size: var(--font-size-8);
+  }
+}

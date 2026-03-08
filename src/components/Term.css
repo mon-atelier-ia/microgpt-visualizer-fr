@@ -1,0 +1,184 @@
+/* ───── Term : tooltip + modal ───── */
+
+.term {
+  position: relative;
+  text-decoration: underline dotted var(--text-dim);
+  text-underline-offset: 3px;
+  cursor: help;
+  color: inherit;
+}
+.term:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: var(--radius-2);
+}
+
+/* Tooltip — au-dessus par defaut */
+.term-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 300px;
+  padding: 10px var(--sp-12);
+  background: var(--surface);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-8);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--font-size-sm);
+  line-height: var(--lh-normal);
+  color: var(--text);
+  z-index: var(--z-tooltip);
+  pointer-events: auto;
+  text-decoration: none;
+  font-weight: normal;
+  text-align: left;
+}
+/* Fleche vers le bas (position au-dessus) */
+.term-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--border-hover);
+}
+/* Pont invisible entre le tooltip et le terme (WCAG 1.4.13 hoverable) */
+.term-tooltip::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 14px;
+}
+
+/* Tooltip retourne — en dessous (proche du haut du viewport) */
+.term-tooltip--below {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+.term-tooltip--below::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--border-hover);
+}
+.term-tooltip--below::before {
+  top: auto;
+  bottom: 100%;
+}
+
+.term-tooltip-text {
+  display: block;
+}
+
+.term-tooltip-link {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--blue);
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.term-tooltip-link:hover {
+  color: var(--cyan);
+}
+
+/* Modal (native <dialog>) */
+.term-modal {
+  max-width: 560px;
+  width: calc(100% - 32px);
+  padding: 0;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-12);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+}
+.term-modal::backdrop {
+  background: var(--overlay);
+  backdrop-filter: blur(var(--blur-md));
+}
+
+.term-modal-content {
+  padding: var(--sp-24);
+}
+
+.term-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.term-modal-title {
+  font-size: var(--font-size-xl);
+  color: var(--blue);
+  margin: 0;
+}
+.term-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: var(--font-size-24);
+  cursor: pointer;
+  padding: 0 var(--sp-4);
+  line-height: 1;
+}
+.term-modal-close:hover {
+  color: var(--text);
+}
+
+.term-modal-short {
+  font-size: var(--font-size-md);
+  color: var(--cyan);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  line-height: var(--lh-normal);
+}
+
+.term-modal-body {
+  font-size: var(--font-size-md);
+  line-height: var(--lh-loose);
+  color: var(--text);
+}
+.term-modal-body p {
+  margin-bottom: 12px;
+}
+.term-modal-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile breakpoint */
+@media (max-width: 768px) {
+  /* Tooltip responsive — pleine largeur, sans fleche */
+  .term-tooltip,
+  .term-tooltip--below {
+    position: fixed;
+    bottom: auto;
+    top: auto;
+    left: 16px;
+    right: 16px;
+    transform: none;
+    width: auto;
+    max-width: none;
+  }
+  .term-tooltip::after,
+  .term-tooltip--below::after {
+    display: none;
+  }
+  .term-tooltip::before,
+  .term-tooltip--below::before {
+    display: none;
+  }
+  .term-modal-content {
+    padding: 20px var(--sp-16);
+  }
+}

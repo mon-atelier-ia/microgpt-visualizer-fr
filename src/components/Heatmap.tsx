@@ -3,6 +3,8 @@ import { Value } from "../engine/autograd";
 import { getCssVar } from "../utils/getCssVar";
 import { parseColor } from "../utils/parseColor";
 import { valToColor } from "../utils/valToColor";
+import "./VectorDisplay.css";
+import "./Heatmap.css";
 
 const DISPLAY_DECIMALS = 2;
 const TOOLTIP_DECIMALS = 4;

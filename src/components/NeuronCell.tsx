@@ -1,3 +1,5 @@
+import "./NeuronCell.css";
+
 interface Props {
   value: number;
   index: number;

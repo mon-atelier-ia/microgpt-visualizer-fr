@@ -8,6 +8,7 @@
 import { useId, useRef, useState, useEffect, useCallback } from "react";
 import { GLOSSARY } from "../data/glossary";
 import { useTermModal } from "./TermProvider";
+import "./Term.css";
 
 interface TermProps {
   id: string;

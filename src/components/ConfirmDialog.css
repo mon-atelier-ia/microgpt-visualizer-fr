@@ -1,0 +1,36 @@
+/* ───── Confirm dialog ───── */
+.confirm-dialog {
+  max-width: 400px;
+  width: calc(100% - 32px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-12);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+}
+.confirm-dialog::backdrop {
+  background: var(--overlay);
+  backdrop-filter: blur(var(--blur-md));
+}
+.confirm-dialog__content {
+  padding: var(--sp-24);
+}
+.confirm-dialog__title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin: 0 0 var(--sp-8);
+  color: var(--orange);
+}
+.confirm-dialog__message {
+  font-size: var(--font-size-md);
+  line-height: var(--lh-normal);
+  color: var(--text-dim);
+  margin: 0 0 20px;
+}
+.confirm-dialog__actions {
+  display: flex;
+  gap: var(--sp-8);
+  justify-content: flex-end;
+}

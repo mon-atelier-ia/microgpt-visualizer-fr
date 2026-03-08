@@ -1,5 +1,6 @@
 import { memo } from "react";
 import PageSection from "../components/PageSection";
+import "./ConclusionPage.css";
 
 const ROWS = [
   {

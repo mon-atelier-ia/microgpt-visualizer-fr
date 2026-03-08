@@ -7,6 +7,7 @@ import {
   findClosestNeuron,
   makeTouchHandlers,
 } from "../utils/canvasInteraction";
+import "./NNDiagram.css";
 
 // ── Config ──────────────────────────────────────────────────────────
 const N_HEAD = 4;

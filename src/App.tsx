@@ -3,6 +3,8 @@ import { DATASETS, DEFAULT_DATASET_ID } from "./datasets";
 import { resetModel, getModelTotalStep } from "./modelStore";
 import TermProvider from "./components/TermProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
+import "./components/ConfirmDialog.css";
+import "./components/ShareDialog.css";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 const TokenizerPage = lazy(() => import("./pages/TokenizerPage"));

@@ -4,6 +4,7 @@ import { parseColor } from "../utils/parseColor";
 import { getCssVar } from "../utils/getCssVar";
 import { tokenLabel } from "../engine/model";
 import type { WteSnapshot } from "../modelStore";
+import "./PCAScatterPlot.css";
 
 // ── Config ──────────────────────────────────────────────────────────
 const VOWELS = new Set(["a", "e", "i", "o", "u", "y"]);

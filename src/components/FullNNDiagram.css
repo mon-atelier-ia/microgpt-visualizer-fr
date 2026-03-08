@@ -1,0 +1,46 @@
+/* ── Full NN Diagram canvas ── */
+.full-nn-canvas-wrap {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: var(--radius-8);
+  box-shadow: inset 0 0 0 1px var(--border);
+  background: var(--surface2);
+}
+
+.full-nn-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  min-width: 900px;
+  height: 500px;
+  cursor: crosshair;
+  background: var(--surface);
+  border-radius: var(--radius-8);
+}
+
+.full-nn-controls {
+  display: flex;
+  gap: var(--sp-8);
+  margin-top: 8px;
+}
+
+.full-nn-mobile-msg {
+  display: none;
+  text-align: center;
+  padding: var(--sp-32) var(--sp-16);
+  color: var(--text-dim);
+  font-size: var(--font-size-base);
+}
+
+@media (max-width: 768px) {
+  /* FullNNDiagram: hide canvas, show mobile message */
+  .full-nn-canvas-wrap {
+    display: none;
+  }
+  .full-nn-controls {
+    display: none;
+  }
+  .full-nn-mobile-msg {
+    display: block;
+  }
+}
