@@ -334,3 +334,5 @@ Le playground a révélé que A1 ne serait pas un simple reskin mais une **refon
 | `filter: brightness()` pour hover — hack                   | Vraies couleurs hover en oklch                                                        |
 
 **Effort estimé A1 révisé : 1-2 jours** (Claude Code + solo dev), incluant la restructuration.
+
+**Plan détaillé :** [`docs/plans/2026-03-08-phase-a1-css-refactoring.md`](plans/2026-03-08-phase-a1-css-refactoring.md) — 7 tâches, refactoring structurel sans changement visuel.

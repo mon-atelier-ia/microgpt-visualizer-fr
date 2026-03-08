@@ -628,7 +628,9 @@ Migration complète du pipeline couleur vers l'espace oklch (7 tasks, 44 nouveau
 
 **Résultat** : pipeline oklch complet. `oklch.ts` → `parseColor` → `valToColor` → Canvas. CSS vars en oklch. 0 hardcoded RGB dans les composants.
 
-**Décision A1/A2** : Phase A2 (Tailwind) rejetée — le playground-redesign prouve que CSS custom + oklch suffit pour un résultat moderne 2026. Phase A1 (refactoring CSS structurel) validée comme direction future.
+**Décision A1/A2** : Phase A2 (Tailwind) rejetée — le playground-redesign prouve que CSS custom + oklch suffit pour un résultat moderne 2026. Phase A1 (refactoring CSS structurel) validée comme prochaine étape.
+
+**Plan A1** : [`docs/plans/2026-03-08-phase-a1-css-refactoring.md`](docs/plans/2026-03-08-phase-a1-css-refactoring.md) — 7 tâches : design tokens, breakpoints 5→3, filter:brightness()→oklch, split styles.css (~13 fichiers), nettoyage sélecteurs, centralisation keyframes, tests non-régression. Aucun changement visuel.
 
 ### 10. Polish CSS — FAIT
 
