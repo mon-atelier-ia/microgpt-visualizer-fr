@@ -644,9 +644,24 @@ Migration complète du pipeline couleur vers l'espace oklch (7 tasks, 44 nouveau
 
 **Résultat** : pipeline oklch complet. `oklch.ts` → `parseColor` → `valToColor` → Canvas. CSS vars en oklch. 0 hardcoded RGB dans les composants.
 
-**Décision A1/A2** : Phase A2 (Tailwind) rejetée — le playground-redesign prouve que CSS custom + oklch suffit pour un résultat moderne 2026. Phase A1 (refactoring CSS structurel) validée comme prochaine étape.
+**Décision A1/A2** : Phase A2 (Tailwind) rejetée — le playground-redesign prouve que CSS custom + oklch suffit pour un résultat moderne 2026. Phase A1 (refactoring CSS structurel) validée.
 
-**Plan A1** : [`docs/plans/2026-03-08-phase-a1-css-refactoring.md`](docs/plans/2026-03-08-phase-a1-css-refactoring.md) — 7 tâches : design tokens, breakpoints 5→3, filter:brightness()→oklch, split styles.css (~13 fichiers), nettoyage sélecteurs, centralisation keyframes, tests non-régression. Aucun changement visuel.
+### Phase A1 — refactoring CSS structurel — FAIT
+
+> Plan détaillé : [`docs/plans/2026-03-08-phase-a1-css-refactoring.md`](docs/plans/2026-03-08-phase-a1-css-refactoring.md)
+
+Refactoring structurel complet du CSS (7 tâches + 3 bugfixes post-review) :
+
+- ✅ Design tokens complets : `--sp-*` (7), `--radius-*` (8), `--font-size-*` (18), `--t-*` (5), `--shadow-*` (5), `--z-*` (6), `--opacity-*` (3), `--lh-*` (4)
+- ✅ Breakpoints consolidés 5→3 : 900px (tablet) / 768px (mobile) / 480px (small)
+- ✅ `filter: brightness()` → oklch hover colors (`--blue-hover`, `--border-hover-bg`, `--red-hover`)
+- ✅ Split styles.css : 2 150→1 031 lignes + 15 fichiers CSS co-localisés (composants + pages)
+- ✅ Nommage cohérent : `--radius-*` tout numérique, `--font-size-2xs` < `--font-size-xs` corrigé
+- ✅ Animation durations tokenisées : `var(--t-slow)`, `var(--t-medium)`, `var(--t-expand)`
+- ✅ Dead CSS supprimé : `.btn-toggle--sm`, `.ml-12`, `.select-native`
+- ✅ Bugfix : `.controls`, `.stat`, `canvas.chart` restaurés (perdus lors de l'extraction)
+- ✅ Bugfix : heatmap theme reactivity (`useThemeSignal` MutationObserver)
+- ✅ Bugfix : NNDiagram connection brightness equalized (`densityScale`)
 
 ### 10. Polish CSS — FAIT
 
