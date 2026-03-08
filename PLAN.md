@@ -254,7 +254,8 @@ docs/
 │ ├── 2026-03-03-pca-embeddings.md # Plan PCA scatter plot (8 tasks)
 │ ├── 2026-03-05-sidebar-and-new-pages-design.md # Design sidebar + 3 nouvelles pages
 │ ├── 2026-03-05-sidebar-and-new-pages-plan.md # Plan d'implémentation (8 tasks)
-│ └── 2026-03-08-phase0-oklch.md # Plan Phase 0 oklch (7 tasks)
+│ ├── 2026-03-08-phase0-oklch.md # Plan Phase 0 oklch (7 tasks)
+│ └── 2026-03-08-phase-a1-css-refactoring.md # Plan Phase A1 CSS refactoring (7 tasks)
 
 **Total : ~9 100 lignes src (hors data blobs), 52 fichiers source + 35 fichiers test. 192 tests. 10 playgrounds standalone.**
 
