@@ -289,3 +289,48 @@ Gain
 | Faire A1 "pour voir" puis A2     | **Déconseillé**             | 0.5 jour de CSS restructuré jeté. Aller directement Phase 0 → A2 |
 
 **Dans tous les cas, commencer par Phase 0.** C'est le seul investissement qui n'est jamais gaspillé et qui produit des gains nets immédiats en qualité, modernité et pérennité.
+
+---
+
+## 11. Décision finale (2026-03-08)
+
+**Phase 0** : FAIT (192 tests, 35 fichiers test, 9 commits sur `main`, déployé en production).
+
+**Phase A2 (Tailwind)** : REJETEE — le playground `playground-redesign.html` a démontré qu'un redesign CSS pur atteint le niveau visuel 2026 sans dépendance framework.
+
+**Phase A1 (CSS redesign)** : VALIDEE comme prochaine étape. Le playground sert de référence.
+
+### 11.1 Prototype de référence : `playground-redesign.html`
+
+Démo standalone HTML/CSS/JS (zero dépendance React) montrant la direction esthétique "Digital Explorer" pour A1 :
+
+| Dimension          | Design actuel                           | Direction A1 (playground)                                                                                                   |
+| ------------------ | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Palette**        | Warm neutral oklch (ambre/brun)         | Deep space indigo + coral/salmon + electric teal + acid lime                                                                |
+| **Typographie**    | SF Mono / Fira Code partout (monospace) | Plus Jakarta Sans (display, geometrique, friendly) + Space Mono (donnees)                                                   |
+| **Layout**         | Sidebar fixe 230px + contenu scrollable | Topbar horizontale avec tabs scrollables + barre XP gamifiee                                                                |
+| **Fond**           | Aplat solide `--bg`                     | Mesh gradient anime (3 blobs oklch) + grille geometrique masquee en radial                                                  |
+| **Panneaux**       | Surface opaque + bordure solide 1px     | Glass blur (`backdrop-filter`) + ligne d'accent au hover + ombres profondes + lift 3D                                       |
+| **Tokens**         | Petits, plats, hover translateY(-2px)   | Rotation + scale 1.05 au hover, bounce spring, selection doree avec glow                                                    |
+| **Datasets**       | Liste verticale dans sidebar            | Pills horizontales avec gradient (chip actif = gradient coral→pink)                                                         |
+| **Heatmap**        | Rampe bleue, border-collapse dense      | Rampe teal, border-spacing 4px, cells qui scale 1.15 au hover                                                               |
+| **Sparkline loss** | (n'existe pas en CSS)                   | 3 couleurs (coral → gold → lime) selon la progression                                                                       |
+| **Animations**     | Basiques (0.15s ease)                   | Staggered rise-in au load, `@property` pour animation gradient, spring curves (`cubic-bezier(0.34, 1.56, 0.64, 1)`) partout |
+| **Progression**    | Visited dots verts 6px dans sidebar     | Barre XP gradient shimmer sous la topbar                                                                                    |
+
+### 11.2 Scope révisé de A1
+
+Le playground a révélé que A1 ne serait pas un simple reskin mais une **refonte structurelle du CSS** :
+
+| Problème actuel                                            | Correction A1                                                                         |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1 fichier CSS monolithique (550+ lignes)                   | Découpage par composant/page (CSS Modules ou fichiers séparés)                        |
+| Sélecteurs plats sans scope (`.panel`, `.btn`)             | Scoping par composant                                                                 |
+| Layout rigide `margin-left: 230px` hardcodé                | CSS Grid layout, responsive natif                                                     |
+| Pas de design tokens (seules les couleurs sont tokenisées) | Tokens sémantiques : `--card-bg`, `--card-border`, `--glow-*`, `--radius`, `--shadow` |
+| Transitions inconsistantes (0.15s, 0.2s, mixtes)           | Système de timing unifié (`--t-fast`, `--t-normal`, `--t-slow`)                       |
+| Responsive ad hoc, breakpoints non standardisés            | Breakpoints centralisés, mobile-first                                                 |
+| Chaque composant réinvente ses keyframes                   | Animations réutilisables (fade, rise, pop, spring)                                    |
+| `filter: brightness()` pour hover — hack                   | Vraies couleurs hover en oklch                                                        |
+
+**Effort estimé A1 révisé : 1-2 jours** (Claude Code + solo dev), incluant la restructuration.
