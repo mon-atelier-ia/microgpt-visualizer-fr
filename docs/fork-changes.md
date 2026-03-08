@@ -235,6 +235,19 @@ Commits: `4ea6c80`, `226e502`, `8c63af0`, `441b85b`, `e13fcdc`, `c6e7c2c`, `8baa
 | `src/engine/model.ts` | Cleanup: `(v)=>v.data` shadowing → `(val)=>val.data`, `as ForwardTrace` cast → explicit field construction at return | `7e76fe9` | Eliminates variable shadowing (v callback shadowed const v), makes return type-safe (adding a ForwardTrace field without populating it now causes TS error)    |
 | `src/engine/data.ts`  | No change                                                                                                            | —         | Original NAMES_RAW kept as-is. New datasets live in `src/datasets/`                                                                                            |
 
+## Phase 0 oklch — pipeline couleur
+
+| Change                                                                    | Fichier(s)                                                           | Justification                                                                                                                |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `oklch.ts` : oklchToRgb + rgbToOklch (conversions oklch↔sRGB)             | `src/utils/oklch.ts`, `src/utils/oklch.test.ts`                      | Module partagé DRY — fondation pour parseColor, valToColor, et futures couleurs oklch                                        |
+| `parseColor` : support `oklch(L C H)` en entrée                           | `src/utils/parseColor.ts`                                            | Canvas 2D a besoin de RGB — parseColor convertit automatiquement les CSS vars oklch via oklchToRgb                           |
+| `valToColor` : interpolation oklch shorter-arc hue (vert↔rouge via jaune) | `src/utils/valToColor.ts`, `src/utils/valToColor.test.ts`            | Remplacement interpolation RGB (transit par brun grisâtre) → oklch (transit par jaune vif, perceptuellement juste)           |
+| 17 CSS vars migrées hex→oklch (dark + light themes)                       | `src/styles.css`                                                     | `--bg`, `--surface`, `--text`, `--text-dim`, `--blue`, `--green`, `--red` × 2 thèmes + `--surface2`, `--border`, `--code-bg` |
+| 3 composants cellule : `color-mix(in oklch)` remplace rgba hardcodés      | `HeatCell.tsx`, `NeuronCell.tsx`, `LossCell.tsx`                     | Opacity via CSS standard `color-mix(in oklch, var(--green) X%, transparent)` — auto theme-reactive                           |
+| `--dot-shadow` + `--vignette-glow` CSS vars pour PCAScatterPlot           | `src/styles.css`, `PCAScatterPlot.tsx`                               | Élimine noir/blanc hardcodés pour ombres et vignette — réactif au thème                                                      |
+| 44 nouveaux tests oklch (148→192)                                         | `oklch.test.ts`, `valToColor.test.ts`, 4 fichiers cell/visual-parity | Round-trip, parité visuelle hex↔oklch, bornes, gradient, WCAG contraste, cell no-rgba                                        |
+| `playground-redesign.html` : démo redesign 2026 "Digital Explorer"        | `playground-redesign.html`                                           | Preuve de concept CSS custom + oklch = résultat moderne 2026 sans Tailwind. Décision : A1 validée, A2 rejetée                |
+
 ## Divers
 
 | Change                                         | Fichier(s)              | Justification                                                                                                                                          |

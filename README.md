@@ -23,7 +23,7 @@ Application web interactive pour visualiser et comprendre le fonctionnement des 
 - Glossaire pédagogique intégré (30 termes avec analogies pour 10-14 ans)
 - 6 jeux de données dont 5 francophones (prénoms simples, prénoms top 1K, prénoms INSEE 33K, pokémon, dinosaures)
 - Accessibilité WCAG 2.1 AA (navigation clavier, contrastes, labels, `prefers-reduced-motion`)
-- 148 tests (composants, engine, accessibilité, store, intégrité des données)
+- 192 tests (composants, engine, accessibilité, store, oklch, intégrité des données)
 - ErrorBoundary avec message français et bouton de rechargement
 - Bouton partager avec QR code (modal `<dialog>`)
 - Easter egg console (ASCII art P-A.G)
@@ -63,7 +63,7 @@ L'application est accessible sur `http://localhost:5173`
 | `pnpm build`   | Build de production                                |
 | `pnpm preview` | Aperçu local du build de production                |
 | `pnpm lint`    | ESLint                                             |
-| `pnpm test`    | Vitest (148 tests)                                 |
+| `pnpm test`    | Vitest (192 tests)                                 |
 
 ## Structure du projet
 
@@ -97,7 +97,7 @@ docs/
 ├── audit-iso.md        # Audit ISO (25010, 40500, 9241-110)
 └── fork-changes.md     # Registre divergences upstream
 
-playground*.html          # 9 playgrounds standalone (réseau, autograd, démo complète…)
+playground*.html          # 10 playgrounds standalone (réseau, autograd, démo complète, redesign…)
 ```
 
 ## Stack technique
@@ -107,7 +107,7 @@ playground*.html          # 9 playgrounds standalone (réseau, autograd, démo c
 - **Vite 7** — Build et serveur de développement
 - **Vitest** — Tests unitaires et composants
 - **Autograd custom** — Moteur ML éducatif (port de microgpt.py)
-- **CSS custom** — Pas de Tailwind, 46 custom properties (thème clair/sombre)
+- **CSS custom** — Pas de Tailwind, 46 custom properties oklch (thème clair/sombre)
 
 ## Objectif pédagogique
 

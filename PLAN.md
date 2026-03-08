@@ -211,9 +211,12 @@ src/
 │   ├── headExplanation.tsx        #  37 lignes — phrases explicatives FR par personnalité
 │   ├── pca.ts                     #  96 lignes — PCA 2D (centrage, covariance, vecteurs propres)
 │   ├── pca.test.ts                #  76 lignes — 6 tests (identité, corrélation, forme sortie, taille, ≥2 lignes, vide)
-│   ├── parseColor.ts              #  15 lignes — parse hex/rgb/rgba → [r,g,b]
+│   ├── oklch.ts                   #  71 lignes — oklchToRgb + rgbToOklch (conversions oklch↔sRGB)
+│   ├── oklch.test.ts              #  66 lignes — 20 tests (round-trip 8 couleurs + parité visuelle 12 vars CSS)
+│   ├── parseColor.ts              #  33 lignes — parse hex/rgb/rgba/oklch() → [r,g,b]
 │   ├── parseColor.test.ts         #  25 lignes — 5 tests (hex6, rgb, rgba, hex3, fallback)
-│   ├── valToColor.ts              #  18 lignes — interpolation vert/rouge par valeur (Canvas)
+│   ├── valToColor.ts              #  40 lignes — interpolation oklch vert/rouge par valeur (Canvas)
+│   ├── valToColor.test.ts         #  62 lignes — 12 tests (bornes, gradient, thème, WCAG contraste)
 │   ├── canvasInteraction.ts       #  52 lignes — findClosestNeuron + makeTouchHandlers (Canvas)
 │   └── getCssVar.ts               #   3 lignes — getComputedStyle wrapper
 ├── engine/                        # 464 lignes — LECTURE SEULE (upstream)
@@ -239,6 +242,7 @@ playground-complete.html # Démo complète : vrai autograd+Adam, tokenisation→
 playground-attention.html # Prototype attention animé (Q·K, softmax, V) — remplacé par BertViz
 playground-bertviz.html # Visualisation BertViz — lignes token↔token, classifieur dynamique de têtes
 playground-pca.html # Prototype PCA scatter plot (points colorés, constellation, animation)
+playground-redesign.html # Démo redesign 2026 "Digital Explorer" (oklch, topbar, glass cards, mesh gradient)
 
 scripts/
 └── investigate-heads.ts # Investigation empirique des personnalités de têtes (10 seeds × 1000 steps)
@@ -249,9 +253,10 @@ docs/
 │ ├── 2026-03-01-embeddings-page-vivante-plan.md # Plan d'implémentation
 │ ├── 2026-03-03-pca-embeddings.md # Plan PCA scatter plot (8 tasks)
 │ ├── 2026-03-05-sidebar-and-new-pages-design.md # Design sidebar + 3 nouvelles pages
-│ └── 2026-03-05-sidebar-and-new-pages-plan.md # Plan d'implémentation (8 tasks)
+│ ├── 2026-03-05-sidebar-and-new-pages-plan.md # Plan d'implémentation (8 tasks)
+│ └── 2026-03-08-phase0-oklch.md # Plan Phase 0 oklch (7 tasks)
 
-**Total : ~8 300 lignes src (hors data blobs), 54 fichiers source + 29 fichiers test. 148 tests. 9 playgrounds standalone.**
+**Total : ~9 100 lignes src (hors data blobs), 52 fichiers source + 35 fichiers test. 192 tests. 10 playgrounds standalone.**
 
 ### Constats clés
 
@@ -265,7 +270,7 @@ docs/
 - **Attention** : boucle multi-token côté page (KV cache pattern), matrice T×T `<table>` sémantique
 - **Model sharing** : `useSyncExternalStore` dans `modelStore.ts`, hook `useModel()` (A-1 corrigé)
 - **Tooltips** : WAI-ARIA compliant, WCAG 1.4.13, flip viewport, bridge hoverable
-- **Tests** : Vitest + jsdom + @testing-library/react (148 tests, 29 fichiers)
+- **Tests** : Vitest + jsdom + @testing-library/react (192 tests, 35 fichiers)
 - **ErrorBoundary** : class component, `window.location.reload()`, sidebar hors boundary
 - **Canvas shared hooks** : `useCanvasObservers` (IO/RO/MO), `canvasInteraction`, `valToColor` partagés entre NNDiagram et FullNNDiagram
 - **Code splitting** : `React.lazy()` + `Suspense` → 9+ chunks JS séparés
@@ -604,7 +609,26 @@ Audit systématique des 7 composants animés/interactifs : cohérence visuelle, 
 - ✅ **TokenizerPage** — CSS keyframes, `prefers-reduced-motion` global CSS
 - ✅ **BertVizView** — SVG inline avec CSS vars HEAD_COLORS, pas d'animation à corriger
 
-**Résultat** : 0 couleur hardcodée dans les composants. Tous utilisent CSS custom properties → prêt pour futur oklch.
+**Résultat** : 0 couleur hardcodée dans les composants. Tous utilisent CSS custom properties → prêt pour oklch.
+
+### Phase 0 oklch — FAIT
+
+> Plan détaillé : [`docs/plans/2026-03-08-phase0-oklch.md`](docs/plans/2026-03-08-phase0-oklch.md)
+
+Migration complète du pipeline couleur vers l'espace oklch (7 tasks, 44 nouveaux tests) :
+
+- ✅ `oklch.ts` : module partagé `oklchToRgb` + `rgbToOklch` (conversions oklch↔sRGB, 71 lignes)
+- ✅ `parseColor` : supporte `oklch(L C H)` en plus de hex/rgb/rgba (33 lignes)
+- ✅ `valToColor` : interpolation oklch shorter-arc hue (vert↔rouge via jaune, pas brun) (40 lignes)
+- ✅ 17 CSS vars migrées hex→oklch (les deux thèmes `[data-theme="dark"]` / `[data-theme="light"]`)
+- ✅ 3 composants cellule utilisent `color-mix(in oklch)` au lieu de rgba hardcodés (HeatCell, NeuronCell, LossCell)
+- ✅ `--dot-shadow` + `--vignette-glow` CSS vars pour PCAScatterPlot (élimine noir/blanc hardcodés)
+- ✅ 44 nouveaux tests : oklch round-trip (8), parité visuelle (12), valToColor (12), WCAG contraste, cell no-rgba (4), visual-parity (8)
+- ✅ `playground-redesign.html` : démo redesign 2026 "Digital Explorer" — preuve de concept A1
+
+**Résultat** : pipeline oklch complet. `oklch.ts` → `parseColor` → `valToColor` → Canvas. CSS vars en oklch. 0 hardcoded RGB dans les composants.
+
+**Décision A1/A2** : Phase A2 (Tailwind) rejetée — le playground-redesign prouve que CSS custom + oklch suffit pour un résultat moderne 2026. Phase A1 (refactoring CSS structurel) validée comme direction future.
 
 ### 10. Polish CSS — FAIT
 
