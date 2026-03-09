@@ -311,9 +311,9 @@ export default function App() {
             viewBox="0 0 29 29"
           >
             <defs>
-              <radialGradient id="qr-grad" cx="50%" cy="50%" r="60%">
-                <stop offset="0%" stopColor="var(--blue)" />
-                <stop offset="100%" stopColor="var(--purple)" />
+              <radialGradient id="qr-grad" cx="50%" cy="50%" r="65%">
+                <stop offset="0%" stopColor="var(--text)" />
+                <stop offset="100%" stopColor="var(--blue)" />
               </radialGradient>
             </defs>
             <path
