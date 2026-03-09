@@ -59,7 +59,6 @@
   width: 180px;
   height: 180px;
   border-radius: var(--radius-8);
-  color: var(--text);
   background: var(--surface);
 }
 .share-dialog__url {
