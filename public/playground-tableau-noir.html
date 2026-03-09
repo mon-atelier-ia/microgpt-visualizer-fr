@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>microGPT — Tableau Noir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Permanent+Marker&family=Source+Code+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   TABLEAU NOIR — Neo-brutalist / chalk on blackboard / classroom
+   oklch palette exclusively — NO gradients, NO blur, NO glass
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Palette — BLACKBOARD (dark) ── */
+:root, [data-theme="dark"] {
+  --bg:          oklch(0.22 0.02 175);
+  --bg-deep:     oklch(0.18 0.025 180);
+  --surface:     oklch(0.26 0.018 178);
+  --surface2:    oklch(0.30 0.015 176);
+  --surface3:    oklch(0.34 0.012 174);
+  --border:      oklch(0.92 0.01 90 / 0.5);
+  --text:        oklch(0.92 0.01 90);
+  --text-dim:    oklch(0.72 0.01 90);
+  --text-muted:  oklch(0.52 0.015 180);
+
+  --chalk:       oklch(0.92 0.01 90);
+  --chalk-blue:  oklch(0.65 0.12 240);
+  --chalk-pink:  oklch(0.70 0.12 350);
+  --chalk-yellow:oklch(0.82 0.12 95);
+  --chalk-green: oklch(0.65 0.12 155);
+  --chalk-orange:oklch(0.72 0.14 55);
+
+  --hard-shadow: oklch(0.10 0.02 180);
+  --card-bg:     oklch(0.20 0.022 178);
+  --card-border: oklch(0.92 0.01 90 / 0.45);
+
+  /* Chalkboard noise texture via SVG data URI */
+  --board-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+}
+
+/* ── Palette — WHITEBOARD (light) ── */
+[data-theme="light"] {
+  --bg:          oklch(0.96 0.005 90);
+  --bg-deep:     oklch(0.93 0.008 88);
+  --surface:     oklch(0.98 0.003 90);
+  --surface2:    oklch(0.94 0.005 88);
+  --surface3:    oklch(0.90 0.008 86);
+  --border:      oklch(0.25 0.02 200 / 0.6);
+  --text:        oklch(0.20 0.02 200);
+  --text-dim:    oklch(0.40 0.015 200);
+  --text-muted:  oklch(0.60 0.01 200);
+
+  --chalk:       oklch(0.20 0.02 200);
+  --chalk-blue:  oklch(0.45 0.18 240);
+  --chalk-pink:  oklch(0.52 0.20 350);
+  --chalk-yellow:oklch(0.50 0.16 95);
+  --chalk-green: oklch(0.45 0.16 155);
+  --chalk-orange:oklch(0.52 0.18 55);
+
+  --hard-shadow: oklch(0.70 0.01 90);
+  --card-bg:     oklch(0.97 0.004 90);
+  --card-border: oklch(0.25 0.02 200 / 0.5);
+
+  --board-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* ── Reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Architects Daughter', cursive;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ══════════════════════════════════════════════
+   BLACKBOARD TEXTURE — the foundation
+   ══════════════════════════════════════════════ */
+.board-texture {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    var(--board-noise),
+    var(--bg);
+  background-repeat: repeat;
+}
+
+/* Ghost chalk — erased text traces */
+.chalk-ghosts {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.chalk-ghosts::before {
+  content: 'f(x) = Wx + b    ∑ softmax    ∂L/∂w    argmax    P(x|θ)    RMSNorm    attention';
+  position: absolute;
+  top: 15%;
+  left: 5%;
+  font-family: 'Architects Daughter', cursive;
+  font-size: 38px;
+  color: var(--chalk);
+  opacity: 0.025;
+  white-space: nowrap;
+  transform: rotate(-3deg);
+  letter-spacing: 12px;
+}
+.chalk-ghosts::after {
+  content: 'embedding    wte × wpe    gradient    backprop    loss = -log(p)    dim=16';
+  position: absolute;
+  bottom: 20%;
+  right: 2%;
+  font-family: 'Architects Daughter', cursive;
+  font-size: 32px;
+  color: var(--chalk);
+  opacity: 0.02;
+  white-space: nowrap;
+  transform: rotate(1.5deg);
+  letter-spacing: 10px;
+}
+
+/* Chalk tray — bottom edge of the blackboard */
+.chalk-tray {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: oklch(0.35 0.01 60);
+  z-index: 50;
+  box-shadow: 0 -2px 0 oklch(0.40 0.01 60);
+}
+[data-theme="light"] .chalk-tray {
+  background: oklch(0.80 0.01 90);
+  box-shadow: 0 -2px 0 oklch(0.75 0.01 90);
+}
+
+/* ══════════════════════════════════════════════
+   APP LAYOUT
+   ══════════════════════════════════════════════ */
+.app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  padding-bottom: 16px;
+}
+
+/* ══════════════════════════════════════════════
+   TOP BAR — wooden ruler edge
+   ══════════════════════════════════════════════ */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 24px;
+  background: var(--bg-deep);
+  border-bottom: 3px solid var(--card-border);
+  box-shadow: 0 4px 0 var(--hard-shadow);
+}
+
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.topbar-logo .mark {
+  font-family: 'Permanent Marker', cursive;
+  font-size: 13px;
+  color: var(--bg-deep);
+  background: var(--chalk-yellow);
+  padding: 4px 8px;
+  transform: rotate(-2deg);
+  box-shadow: 3px 3px 0 var(--hard-shadow);
+  display: inline-block;
+}
+.topbar-logo .brand {
+  font-family: 'Permanent Marker', cursive;
+  font-size: 18px;
+  color: var(--chalk);
+  letter-spacing: 1px;
+}
+
+/* ── Step tabs — chalk tab paper bookmarks ── */
+.step-tabs {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px;
+}
+.step-tabs::-webkit-scrollbar { display: none; }
+
+.step-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-family: 'Architects Daughter', cursive;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s;
+  position: relative;
+}
+.step-tab:hover { color: var(--text-dim); }
+.step-tab .n {
+  font-family: 'Permanent Marker', cursive;
+  font-size: 13px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--text-muted);
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.step-tab.active {
+  color: var(--chalk-yellow);
+}
+.step-tab.active .n {
+  border-color: var(--chalk-yellow);
+  color: var(--chalk-yellow);
+  box-shadow: 3px 3px 0 var(--hard-shadow);
+  transform: scale(1.1);
+}
+.step-tab.visited::after {
+  content: '✓';
+  font-family: 'Permanent Marker', cursive;
+  font-size: 14px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: var(--chalk-green);
+}
+.step-tab:focus-visible {
+  outline: 3px solid var(--chalk-yellow);
+  outline-offset: 2px;
+}
+
+/* ── Actions ── */
+.topbar-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--card-border);
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 15px;
+  font-family: 'Architects Daughter', cursive;
+  transition: all 0.15s;
+  box-shadow: 2px 2px 0 var(--hard-shadow);
+}
+.icon-btn:hover {
+  color: var(--chalk-yellow);
+  border-color: var(--chalk-yellow);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--hard-shadow);
+}
+
+/* ── Chalk progress — checkmarks ── */
+.chalk-progress {
+  height: 4px;
+  background: var(--surface);
+  position: sticky;
+  top: 57px;
+  z-index: 29;
+  box-shadow: 0 2px 0 var(--hard-shadow);
+}
+.chalk-progress-fill {
+  height: 100%;
+  width: 28%;
+  background: var(--chalk-yellow);
+  transition: width 0.4s ease;
+}
+
+/* ══════════════════════════════════════════════
+   MAIN CONTENT
+   ══════════════════════════════════════════════ */
+.main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+/* ══════════════════════════════════════════════
+   HERO — massive chalk title
+   ══════════════════════════════════════════════ */
+.hero {
+  margin-bottom: 32px;
+  transform: rotate(-0.3deg);
+}
+.hero-eyebrow {
+  display: inline-block;
+  font-family: 'Permanent Marker', cursive;
+  font-size: 14px;
+  color: var(--chalk-pink);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 10px;
+  padding: 4px 14px;
+  border: 2px solid var(--chalk-pink);
+  box-shadow: 3px 3px 0 var(--hard-shadow);
+  transform: rotate(0.8deg);
+}
+.hero h1 {
+  font-family: 'Permanent Marker', cursive;
+  font-size: clamp(24px, 4.5vw, 40px);
+  line-height: 1.3;
+  color: var(--chalk);
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+  /* Chalk texture effect — slight roughness */
+  text-shadow:
+    1px 1px 0 oklch(0.92 0.01 90 / 0.3),
+    -1px -1px 0 oklch(0.92 0.01 90 / 0.1);
+}
+/* Underline drawn with chalk — wobbly SVG */
+.hero h1::after {
+  content: '';
+  display: block;
+  width: 80%;
+  height: 6px;
+  margin-top: 4px;
+  background: var(--chalk-yellow);
+  opacity: 0.5;
+  transform: rotate(-0.5deg) skewX(-2deg);
+}
+.hero p {
+  font-size: 18px;
+  color: var(--text-dim);
+  max-width: 600px;
+  line-height: 1.7;
+}
+.hero p strong {
+  color: var(--chalk-blue);
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+}
+
+/* ══════════════════════════════════════════════
+   DATASET CHIPS — chalk labels
+   ══════════════════════════════════════════════ */
+.datasets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+.chip {
+  padding: 5px 16px;
+  font-family: 'Architects Daughter', cursive;
+  font-size: 15px;
+  border: 2px solid var(--card-border);
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 2px 2px 0 var(--hard-shadow);
+}
+.chip:hover {
+  border-color: var(--chalk);
+  color: var(--chalk);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--hard-shadow);
+}
+.chip.on {
+  background: var(--chalk-yellow);
+  border-color: var(--chalk-yellow);
+  color: var(--bg-deep);
+  box-shadow: 3px 3px 0 var(--hard-shadow);
+  transform: rotate(-1deg);
+}
+
+/* ══════════════════════════════════════════════
+   CARDS — blackboard panels, NEO-BRUTALIST
+   No radius. No blur. No glass. Hard shadows.
+   ══════════════════════════════════════════════ */
+.card {
+  background: var(--card-bg);
+  border: 3px solid var(--card-border);
+  padding: 22px;
+  margin-bottom: 22px;
+  position: relative;
+  box-shadow: 5px 5px 0 var(--hard-shadow);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 var(--hard-shadow);
+}
+/* Slight rotation on alternating cards for organic feel */
+.card.tilt-r { transform: rotate(0.4deg); }
+.card.tilt-r:hover { transform: rotate(0.4deg) translate(-2px, -2px); }
+.card.tilt-l { transform: rotate(-0.3deg); }
+.card.tilt-l:hover { transform: rotate(-0.3deg) translate(-2px, -2px); }
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.card-label {
+  font-family: 'Permanent Marker', cursive;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--chalk);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-label .dot {
+  width: 10px;
+  height: 10px;
+  background: var(--chalk-pink);
+  box-shadow: 2px 2px 0 var(--hard-shadow);
+  /* Square dot — no border-radius — brutalist */
+}
+.card-badge {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 11px;
+  padding: 3px 10px;
+  border: 2px solid var(--card-border);
+  color: var(--text-dim);
+  box-shadow: 2px 2px 0 var(--hard-shadow);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+/* ══════════════════════════════════════════════
+   CALLOUT — teacher's note
+   ══════════════════════════════════════════════ */
+.callout {
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 2px solid var(--chalk-blue);
+  border-left-width: 5px;
+  box-shadow: 3px 3px 0 var(--hard-shadow);
+  font-size: 17px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-bottom: 18px;
+  transform: rotate(0.3deg);
+}
+.callout strong {
+  color: var(--chalk-green);
+  font-weight: 700;
+}
+.callout code {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 13px;
+  color: var(--chalk-yellow);
+  background: oklch(0.82 0.12 95 / 0.1);
+  padding: 2px 8px;
+  border: 1px solid oklch(0.82 0.12 95 / 0.3);
+}
+
+/* ══════════════════════════════════════════════
+   TOKENS — chalk letters on the board
+   ══════════════════════════════════════════════ */
+.tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.tok {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 16px;
+  background: none;
+  border: 2px solid var(--card-border);
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+  position: relative;
+  box-shadow: 3px 3px 0 var(--hard-shadow);
+  animation: chalkJitter 0.3s ease-in-out infinite alternate;
+}
+@keyframes chalkJitter {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(0.3px, -0.3px); }
+}
+.tok:hover {
+  border-color: var(--chalk);
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 5px 5px 0 var(--hard-shadow);
+}
+.tok:active { transform: scale(0.96) !important; }
+.tok .ch {
+  font-family: 'Permanent Marker', cursive;
+  font-size: 24px;
+  color: var(--chalk);
+  line-height: 1;
+  text-shadow: 1px 1px 0 oklch(0.92 0.01 90 / 0.2);
+}
+.tok .ix {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.tok.bos {
+  border-color: var(--chalk-pink);
+  background: oklch(0.70 0.12 350 / 0.08);
+}
+.tok.bos .ch {
+  font-size: 12px;
+  color: var(--chalk-pink);
+}
+/* Selected token — double yellow underline (chalk style) */
+.tok.sel {
+  border-color: var(--chalk-yellow);
+  box-shadow: 5px 5px 0 var(--hard-shadow);
+}
+.tok.sel::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  background: var(--chalk-yellow);
+  box-shadow: 0 3px 0 var(--chalk-yellow);
+}
+.tok.sel .ch {
+  color: var(--chalk-yellow);
+}
+
+.arrow {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 18px;
+  color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════════════
+   HEATMAP — chalk blue → white → pink
+   ══════════════════════════════════════════════ */
+.heatmap { overflow-x: auto; }
+.heatmap table {
+  border-collapse: separate;
+  border-spacing: 2px;
+  width: 100%;
+}
+.heatmap th {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+  padding: 4px 6px;
+}
+.heatmap td {
+  text-align: center;
+  padding: 8px 4px;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.15s;
+  cursor: default;
+  border: 1px solid oklch(0.92 0.01 90 / 0.12);
+}
+.heatmap td:hover {
+  outline: 2px solid var(--chalk);
+  outline-offset: -1px;
+  z-index: 2;
+  position: relative;
+}
+
+/* Chalk ramp: blue → white → pink */
+.h0 { background: oklch(0.28 0.01 200); color: var(--text-muted); }
+.h1 { background: oklch(0.40 0.06 240); color: oklch(0.80 0.04 240); }
+.h2 { background: oklch(0.52 0.08 240); color: var(--chalk); }
+.h3 { background: oklch(0.72 0.03 90);  color: oklch(0.25 0.02 200); }
+.h4 { background: oklch(0.62 0.08 350); color: oklch(0.95 0.01 90); }
+.h5 { background: oklch(0.70 0.12 350); color: oklch(0.20 0.02 350); font-weight: 700; }
+
+[data-theme="light"] .h0 { background: oklch(0.94 0.005 90);  color: oklch(0.60 0.01 200); }
+[data-theme="light"] .h1 { background: oklch(0.78 0.06 240);  color: oklch(0.30 0.06 240); }
+[data-theme="light"] .h2 { background: oklch(0.65 0.10 240);  color: oklch(0.97 0.005 90); }
+[data-theme="light"] .h3 { background: oklch(0.85 0.02 90);   color: oklch(0.30 0.02 200); }
+[data-theme="light"] .h4 { background: oklch(0.65 0.12 350);  color: oklch(0.97 0.005 90); }
+[data-theme="light"] .h5 { background: oklch(0.52 0.20 350);  color: oklch(0.97 0.005 90); }
+
+/* ══════════════════════════════════════════════
+   PROBABILITY BARS — chalk bars
+   ══════════════════════════════════════════════ */
+.probs { display: flex; flex-direction: column; gap: 10px; }
+.prob {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.prob-ch {
+  font-family: 'Permanent Marker', cursive;
+  font-size: 20px;
+  width: 28px;
+  text-align: center;
+  color: var(--chalk);
+}
+.prob-track {
+  flex: 1;
+  height: 24px;
+  background: var(--surface);
+  border: 2px solid var(--card-border);
+  overflow: hidden;
+}
+.prob-fill {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  transition: width 0.6s ease;
+}
+.prob-fill.top {
+  background: var(--chalk-green);
+  color: var(--bg-deep);
+}
+.prob-fill.mid {
+  background: var(--chalk-blue);
+  color: var(--bg-deep);
+}
+.prob-fill.low {
+  background: var(--surface3);
+  color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════════════
+   STATS — numbers on the board
+   ══════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.stat {
+  background: var(--surface);
+  border: 2px solid var(--card-border);
+  padding: 16px 12px;
+  text-align: center;
+  box-shadow: 3px 3px 0 var(--hard-shadow);
+  transition: all 0.15s;
+}
+.stat:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--hard-shadow);
+}
+.stat-v {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-v.pink   { color: var(--chalk-pink); }
+.stat-v.green  { color: var(--chalk-green); }
+.stat-v.yellow { color: var(--chalk-yellow); }
+.stat-v.blue   { color: var(--chalk-blue); }
+.stat-l {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ══════════════════════════════════════════════
+   LOSS SPARKLINE — chalk bars
+   ══════════════════════════════════════════════ */
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 52px;
+  padding: 4px 0;
+}
+.sbar {
+  flex: 1;
+  min-width: 4px;
+  transition: height 0.3s ease;
+  cursor: pointer;
+}
+.sbar:hover { opacity: 0.7; }
+.sbar.hi { background: var(--chalk-pink); }
+.sbar.md { background: var(--chalk-yellow); }
+.sbar.lo { background: var(--chalk-green); }
+
+/* ══════════════════════════════════════════════
+   BUTTONS — massive brutalist
+   ══════════════════════════════════════════════ */
+.btn {
+  padding: 10px 22px;
+  font-family: 'Permanent Marker', cursive;
+  font-size: 15px;
+  border: 3px solid;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: none;
+  letter-spacing: 0.5px;
+}
+.btn:active { transform: translate(2px, 2px) !important; box-shadow: none !important; }
+.btn:focus-visible {
+  outline: 3px solid var(--chalk-yellow);
+  outline-offset: 3px;
+}
+.btn-primary {
+  border-color: var(--chalk-pink);
+  color: var(--chalk-pink);
+  box-shadow: 4px 4px 0 var(--hard-shadow);
+}
+.btn-primary:hover {
+  background: var(--chalk-pink);
+  color: var(--bg-deep);
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 var(--hard-shadow);
+}
+.btn-ghost {
+  border-color: var(--card-border);
+  color: var(--text-dim);
+  box-shadow: 3px 3px 0 var(--hard-shadow);
+}
+.btn-ghost:hover {
+  border-color: var(--chalk);
+  color: var(--chalk);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--hard-shadow);
+}
+.btns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ══════════════════════════════════════════════
+   PREDICTION TEXT
+   ══════════════════════════════════════════════ */
+.pred-text {
+  font-size: 17px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+.pred-text strong {
+  color: var(--chalk-green);
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 3px;
+}
+
+/* ══════════════════════════════════════════════
+   ANIMATIONS — chalk writing effect
+   ══════════════════════════════════════════════ */
+@keyframes chalkWrite {
+  from { opacity: 0; transform: translateY(10px) rotate(-1deg); }
+  to   { opacity: 1; transform: translateY(0) rotate(0deg); }
+}
+.rise { animation: chalkWrite 0.35s ease both; }
+.rise-1 { animation-delay: 0.05s; }
+.rise-2 { animation-delay: 0.10s; }
+.rise-3 { animation-delay: 0.15s; }
+.rise-4 { animation-delay: 0.20s; }
+.rise-5 { animation-delay: 0.25s; }
+.rise-6 { animation-delay: 0.30s; }
+.rise-7 { animation-delay: 0.35s; }
+
+/* Token chalk-in animation */
+@keyframes chalkIn {
+  0%   { opacity: 0; transform: translateY(-8px) rotate(2deg); }
+  100% { opacity: 1; transform: translateY(0) rotate(0deg); }
+}
+.tokens-anim .tok {
+  animation: chalkIn 0.25s ease both;
+}
+.tokens-anim .tok:nth-child(1) { animation-delay: 0.04s; }
+.tokens-anim .tok:nth-child(2) { animation-delay: 0.06s; }
+.tokens-anim .tok:nth-child(3) { animation-delay: 0.10s; }
+.tokens-anim .tok:nth-child(4) { animation-delay: 0.14s; }
+.tokens-anim .tok:nth-child(5) { animation-delay: 0.18s; }
+.tokens-anim .tok:nth-child(6) { animation-delay: 0.22s; }
+.tokens-anim .tok:nth-child(7) { animation-delay: 0.26s; }
+.tokens-anim .tok:nth-child(8) { animation-delay: 0.30s; }
+.tokens-anim .tok:nth-child(9) { animation-delay: 0.34s; }
+.tokens-anim .tok:nth-child(10) { animation-delay: 0.38s; }
+.tokens-anim .tok:nth-child(11) { animation-delay: 0.42s; }
+.tokens-anim .arrow {
+  animation: chalkWrite 0.2s ease both;
+}
+
+/* ── "A retenir" footer message ── */
+.board-footer {
+  text-align: center;
+  padding: 20px;
+  font-family: 'Architects Daughter', cursive;
+  font-size: 16px;
+  color: var(--text-muted);
+  transform: rotate(0.5deg);
+}
+.board-footer span {
+  border-bottom: 2px dashed var(--text-muted);
+  padding-bottom: 2px;
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .step-tabs { display: none; }
+  .row { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .main { padding: 20px 14px; }
+  .hero h1 { font-size: 20px; }
+}
+
+/* ══════════════════════════════════════════════
+   REDUCED MOTION
+   ══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Blackboard layers -->
+<div class="board-texture"></div>
+<div class="chalk-ghosts"></div>
+<div class="chalk-tray"></div>
+
+<div class="app">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      <span class="mark">μG</span>
+      <span class="brand">microGPT</span>
+    </div>
+
+    <nav class="step-tabs" aria-label="Etapes">
+      <button class="step-tab visited"><span class="n">0</span> Accueil</button>
+      <button class="step-tab visited"><span class="n">1</span> Tokenisation</button>
+      <button class="step-tab active"><span class="n">2</span> Plongements</button>
+      <button class="step-tab"><span class="n">3</span> Propagation</button>
+      <button class="step-tab"><span class="n">4</span> Attention</button>
+      <button class="step-tab"><span class="n">5</span> Entrainement</button>
+      <button class="step-tab"><span class="n">6</span> Inference</button>
+      <button class="step-tab"><span class="n">7</span> Modele complet</button>
+      <button class="step-tab"><span class="n">8</span> Conclusion</button>
+    </nav>
+
+    <div class="topbar-actions">
+      <button class="icon-btn" id="themeBtn" aria-label="Changer de theme">☽</button>
+      <button class="icon-btn" aria-label="Partager">↗</button>
+    </div>
+  </header>
+
+  <!-- Chalk progress bar -->
+  <div class="chalk-progress"><div class="chalk-progress-fill"></div></div>
+
+  <!-- Content -->
+  <main class="main">
+
+    <!-- Hero -->
+    <div class="hero rise rise-1">
+      <span class="hero-eyebrow">Etape 2 / 8</span>
+      <h1>Les plongements donnent une adresse a chaque lettre</h1>
+      <p>Chaque caractere est transforme en un vecteur de <strong>16 nombres</strong>.
+        C'est comme donner des coordonnees GPS dans un espace a 16 dimensions
+        — le reseau apprend ces coordonnees tout seul.</p>
+    </div>
+
+    <!-- Dataset chips -->
+    <div class="datasets rise rise-2">
+      <button class="chip">Noms EN</button>
+      <button class="chip on">Prenoms simples</button>
+      <button class="chip">Top 1K</button>
+      <button class="chip">INSEE 33K</button>
+      <button class="chip">Pokemon</button>
+      <button class="chip">Dinosaures</button>
+    </div>
+
+    <!-- Tokens card -->
+    <div class="card tilt-r rise rise-3">
+      <div class="card-head">
+        <span class="card-label"><span class="dot"></span> Tokens d'entree</span>
+        <span class="card-badge">6 tokens</span>
+      </div>
+      <div class="callout">
+        Le mot est decoupe lettre par lettre. Le symbole <code>&lt;S&gt;</code>
+        marque le <strong>debut</strong> du mot — c'est le signal de depart pour le reseau.
+      </div>
+      <div class="tokens tokens-anim">
+        <div class="tok bos"><span class="ch">&lt;S&gt;</span><span class="ix">0</span></div>
+        <span class="arrow">→</span>
+        <div class="tok"><span class="ch">m</span><span class="ix">13</span></div>
+        <span class="arrow">→</span>
+        <div class="tok"><span class="ch">a</span><span class="ix">1</span></div>
+        <span class="arrow">→</span>
+        <div class="tok sel"><span class="ch">r</span><span class="ix">18</span></div>
+        <span class="arrow">→</span>
+        <div class="tok"><span class="ch">i</span><span class="ix">9</span></div>
+        <span class="arrow">→</span>
+        <div class="tok"><span class="ch">e</span><span class="ix">5</span></div>
+      </div>
+    </div>
+
+    <!-- Two columns -->
+    <div class="row">
+      <!-- Embedding heatmap -->
+      <div class="card tilt-l rise rise-4">
+        <div class="card-head">
+          <span class="card-label"><span class="dot" style="background:var(--chalk-blue)"></span> Matrice wte</span>
+          <span class="card-badge">27 x 16</span>
+        </div>
+        <div class="heatmap">
+          <table aria-label="Matrice de plongements lexicaux">
+            <thead>
+              <tr><th></th><th>d0</th><th>d1</th><th>d2</th><th>d3</th><th>d4</th><th>d5</th><th>d6</th><th>d7</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>a</th><td class="h2">0.12</td><td class="h4">0.67</td><td class="h1">-.03</td><td class="h3">0.41</td><td class="h0">-.15</td><td class="h5">0.89</td><td class="h2">0.23</td><td class="h1">-.09</td></tr>
+              <tr><th>b</th><td class="h3">0.45</td><td class="h1">-.12</td><td class="h5">0.91</td><td class="h0">-.22</td><td class="h4">0.73</td><td class="h2">0.18</td><td class="h1">0.05</td><td class="h3">0.38</td></tr>
+              <tr><th>c</th><td class="h1">-.08</td><td class="h3">0.52</td><td class="h2">0.21</td><td class="h5">0.88</td><td class="h1">0.03</td><td class="h4">0.64</td><td class="h3">0.47</td><td class="h0">-.19</td></tr>
+              <tr><th>d</th><td class="h4">0.71</td><td class="h0">-.18</td><td class="h3">0.39</td><td class="h2">0.15</td><td class="h5">0.82</td><td class="h1">-.06</td><td class="h4">0.59</td><td class="h2">0.27</td></tr>
+              <tr><th>e</th><td class="h2">0.19</td><td class="h5">0.85</td><td class="h1">0.08</td><td class="h3">0.44</td><td class="h2">0.25</td><td class="h0">-.14</td><td class="h5">0.93</td><td class="h4">0.61</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Predictions -->
+      <div class="card tilt-r rise rise-5">
+        <div class="card-head">
+          <span class="card-label"><span class="dot" style="background:var(--chalk-green)"></span> Prediction</span>
+          <span class="card-badge">top 5</span>
+        </div>
+        <p class="pred-text">
+          Apres <strong>mar</strong>, le modele predit :
+        </p>
+        <div class="probs">
+          <div class="prob"><span class="prob-ch">i</span><div class="prob-track"><div class="prob-fill top" style="width:72%">72%</div></div></div>
+          <div class="prob"><span class="prob-ch">c</span><div class="prob-track"><div class="prob-fill mid" style="width:14%">14%</div></div></div>
+          <div class="prob"><span class="prob-ch">t</span><div class="prob-track"><div class="prob-fill mid" style="width:8%">8%</div></div></div>
+          <div class="prob"><span class="prob-ch">a</span><div class="prob-track"><div class="prob-fill low" style="width:4%">4%</div></div></div>
+          <div class="prob"><span class="prob-ch">e</span><div class="prob-track"><div class="prob-fill low" style="width:2%">2%</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loss Chart -->
+    <div class="card tilt-r rise rise-5" style="margin-bottom:22px">
+      <div class="card-head">
+        <span class="card-label"><span class="dot" style="background:var(--chalk-yellow)"></span> Courbe d'apprentissage</span>
+        <span class="card-badge">250 etapes</span>
+      </div>
+      <canvas id="lossCanvas" style="width:100%;height:280px;cursor:crosshair"></canvas>
+    </div>
+
+    <!-- Training stats -->
+    <div class="card tilt-l rise rise-7">
+      <div class="card-head">
+        <span class="card-label"><span class="dot" style="background:var(--chalk-yellow)"></span> Entrainement</span>
+        <span class="card-badge">en cours</span>
+      </div>
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-v pink">247</div><div class="stat-l">Etapes</div></div>
+        <div class="stat"><div class="stat-v green">1.82</div><div class="stat-l">Loss actuelle</div></div>
+        <div class="stat"><div class="stat-v yellow">3.26</div><div class="stat-l">Loss initiale</div></div>
+        <div class="stat"><div class="stat-v blue">4 192</div><div class="stat-l">Parametres</div></div>
+      </div>
+      <div class="spark" aria-label="Evolution de la loss">
+        <div class="sbar hi" style="height:92%"></div>
+        <div class="sbar hi" style="height:88%"></div>
+        <div class="sbar hi" style="height:82%"></div>
+        <div class="sbar hi" style="height:76%"></div>
+        <div class="sbar hi" style="height:68%"></div>
+        <div class="sbar md" style="height:60%"></div>
+        <div class="sbar md" style="height:54%"></div>
+        <div class="sbar md" style="height:49%"></div>
+        <div class="sbar md" style="height:44%"></div>
+        <div class="sbar md" style="height:40%"></div>
+        <div class="sbar md" style="height:37%"></div>
+        <div class="sbar lo" style="height:34%"></div>
+        <div class="sbar lo" style="height:32%"></div>
+        <div class="sbar lo" style="height:30%"></div>
+        <div class="sbar lo" style="height:29%"></div>
+        <div class="sbar lo" style="height:27%"></div>
+        <div class="sbar lo" style="height:26%"></div>
+        <div class="sbar lo" style="height:25%"></div>
+        <div class="sbar lo" style="height:24%"></div>
+        <div class="sbar lo" style="height:23%"></div>
+      </div>
+      <div class="btns" style="margin-top: 18px;">
+        <button class="btn btn-primary">Lancer l'entrainement</button>
+        <button class="btn btn-ghost">Reinitialiser le modele</button>
+      </div>
+    </div>
+
+    <!-- Board footer -->
+    <div class="board-footer">
+      <span>— ne pas effacer —</span>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// Theme toggle
+document.getElementById('themeBtn').addEventListener('click', function() {
+  const html = document.documentElement;
+  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = next;
+  this.textContent = next === 'dark' ? '\u263D' : '\u2600';
+});
+
+// Tab navigation
+document.querySelectorAll('.step-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelector('.step-tab.active')?.classList.remove('active');
+    tab.classList.add('active');
+    const idx = [...tab.parentNode.children].indexOf(tab);
+    document.querySelector('.chalk-progress-fill').style.width = ((idx + 1) / 9 * 100) + '%';
+  });
+});
+
+// Dataset chips
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelector('.chip.on')?.classList.remove('on');
+    c.classList.add('on');
+  });
+});
+
+// Token selection
+document.querySelectorAll('.tok:not(.bos)').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelector('.tok.sel')?.classList.remove('sel');
+    t.classList.add('sel');
+  });
+});
+
+// ═══ LOSS CHART — CHALK ON BLACKBOARD ═══
+(function() {
+  const canvas = document.getElementById('lossCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Generate realistic loss data: 250 steps
+  function seed(s) { return function() { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  const rng = seed(7);
+  const STEPS = 250;
+  const lossData = [];
+  for (let i = 0; i < STEPS; i++) {
+    const base = 1.8 + 1.5 * Math.exp(-i / 60);
+    const noise = (rng() - 0.5) * 0.3;
+    lossData.push(base + noise);
+  }
+
+  // Moving average (window=20)
+  function movingAvg(data, w) {
+    const result = [];
+    for (let i = 0; i < data.length; i++) {
+      const start = Math.max(0, i - w + 1);
+      let sum = 0;
+      for (let j = start; j <= i; j++) sum += data[j];
+      result.push(sum / (i - start + 1));
+    }
+    return result;
+  }
+  const avgData = movingAvg(lossData, 20);
+  const RANDOM_LOSS = Math.log(27); // ~3.30
+
+  function getCssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width, H = rect.height;
+    const PAD = { top: 20, right: 20, bottom: 32, left: 52 };
+    const pW = W - PAD.left - PAD.right;
+    const pH = H - PAD.top - PAD.bottom;
+
+    // Background
+    ctx.fillStyle = getCssVar('--card-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Data range
+    const minLoss = Math.min(...lossData, ...avgData) * 0.95;
+    const maxLoss = Math.max(...lossData, RANDOM_LOSS) * 1.05;
+
+    function toX(i) { return PAD.left + (i / (STEPS - 1)) * pW; }
+    function toY(v) { return PAD.top + (1 - (v - minLoss) / (maxLoss - minLoss)) * pH; }
+
+    const borderColor = getCssVar('--card-border');
+    const chalkBlue = getCssVar('--chalk-blue');
+    const chalkYellow = getCssVar('--chalk-yellow');
+    const chalkPink = getCssVar('--chalk-pink');
+    const textMuted = getCssVar('--text-muted');
+
+    // Grid lines
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    const gridSteps = 5;
+    ctx.font = '12px "Source Code Pro", monospace';
+    ctx.fillStyle = textMuted;
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= gridSteps; i++) {
+      const v = minLoss + (maxLoss - minLoss) * (i / gridSteps);
+      const y = toY(v);
+      ctx.beginPath();
+      ctx.moveTo(PAD.left, y);
+      ctx.lineTo(W - PAD.right, y);
+      ctx.stroke();
+      ctx.fillText(v.toFixed(1), PAD.left - 6, y + 4);
+    }
+    ctx.setLineDash([]);
+
+    // Random baseline
+    ctx.strokeStyle = chalkPink;
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, toY(RANDOM_LOSS));
+    ctx.lineTo(W - PAD.right, toY(RANDOM_LOSS));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Raw loss line (scratchy chalk)
+    ctx.strokeStyle = chalkBlue;
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < STEPS; i++) {
+      const x = toX(i), y = toY(lossData[i]);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Moving average (THICK chalk)
+    ctx.strokeStyle = chalkYellow;
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < STEPS; i++) {
+      const x = toX(i), y = toY(avgData[i]);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Step counter
+    ctx.font = '13px "Architects Daughter", cursive';
+    ctx.fillStyle = textMuted;
+    ctx.textAlign = 'center';
+    ctx.fillText(STEPS + ' etapes', PAD.left + pW / 2, H - 6);
+
+    // Legend (top-right)
+    ctx.font = '12px "Architects Daughter", cursive';
+    ctx.textAlign = 'right';
+    let lx = W - PAD.right;
+    const ly = PAD.top + 6;
+
+    // hasard (pink)
+    ctx.fillStyle = chalkPink;
+    ctx.globalAlpha = 0.6;
+    ctx.fillRect(lx - 42, ly - 4, 14, 2);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = textMuted;
+    ctx.fillText('hasard', lx, ly);
+
+    // moyenne (yellow)
+    ctx.fillStyle = chalkYellow;
+    ctx.fillRect(lx - 42, ly + 14, 14, 3);
+    ctx.fillStyle = textMuted;
+    ctx.fillText('moyenne', lx, ly + 18);
+
+    // brut (blue)
+    ctx.fillStyle = chalkBlue;
+    ctx.globalAlpha = 0.5;
+    ctx.fillRect(lx - 42, ly + 32, 14, 2);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = textMuted;
+    ctx.fillText('brut', lx, ly + 36);
+  }
+
+  const ro = new ResizeObserver(() => draw());
+  ro.observe(canvas.parentElement);
+  new MutationObserver(() => draw()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  draw();
+})();
+</script>
+</body>
+</html>

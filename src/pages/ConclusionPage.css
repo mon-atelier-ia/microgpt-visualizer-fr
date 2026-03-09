@@ -50,3 +50,42 @@
 .conclusion-links a:hover {
   text-decoration: underline;
 }
+
+/* ─── Playground links ─── */
+.playground-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-12);
+}
+.playground-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-8);
+  padding: var(--sp-16) var(--sp-12);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-8);
+  background: var(--surface2);
+  text-decoration: none;
+  color: var(--text);
+  transition:
+    border-color var(--t-fast),
+    background var(--t-fast);
+}
+.playground-card:hover {
+  border-color: var(--blue);
+  background: var(--surface);
+}
+.playground-card__icon {
+  font-size: var(--font-size-xl);
+}
+.playground-card__label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-align: center;
+}
+@media (max-width: 600px) {
+  .playground-links {
+    grid-template-columns: 1fr;
+  }
+}

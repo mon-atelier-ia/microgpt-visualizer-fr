@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>microGPT — Redesign Explorer 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ── BRAND NEW palette — deep space + neon coral ── */
+@property --mesh-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+:root, [data-theme="dark"] {
+  --bg:        oklch(0.145 0.015 270);
+  --bg-deep:   oklch(0.11 0.02 275);
+  --surface:   oklch(0.19 0.018 268);
+  --surface2:  oklch(0.23 0.02 266);
+  --surface3:  oklch(0.27 0.018 265);
+  --border:    oklch(0.30 0.02 268 / 0.5);
+  --text:      oklch(0.93 0.01 90);
+  --text-dim:  oklch(0.65 0.015 260);
+  --text-muted:oklch(0.45 0.015 265);
+
+  --accent:    oklch(0.72 0.19 25);    /* coral/salmon */
+  --accent2:   oklch(0.70 0.16 330);   /* hot pink */
+  --teal:      oklch(0.75 0.12 185);   /* electric teal */
+  --lime:      oklch(0.82 0.18 135);   /* acid lime */
+  --gold:      oklch(0.80 0.14 85);    /* warm gold */
+  --violet:    oklch(0.62 0.18 295);   /* deep violet */
+  --sky:       oklch(0.75 0.10 230);   /* soft sky */
+
+  --glow-accent: oklch(0.72 0.19 25 / 0.25);
+  --glow-teal:   oklch(0.75 0.12 185 / 0.2);
+  --glow-lime:   oklch(0.82 0.18 135 / 0.15);
+  --glow-violet: oklch(0.62 0.18 295 / 0.2);
+
+  --card-bg: oklch(0.18 0.018 268 / 0.8);
+  --card-border: oklch(0.35 0.025 268 / 0.3);
+  --card-shadow: oklch(0 0 0 / 0.4);
+}
+
+[data-theme="light"] {
+  --bg:        oklch(0.97 0.008 85);
+  --bg-deep:   oklch(0.94 0.01 80);
+  --surface:   oklch(0.99 0.005 90);
+  --surface2:  oklch(0.95 0.008 85);
+  --surface3:  oklch(0.92 0.01 82);
+  --border:    oklch(0.88 0.012 85 / 0.6);
+  --text:      oklch(0.20 0.015 270);
+  --text-dim:  oklch(0.45 0.015 260);
+  --text-muted:oklch(0.65 0.01 265);
+
+  --accent:    oklch(0.58 0.20 22);
+  --accent2:   oklch(0.55 0.18 330);
+  --teal:      oklch(0.52 0.12 185);
+  --lime:      oklch(0.55 0.16 140);
+  --gold:      oklch(0.58 0.14 85);
+  --violet:    oklch(0.48 0.18 295);
+  --sky:       oklch(0.55 0.10 230);
+
+  --glow-accent: oklch(0.58 0.20 22 / 0.12);
+  --glow-teal:   oklch(0.52 0.12 185 / 0.1);
+  --glow-lime:   oklch(0.55 0.16 140 / 0.08);
+  --glow-violet: oklch(0.48 0.18 295 / 0.1);
+
+  --card-bg: oklch(0.99 0.005 90 / 0.9);
+  --card-border: oklch(0.88 0.012 85 / 0.5);
+  --card-shadow: oklch(0 0 0 / 0.06);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.5s, color 0.4s;
+}
+
+/* ── Animated mesh gradient background ── */
+.mesh-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 90%, var(--glow-violet) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 85% 15%, var(--glow-teal) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 50% at 50% 50%, var(--glow-accent) 0%, transparent 70%);
+  animation: meshShift 12s ease-in-out infinite alternate;
+  opacity: 0.7;
+}
+@keyframes meshShift {
+  0%   { background-position: 0% 0%, 100% 0%, 50% 50%; }
+  50%  { background-position: 20% 30%, 70% 20%, 40% 60%; }
+  100% { background-position: 10% 60%, 90% 40%, 55% 35%; }
+}
+
+/* subtle grid overlay */
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.15;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 70%);
+}
+
+/* ── App layout ── */
+.app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+/* ── Top bar ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 28px;
+  background: var(--card-bg);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-bottom: 1px solid var(--card-border);
+}
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+.topbar-logo .mark {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 2px 12px var(--glow-accent);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.topbar-logo:hover .mark { transform: rotate(-8deg) scale(1.1); }
+
+/* ── Step tabs (horizontal nav) ── */
+.step-tabs {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 2px;
+}
+.step-tabs::-webkit-scrollbar { display: none; }
+.step-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: all 0.2s;
+  position: relative;
+}
+.step-tab:hover {
+  color: var(--text-dim);
+  background: var(--surface2);
+}
+.step-tab .n {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--surface3);
+  color: var(--text-dim);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.step-tab.active {
+  color: var(--text);
+  background: var(--surface2);
+}
+.step-tab.active .n {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 10px var(--glow-accent);
+  transform: scale(1.08);
+}
+.step-tab.visited::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lime);
+}
+.step-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.topbar-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--card-border);
+  background: var(--surface2);
+  color: var(--text-dim);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+.icon-btn:hover {
+  color: var(--text);
+  background: var(--surface3);
+  border-color: var(--accent);
+}
+
+/* ── XP progress bar ── */
+.xp-bar {
+  height: 3px;
+  background: var(--surface2);
+  position: sticky;
+  top: 57px;
+  z-index: 29;
+}
+.xp-fill {
+  height: 100%;
+  width: 28%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2), var(--violet));
+  background-size: 200% 100%;
+  animation: xpShimmer 3s ease-in-out infinite;
+  border-radius: 0 2px 2px 0;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes xpShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ── Main ── */
+.main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 28px 64px;
+}
+
+/* ── Page header ── */
+.hero {
+  margin-bottom: 36px;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  padding: 5px 12px;
+  background: var(--glow-accent);
+  border-radius: 6px;
+  border: 1px solid oklch(0.72 0.19 25 / 0.2);
+}
+.hero h1 {
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -1.5px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--text) 0%, var(--text-dim) 50%, var(--accent) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero p {
+  font-size: 15px;
+  color: var(--text-dim);
+  max-width: 580px;
+  line-height: 1.75;
+}
+.hero p strong { color: var(--teal); font-weight: 600; }
+
+/* ── Dataset switcher ── */
+.datasets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.chip {
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 100px;
+  border: 1px solid var(--card-border);
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+.chip.on {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 3px 14px var(--glow-accent);
+}
+.chip.on:hover { transform: translateY(-2px) scale(1.03); }
+
+/* ── Cards ── */
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow:
+    0 4px 24px var(--card-shadow),
+    inset 0 1px 0 oklch(1 0 0 / 0.04);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px var(--card-shadow);
+}
+/* top-edge color accent line */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 24px;
+  right: 24px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.card:hover::before { opacity: 1; }
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.card-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-label .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--glow-accent);
+}
+.card-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: var(--surface3);
+  color: var(--text-dim);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* ── Tokens ── */
+.tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.tok {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 16px;
+  background: var(--surface2);
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+}
+.tok:hover {
+  border-color: var(--teal);
+  transform: translateY(-6px) rotate(-1deg);
+  box-shadow: 0 12px 28px var(--card-shadow);
+}
+.tok:active { transform: scale(0.95); }
+.tok .ch {
+  font-family: 'Space Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--teal);
+  line-height: 1;
+}
+.tok .ix {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--text-muted);
+}
+.tok.bos {
+  background: var(--glow-accent);
+  border-color: oklch(0.72 0.19 25 / 0.3);
+}
+.tok.bos .ch {
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 700;
+}
+.tok.sel {
+  border-color: var(--gold);
+  background: oklch(0.80 0.14 85 / 0.1);
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: 0 8px 24px oklch(0.80 0.14 85 / 0.15);
+}
+.arrow {
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+/* ── Heatmap ── */
+.heatmap { overflow-x: auto; }
+.heatmap table {
+  border-collapse: separate;
+  border-spacing: 4px;
+  width: 100%;
+}
+.heatmap th {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 400;
+  padding: 6px;
+}
+.heatmap td {
+  text-align: center;
+  padding: 10px 6px;
+  border-radius: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: default;
+}
+.heatmap td:hover {
+  transform: scale(1.15);
+  z-index: 2;
+  box-shadow: 0 6px 20px var(--card-shadow);
+}
+.h0 { background: oklch(0.19 0.018 268); color: var(--text-muted); }
+.h1 { background: oklch(0.30 0.06 200); color: var(--text-dim); }
+.h2 { background: oklch(0.42 0.08 195); color: var(--text); }
+.h3 { background: oklch(0.54 0.10 190); color: var(--text); }
+.h4 { background: oklch(0.66 0.12 185); color: oklch(0.15 0.02 270); }
+.h5 { background: var(--teal); color: oklch(0.12 0.02 270); font-weight: 700; }
+[data-theme="light"] .h0 { background: oklch(0.95 0.008 85); }
+[data-theme="light"] .h1 { background: oklch(0.85 0.04 190); }
+[data-theme="light"] .h2 { background: oklch(0.75 0.07 188); }
+[data-theme="light"] .h3 { background: oklch(0.65 0.09 186); }
+[data-theme="light"] .h4 { background: oklch(0.55 0.11 185); color: white; }
+[data-theme="light"] .h5 { background: var(--teal); color: white; }
+
+/* ── Probability bars ── */
+.probs { display: flex; flex-direction: column; gap: 10px; }
+.prob {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.prob-ch {
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  width: 28px;
+  text-align: center;
+  color: var(--teal);
+}
+.prob-track {
+  flex: 1;
+  height: 28px;
+  background: var(--surface2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.prob-fill {
+  height: 100%;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.prob-fill.top { background: linear-gradient(90deg, var(--lime), var(--teal)); }
+.prob-fill.mid { background: var(--sky); }
+.prob-fill.low { background: var(--surface3); color: var(--text-muted); }
+
+/* ── Stats grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.stat {
+  background: var(--surface2);
+  border-radius: 14px;
+  padding: 18px 16px;
+  text-align: center;
+  border: 1px solid transparent;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.stat:hover {
+  border-color: var(--card-border);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px var(--card-shadow);
+}
+.stat-v {
+  font-family: 'Space Mono', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-v.coral { color: var(--accent); }
+.stat-v.teal { color: var(--teal); }
+.stat-v.lime { color: var(--lime); }
+.stat-v.gold { color: var(--gold); }
+.stat-l {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+}
+
+/* ── Loss sparkline ── */
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 56px;
+  padding: 4px 0;
+}
+.sbar {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  min-width: 4px;
+  transition: height 0.4s ease, background 0.3s;
+  cursor: pointer;
+}
+.sbar:hover { filter: brightness(1.3); }
+.sbar.hi { background: var(--accent); }
+.sbar.md { background: var(--gold); }
+.sbar.lo { background: var(--lime); }
+
+/* ── Callout ── */
+.callout {
+  padding: 16px 20px;
+  background: var(--surface2);
+  border-radius: 14px;
+  border-left: 3px solid var(--teal);
+  font-size: 13.5px;
+  color: var(--text-dim);
+  line-height: 1.75;
+  margin-bottom: 18px;
+}
+.callout strong { color: var(--teal); font-weight: 600; }
+.callout code {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--lime);
+  background: var(--glow-lime);
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+/* ── Buttons ── */
+.btn {
+  padding: 11px 24px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  letter-spacing: 0.2px;
+}
+.btn:active { transform: scale(0.96); }
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: white;
+  box-shadow: 0 4px 16px var(--glow-accent);
+}
+.btn-primary:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 28px var(--glow-accent);
+}
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--text-dim);
+  border: 1px solid var(--card-border);
+}
+.btn-ghost:hover {
+  color: var(--text);
+  background: var(--surface3);
+  transform: translateY(-2px);
+}
+.btns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ── Animations ── */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.rise { animation: riseIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.rise-1 { animation-delay: 0.06s; }
+.rise-2 { animation-delay: 0.12s; }
+.rise-3 { animation-delay: 0.18s; }
+.rise-4 { animation-delay: 0.24s; }
+.rise-5 { animation-delay: 0.30s; }
+.rise-6 { animation-delay: 0.36s; }
+.rise-7 { animation-delay: 0.42s; }
+
+@keyframes popIn {
+  0% { opacity: 0; transform: translateY(16px) scale(0.8) rotate(-2deg); }
+  70% { transform: translateY(-4px) scale(1.06) rotate(0.5deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+}
+.tokens-anim .tok {
+  animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.tokens-anim .tok:nth-child(1) { animation-delay: 0.04s; }
+.tokens-anim .tok:nth-child(2) { animation-delay: 0.06s; }
+.tokens-anim .tok:nth-child(3) { animation-delay: 0.1s; }
+.tokens-anim .tok:nth-child(4) { animation-delay: 0.14s; }
+.tokens-anim .tok:nth-child(5) { animation-delay: 0.18s; }
+.tokens-anim .tok:nth-child(6) { animation-delay: 0.22s; }
+.tokens-anim .tok:nth-child(7) { animation-delay: 0.26s; }
+.tokens-anim .tok:nth-child(8) { animation-delay: 0.3s; }
+.tokens-anim .tok:nth-child(9) { animation-delay: 0.34s; }
+.tokens-anim .tok:nth-child(10) { animation-delay: 0.38s; }
+.tokens-anim .tok:nth-child(11) { animation-delay: 0.42s; }
+.tokens-anim .arrow {
+  animation: riseIn 0.3s ease both;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .step-tabs { display: none; }
+  .row { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .main { padding: 24px 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="mesh-bg"></div>
+<div class="grid-overlay"></div>
+
+<div class="app">
+
+  <!-- Top bar navigation -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      <span class="mark">uG</span>
+      microGPT
+    </div>
+
+    <nav class="step-tabs" aria-label="Etapes">
+      <button class="step-tab visited"><span class="n">0</span> Accueil</button>
+      <button class="step-tab visited"><span class="n">1</span> Tokenisation</button>
+      <button class="step-tab active"><span class="n">2</span> Plongements</button>
+      <button class="step-tab"><span class="n">3</span> Propagation</button>
+      <button class="step-tab"><span class="n">4</span> Attention</button>
+      <button class="step-tab"><span class="n">5</span> Entrainement</button>
+      <button class="step-tab"><span class="n">6</span> Inference</button>
+      <button class="step-tab"><span class="n">7</span> Modele complet</button>
+      <button class="step-tab"><span class="n">8</span> Conclusion</button>
+    </nav>
+
+    <div class="topbar-actions">
+      <button class="icon-btn" id="themeBtn" aria-label="Changer de theme">&#9789;</button>
+      <button class="icon-btn" aria-label="Partager">&#8599;</button>
+    </div>
+  </header>
+
+  <!-- XP progress bar -->
+  <div class="xp-bar"><div class="xp-fill"></div></div>
+
+  <!-- Content -->
+  <main class="main">
+
+    <!-- Hero -->
+    <div class="hero rise rise-1">
+      <span class="hero-eyebrow">Etape 2 / 8</span>
+      <h1>Les plongements donnent une adresse a chaque lettre</h1>
+      <p>Chaque caractere est transforme en un vecteur de <strong>16 nombres</strong>.
+        C'est comme donner des coordonnees GPS dans un espace a 16 dimensions
+        — le reseau apprend ces coordonnees tout seul.</p>
+    </div>
+
+    <!-- Dataset chips -->
+    <div class="datasets rise rise-2">
+      <button class="chip">Noms EN</button>
+      <button class="chip on">Prenoms simples</button>
+      <button class="chip">Top 1K</button>
+      <button class="chip">INSEE 33K</button>
+      <button class="chip">Pokemon</button>
+      <button class="chip">Dinosaures</button>
+    </div>
+
+    <!-- Tokens card -->
+    <div class="card rise rise-3">
+      <div class="card-head">
+        <span class="card-label"><span class="dot"></span> Tokens d'entree</span>
+        <span class="card-badge">6 tokens</span>
+      </div>
+      <div class="callout">
+        Le mot est decoupe lettre par lettre. Le symbole <code>&lt;S&gt;</code>
+        marque le <strong>debut</strong> du mot — c'est le signal de depart pour le reseau.
+      </div>
+      <div class="tokens tokens-anim">
+        <div class="tok bos"><span class="ch">&lt;S&gt;</span><span class="ix">0</span></div>
+        <span class="arrow">&#8594;</span>
+        <div class="tok"><span class="ch">m</span><span class="ix">13</span></div>
+        <span class="arrow">&#8594;</span>
+        <div class="tok"><span class="ch">a</span><span class="ix">1</span></div>
+        <span class="arrow">&#8594;</span>
+        <div class="tok sel"><span class="ch">r</span><span class="ix">18</span></div>
+        <span class="arrow">&#8594;</span>
+        <div class="tok"><span class="ch">i</span><span class="ix">9</span></div>
+        <span class="arrow">&#8594;</span>
+        <div class="tok"><span class="ch">e</span><span class="ix">5</span></div>
+      </div>
+    </div>
+
+    <!-- Two columns -->
+    <div class="row">
+      <!-- Embedding heatmap -->
+      <div class="card rise rise-4">
+        <div class="card-head">
+          <span class="card-label"><span class="dot" style="background:var(--teal);box-shadow:0 0 8px var(--glow-teal)"></span> Matrice wte</span>
+          <span class="card-badge">27 x 16</span>
+        </div>
+        <div class="heatmap">
+          <table aria-label="Matrice de plongements lexicaux">
+            <thead>
+              <tr><th></th><th>d0</th><th>d1</th><th>d2</th><th>d3</th><th>d4</th><th>d5</th><th>d6</th><th>d7</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>a</th><td class="h2">0.12</td><td class="h4">0.67</td><td class="h1">-.03</td><td class="h3">0.41</td><td class="h0">-.15</td><td class="h5">0.89</td><td class="h2">0.23</td><td class="h1">-.09</td></tr>
+              <tr><th>b</th><td class="h3">0.45</td><td class="h1">-.12</td><td class="h5">0.91</td><td class="h0">-.22</td><td class="h4">0.73</td><td class="h2">0.18</td><td class="h1">0.05</td><td class="h3">0.38</td></tr>
+              <tr><th>c</th><td class="h1">-.08</td><td class="h3">0.52</td><td class="h2">0.21</td><td class="h5">0.88</td><td class="h1">0.03</td><td class="h4">0.64</td><td class="h3">0.47</td><td class="h0">-.19</td></tr>
+              <tr><th>d</th><td class="h4">0.71</td><td class="h0">-.18</td><td class="h3">0.39</td><td class="h2">0.15</td><td class="h5">0.82</td><td class="h1">-.06</td><td class="h4">0.59</td><td class="h2">0.27</td></tr>
+              <tr><th>e</th><td class="h2">0.19</td><td class="h5">0.85</td><td class="h1">0.08</td><td class="h3">0.44</td><td class="h2">0.25</td><td class="h0">-.14</td><td class="h5">0.93</td><td class="h4">0.61</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Predictions -->
+      <div class="card rise rise-5">
+        <div class="card-head">
+          <span class="card-label"><span class="dot" style="background:var(--lime);box-shadow:0 0 8px var(--glow-lime)"></span> Prediction</span>
+          <span class="card-badge">top 5</span>
+        </div>
+        <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 16px;">
+          Apres <strong style="color: var(--teal)">mar</strong>, le modele predit :
+        </p>
+        <div class="probs">
+          <div class="prob"><span class="prob-ch">i</span><div class="prob-track"><div class="prob-fill top" style="width:72%">72%</div></div></div>
+          <div class="prob"><span class="prob-ch">c</span><div class="prob-track"><div class="prob-fill mid" style="width:14%">14%</div></div></div>
+          <div class="prob"><span class="prob-ch">t</span><div class="prob-track"><div class="prob-fill mid" style="width:8%">8%</div></div></div>
+          <div class="prob"><span class="prob-ch">a</span><div class="prob-track"><div class="prob-fill low" style="width:4%">4%</div></div></div>
+          <div class="prob"><span class="prob-ch">e</span><div class="prob-track"><div class="prob-fill low" style="width:2%">2%</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PCA Scatter Plot -->
+    <div class="card rise rise-5" style="margin-bottom:24px">
+      <div class="card-head">
+        <span class="card-label"><span class="dot" style="background:var(--violet);box-shadow:0 0 8px var(--glow-violet)"></span> Espace des plongements</span>
+        <span class="card-badge">PCA 2D</span>
+      </div>
+      <canvas id="pcaCanvas" style="width:100%;height:380px;border-radius:12px;cursor:crosshair"></canvas>
+    </div>
+
+    <!-- Training stats -->
+    <div class="card rise rise-7">
+      <div class="card-head">
+        <span class="card-label"><span class="dot" style="background:var(--gold);box-shadow:0 0 8px oklch(0.80 0.14 85 / 0.2)"></span> Entrainement</span>
+        <span class="card-badge">en cours</span>
+      </div>
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-v coral">247</div><div class="stat-l">Etapes</div></div>
+        <div class="stat"><div class="stat-v lime">1.82</div><div class="stat-l">Loss actuelle</div></div>
+        <div class="stat"><div class="stat-v gold">3.26</div><div class="stat-l">Loss initiale</div></div>
+        <div class="stat"><div class="stat-v teal">4 192</div><div class="stat-l">Parametres</div></div>
+      </div>
+      <div class="spark" aria-label="Evolution de la loss">
+        <div class="sbar hi" style="height:92%"></div>
+        <div class="sbar hi" style="height:88%"></div>
+        <div class="sbar hi" style="height:82%"></div>
+        <div class="sbar hi" style="height:76%"></div>
+        <div class="sbar hi" style="height:68%"></div>
+        <div class="sbar md" style="height:60%"></div>
+        <div class="sbar md" style="height:54%"></div>
+        <div class="sbar md" style="height:49%"></div>
+        <div class="sbar md" style="height:44%"></div>
+        <div class="sbar md" style="height:40%"></div>
+        <div class="sbar md" style="height:37%"></div>
+        <div class="sbar lo" style="height:34%"></div>
+        <div class="sbar lo" style="height:32%"></div>
+        <div class="sbar lo" style="height:30%"></div>
+        <div class="sbar lo" style="height:29%"></div>
+        <div class="sbar lo" style="height:27%"></div>
+        <div class="sbar lo" style="height:26%"></div>
+        <div class="sbar lo" style="height:25%"></div>
+        <div class="sbar lo" style="height:24%"></div>
+        <div class="sbar lo" style="height:23%"></div>
+      </div>
+      <div class="btns" style="margin-top: 20px;">
+        <button class="btn btn-primary">Lancer l'entrainement</button>
+        <button class="btn btn-ghost">Reinitialiser le modele</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// Theme toggle
+document.getElementById('themeBtn').addEventListener('click', function() {
+  const html = document.documentElement;
+  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = next;
+  this.textContent = next === 'dark' ? '\u263D' : '\u2600';
+});
+
+// Tab navigation
+document.querySelectorAll('.step-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelector('.step-tab.active')?.classList.remove('active');
+    tab.classList.add('active');
+    // Animate XP bar
+    const idx = [...tab.parentNode.children].indexOf(tab);
+    document.querySelector('.xp-fill').style.width = ((idx + 1) / 9 * 100) + '%';
+  });
+});
+
+// Dataset chips
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelector('.chip.on')?.classList.remove('on');
+    c.classList.add('on');
+  });
+});
+
+// Token selection
+document.querySelectorAll('.tok:not(.bos)').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelector('.tok.sel')?.classList.remove('sel');
+    t.classList.add('sel');
+  });
+});
+
+// ═══ PCA SCATTER PLOT ═══
+(function() {
+  const canvas = document.getElementById('pcaCanvas');
+  const ctx = canvas.getContext('2d');
+  let hoverIdx = -1;
+
+  // Realistic PCA projections (trained microGPT, Prenoms simples dataset)
+  const VOCAB = '<S>abcdefghijklmnopqrstuvwxyz';
+  const VOWELS = new Set(['a','e','i','o','u','y']);
+  // Positions: [pc1, pc2] — vowels cluster top-right, consonants scatter
+  const PCA = [
+    [-3.2, 2.8],   // <S> — isolated
+    [1.8, 1.5],    // a — vowel cluster
+    [-1.2, -0.8],  // b
+    [-0.5, -1.4],  // c
+    [-1.8, 0.3],   // d
+    [2.1, 0.9],    // e — vowel
+    [-0.3, -2.1],  // f
+    [-1.5, -0.2],  // g
+    [-0.8, -1.7],  // h
+    [1.5, 2.2],    // i — vowel
+    [-2.5, -1.0],  // j
+    [-1.9, -1.5],  // k
+    [0.2, -0.6],   // l
+    [0.5, -0.9],   // m
+    [0.8, -0.3],   // n
+    [2.3, 1.2],    // o — vowel
+    [-0.7, -1.9],  // p
+    [-2.8, -0.5],  // q
+    [0.3, -0.1],   // r
+    [0.1, -1.2],   // s
+    [-0.4, -0.5],  // t
+    [1.9, 1.8],    // u — vowel
+    [-1.1, -1.1],  // v
+    [-2.2, -0.7],  // w
+    [-2.6, -1.8],  // x
+    [1.4, 1.0],    // y — vowel
+    [-1.6, -1.3],  // z
+  ];
+
+  // Top-8 closest pairs (constellation lines)
+  const PAIRS = [[1,5],[1,15],[5,9],[9,21],[15,21],[1,25],[5,25],[9,25]];
+
+  function getCssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function oklchToComponents(str) {
+    // Parse "oklch(L C H)" or "oklch(L C H / A)" — return as-is for canvas
+    return str;
+  }
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width, H = rect.height;
+    const PAD = { top: 20, right: 20, bottom: 30, left: 30 };
+    const pW = W - PAD.left - PAD.right;
+    const pH = H - PAD.top - PAD.bottom;
+    const cx = PAD.left + pW / 2;
+    const cy = PAD.top + pH / 2;
+
+    // Scale to fit
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const [x, y] of PCA) {
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+    const rangeX = maxX - minX || 1;
+    const rangeY = maxY - minY || 1;
+    const scale = Math.min(pW / rangeX, pH / rangeY) * 0.85;
+    const midX = (minX + maxX) / 2;
+    const midY = (minY + maxY) / 2;
+
+    function toScreen(pc1, pc2) {
+      return [cx + (pc1 - midX) * scale, cy - (pc2 - midY) * scale];
+    }
+
+    // Background
+    ctx.fillStyle = getCssVar('--surface');
+    ctx.fillRect(0, 0, W, H);
+
+    // Vignette
+    const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.2, W/2, H/2, Math.min(W,H)*0.7);
+    vg.addColorStop(0, 'transparent');
+    vg.addColorStop(1, getCssVar('--bg'));
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Axes
+    ctx.save();
+    ctx.strokeStyle = getCssVar('--border');
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(cx, PAD.top); ctx.lineTo(cx, H - PAD.bottom);
+    ctx.moveTo(PAD.left, cy); ctx.lineTo(W - PAD.right, cy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Axis labels
+    ctx.font = '10px "Space Mono", monospace';
+    ctx.fillStyle = getCssVar('--text-muted');
+    ctx.textAlign = 'center';
+    ctx.fillText('PC1', W - PAD.right - 10, cy - 6);
+    ctx.save();
+    ctx.translate(cx + 8, PAD.top + 10);
+    ctx.fillText('PC2', 0, 0);
+    ctx.restore();
+
+    // Constellation lines
+    ctx.lineWidth = 1;
+    for (const [a, b] of PAIRS) {
+      const [x1, y1] = toScreen(PCA[a][0], PCA[a][1]);
+      const [x2, y2] = toScreen(PCA[b][0], PCA[b][1]);
+      ctx.strokeStyle = getCssVar('--glow-teal');
+      ctx.beginPath();
+      ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    // Dots
+    const DOT_R = 6;
+    for (let i = 0; i < PCA.length; i++) {
+      const [sx, sy] = toScreen(PCA[i][0], PCA[i][1]);
+      const ch = VOCAB[i];
+      const isBos = i === 0;
+      const isVowel = VOWELS.has(ch);
+      const color = isBos ? getCssVar('--violet') : isVowel ? getCssVar('--teal') : getCssVar('--accent');
+      const glowColor = isBos ? getCssVar('--glow-violet') : isVowel ? getCssVar('--glow-teal') : getCssVar('--glow-accent');
+
+      // Shadow
+      ctx.beginPath();
+      ctx.arc(sx + 2, sy + 2, DOT_R, 0, Math.PI * 2);
+      ctx.fillStyle = getCssVar('--bg');
+      ctx.globalAlpha = 0.3;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Hover glow
+      if (i === hoverIdx) {
+        const hg = ctx.createRadialGradient(sx, sy, DOT_R, sx, sy, DOT_R * 3);
+        hg.addColorStop(0, glowColor);
+        hg.addColorStop(1, 'transparent');
+        ctx.fillStyle = hg;
+        ctx.beginPath();
+        ctx.arc(sx, sy, DOT_R * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Dot
+      const grad = ctx.createRadialGradient(sx - 1, sy - 1, 0, sx, sy, DOT_R);
+      grad.addColorStop(0, getCssVar('--text'));
+      grad.addColorStop(1, color);
+      ctx.beginPath();
+      ctx.arc(sx, sy, DOT_R, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Label
+      ctx.font = 'bold 11px "Space Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Halo
+      ctx.strokeStyle = getCssVar('--surface');
+      ctx.lineWidth = 3;
+      ctx.strokeText(isBos ? '⊕' : ch, sx, sy - DOT_R - 8);
+      ctx.fillStyle = getCssVar('--text');
+      ctx.fillText(isBos ? '⊕' : ch, sx, sy - DOT_R - 8);
+    }
+
+    // Hover tooltip
+    if (hoverIdx >= 0) {
+      const [sx, sy] = toScreen(PCA[hoverIdx][0], PCA[hoverIdx][1]);
+      const ch = VOCAB[hoverIdx];
+      const label = hoverIdx === 0 ? '<S> (debut)' : ch + (VOWELS.has(ch) ? ' (voyelle)' : ' (consonne)');
+      const coords = 'PC1: ' + PCA[hoverIdx][0].toFixed(1) + '  PC2: ' + PCA[hoverIdx][1].toFixed(1);
+      ctx.font = '11px "Space Mono", monospace';
+      const tw = Math.max(ctx.measureText(label).width, ctx.measureText(coords).width) + 16;
+      const tx = Math.min(sx + 14, W - tw - 8);
+      const ty = Math.max(sy - 40, 8);
+      ctx.fillStyle = getCssVar('--surface2');
+      ctx.globalAlpha = 0.92;
+      ctx.beginPath();
+      ctx.roundRect(tx, ty, tw, 36, 6);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = getCssVar('--text');
+      ctx.fillText(label, tx + 8, ty + 13);
+      ctx.fillStyle = getCssVar('--text-dim');
+      ctx.font = '10px "Space Mono", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(coords, tx + 8, ty + 27);
+    }
+
+    // Legend
+    ctx.textAlign = 'left';
+    ctx.font = '10px "Space Mono", monospace';
+    const ly = H - 12;
+    const items = [
+      { label: 'voyelles', color: getCssVar('--teal') },
+      { label: 'consonnes', color: getCssVar('--accent') },
+      { label: '<S>', color: getCssVar('--violet') },
+    ];
+    let lx = PAD.left;
+    for (const item of items) {
+      ctx.beginPath();
+      ctx.arc(lx + 4, ly - 3, 4, 0, Math.PI * 2);
+      ctx.fillStyle = item.color;
+      ctx.fill();
+      ctx.fillStyle = getCssVar('--text-muted');
+      ctx.fillText(item.label, lx + 12, ly);
+      lx += ctx.measureText(item.label).width + 28;
+    }
+  }
+
+  // Hover detection
+  canvas.addEventListener('mousemove', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const W = rect.width, H = rect.height;
+    const PAD = { top: 20, right: 20, bottom: 30, left: 30 };
+    const pW = W - PAD.left - PAD.right;
+    const pH = H - PAD.top - PAD.bottom;
+    const cx = PAD.left + pW / 2;
+    const cy = PAD.top + pH / 2;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const [x, y] of PCA) {
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+    const scale = Math.min(pW / (maxX - minX || 1), pH / (maxY - minY || 1)) * 0.85;
+    const midX2 = (minX + maxX) / 2;
+    const midY2 = (minY + maxY) / 2;
+    let closest = -1, closestDist = 25;
+    for (let i = 0; i < PCA.length; i++) {
+      const sx = cx + (PCA[i][0] - midX2) * scale;
+      const sy = cy - (PCA[i][1] - midY2) * scale;
+      const d = Math.sqrt((mx - sx) ** 2 + (my - sy) ** 2);
+      if (d < closestDist) { closestDist = d; closest = i; }
+    }
+    if (closest !== hoverIdx) { hoverIdx = closest; draw(); }
+  });
+  canvas.addEventListener('mouseleave', function() { hoverIdx = -1; draw(); });
+
+  // Responsive + theme
+  const ro = new ResizeObserver(() => draw());
+  ro.observe(canvas.parentElement);
+  new MutationObserver(() => draw()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  draw();
+})();
+</script>
+</body>
+</html>

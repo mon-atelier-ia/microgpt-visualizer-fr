@@ -132,6 +132,40 @@ const ConclusionPage = memo(function ConclusionPage() {
             — le code TypeScript de référence pour aller plus loin
           </li>
         </ul>
+
+        <p className="page-desc" style={{ marginTop: "var(--sp-12)" }}>
+          Envie de voir l'interface autrement&nbsp;? Essaie ces démos
+          alternatives&nbsp;:
+        </p>
+        <div className="playground-links">
+          <a
+            href="/playground-digital-explorer.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="playground-card"
+          >
+            <span className="playground-card__icon">🚀</span>
+            <span className="playground-card__label">Digital Explorer</span>
+          </a>
+          <a
+            href="/playground-borne-arcade.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="playground-card"
+          >
+            <span className="playground-card__icon">🕹️</span>
+            <span className="playground-card__label">Borne d'Arcade</span>
+          </a>
+          <a
+            href="/playground-tableau-noir.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="playground-card"
+          >
+            <span className="playground-card__icon">🖍️</span>
+            <span className="playground-card__label">Tableau Noir</span>
+          </a>
+        </div>
       </div>
     </PageSection>
   );
