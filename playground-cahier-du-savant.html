@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>microGPT — Le Cahier du Savant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── PALETTE — Naturaliste / journal scientifique ── */
+
+:root, [data-theme="dark"] {
+  /* Cuir et parchemin vieilli */
+  --bg:          oklch(0.18 0.03 55);
+  --bg-deep:     oklch(0.14 0.03 50);
+  --surface:     oklch(0.24 0.03 60);
+  --surface2:    oklch(0.30 0.03 65);
+  --surface3:    oklch(0.35 0.03 60);
+  --border:      oklch(0.45 0.04 55 / 0.5);
+  --text:        oklch(0.88 0.02 80);
+  --text-dim:    oklch(0.65 0.03 70);
+  --text-muted:  oklch(0.48 0.03 65);
+
+  /* Encres et pigments */
+  --sepia:       oklch(0.50 0.06 60);
+  --sepia-light: oklch(0.65 0.05 65);
+  --ink:         oklch(0.80 0.02 80);
+  --herbier:     oklch(0.60 0.14 145);
+  --herbier-dim: oklch(0.45 0.10 145);
+  --specimen:    oklch(0.58 0.16 25);
+  --specimen-dim:oklch(0.45 0.12 25);
+  --annotation:  oklch(0.58 0.12 250);
+  --annotation-dim: oklch(0.42 0.10 250);
+  --gold:        oklch(0.72 0.12 85);
+
+  /* Surfaces */
+  --paper:       oklch(0.24 0.02 65);
+  --paper-edge:  oklch(0.20 0.03 55);
+  --tape:        oklch(0.55 0.06 85 / 0.25);
+  --tape-border: oklch(0.55 0.06 85 / 0.15);
+
+  /* Utilitaires */
+  --shadow-color: oklch(0.08 0.02 50 / 0.5);
+  --glow-ink:    oklch(0.65 0.05 65 / 0.2);
+}
+
+[data-theme="light"] {
+  --bg:          oklch(0.94 0.02 85);
+  --bg-deep:     oklch(0.91 0.02 80);
+  --surface:     oklch(0.97 0.01 88);
+  --surface2:    oklch(0.93 0.02 82);
+  --surface3:    oklch(0.89 0.02 78);
+  --border:      oklch(0.75 0.04 65 / 0.4);
+  --text:        oklch(0.22 0.04 55);
+  --text-dim:    oklch(0.42 0.04 60);
+  --text-muted:  oklch(0.58 0.03 65);
+
+  --sepia:       oklch(0.45 0.06 55);
+  --sepia-light: oklch(0.55 0.05 60);
+  --ink:         oklch(0.25 0.04 55);
+  --herbier:     oklch(0.50 0.16 145);
+  --herbier-dim: oklch(0.40 0.12 145);
+  --specimen:    oklch(0.52 0.18 25);
+  --specimen-dim:oklch(0.42 0.14 25);
+  --annotation:  oklch(0.48 0.14 250);
+  --annotation-dim: oklch(0.38 0.10 250);
+  --gold:        oklch(0.62 0.14 85);
+
+  --paper:       oklch(0.96 0.01 85);
+  --paper-edge:  oklch(0.90 0.02 78);
+  --tape:        oklch(0.82 0.04 85 / 0.45);
+  --tape-border: oklch(0.72 0.04 80 / 0.3);
+
+  --shadow-color: oklch(0.50 0.03 60 / 0.15);
+  --glow-ink:    oklch(0.45 0.04 60 / 0.08);
+}
+
+/* ── RESET + BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Caveat', cursive;
+  font-weight: 500;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* ── PAPER GRAIN TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  opacity: 0.6;
+}
+
+[data-theme="light"] body::before { opacity: 0.35; }
+
+/* ── INK SPLOTCHES (decorative pseudo-elements) ── */
+body::after {
+  content: '';
+  position: fixed;
+  top: 15%;
+  right: 5%;
+  width: 120px;
+  height: 120px;
+  border-radius: 50% 45% 55% 40%;
+  background: var(--glow-ink);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── TOPBAR — Marque-pages en papier ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.topbar::-webkit-scrollbar { display: none; }
+
+.topbar-brand {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 1.1rem;
+  color: var(--sepia-light);
+  padding: 12px 16px 12px 0;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-brand svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--herbier);
+  fill: none;
+  stroke-width: 1.5;
+}
+
+/* Bookmark tabs */
+.tab {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+
+.tab.active {
+  color: var(--herbier);
+  border-bottom-color: var(--herbier);
+  font-weight: 600;
+}
+
+.tab .tab-num {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-right: 4px;
+  vertical-align: super;
+}
+
+.tab.active .tab-num { color: var(--herbier-dim); }
+
+/* Theme toggle */
+.theme-toggle {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-dim);
+  align-self: center;
+  transition: border-color 0.25s;
+}
+.theme-toggle:hover {
+  border-color: var(--sepia-light);
+  color: var(--text);
+}
+
+/* ── NOTEBOOK PROGRESS — cahier qui se remplit ── */
+.progress-bar {
+  height: 3px;
+  background: var(--surface2);
+  position: relative;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 37.5%; /* 3/8 steps */
+  background: linear-gradient(90deg, var(--herbier-dim), var(--herbier), var(--gold));
+  transition: width 0.6s ease;
+  position: relative;
+}
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -1px;
+  width: 6px;
+  height: 5px;
+  background: var(--gold);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--gold);
+}
+
+/* ── MAIN LAYOUT ── */
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+/* ── PANELS — Pages du cahier ── */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  position: relative;
+  box-shadow: 2px 3px 12px var(--shadow-color);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.panel:hover {
+  box-shadow: 3px 5px 20px var(--shadow-color);
+  transform: translateY(-1px);
+}
+
+/* Tape decoration on top-left */
+.panel::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 24px;
+  width: 60px;
+  height: 18px;
+  background: var(--tape);
+  border: 1px solid var(--tape-border);
+  transform: rotate(-2deg);
+  border-radius: 1px;
+  z-index: 2;
+}
+
+/* Second tape on top-right (alternating panels) */
+.panel:nth-child(even)::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: 32px;
+  width: 50px;
+  height: 16px;
+  background: var(--tape);
+  border: 1px solid var(--tape-border);
+  transform: rotate(1.5deg);
+  border-radius: 1px;
+}
+
+.panel-title {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 1.5rem;
+  color: var(--sepia-light);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.panel-title .planche-num {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: var(--surface2);
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.panel-subtitle {
+  font-family: 'Caveat', cursive;
+  font-size: 1rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-bottom: 16px;
+}
+
+.panel-text {
+  color: var(--text);
+  max-width: 640px;
+  margin-bottom: 16px;
+}
+
+/* ── HERO — Couverture du cahier ── */
+.hero {
+  text-align: center;
+  padding: 48px 32px 40px;
+  border: 2px solid var(--sepia);
+  position: relative;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--sepia);
+  border-radius: 1px;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.hero-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  stroke: var(--herbier);
+  fill: none;
+  stroke-width: 1.2;
+}
+
+.hero h1 {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 2.2rem;
+  color: var(--ink);
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.hero h2 {
+  font-family: 'Caveat', cursive;
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--sepia-light);
+  margin-bottom: 20px;
+}
+
+.hero-desc {
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 520px;
+  margin: 0 auto 24px;
+  line-height: 1.6;
+}
+
+.btn-start {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 1.1rem;
+  color: var(--paper);
+  background: var(--herbier);
+  border: none;
+  padding: 10px 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.25s, transform 0.2s;
+  box-shadow: 1px 2px 6px var(--shadow-color);
+}
+.btn-start:hover {
+  background: var(--herbier-dim);
+  transform: translateY(-1px);
+}
+
+/* Annotation marginale */
+.margin-note {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%) rotate(3deg);
+  font-family: 'Caveat', cursive;
+  font-size: 0.85rem;
+  color: var(--annotation);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  opacity: 0.7;
+  letter-spacing: 1px;
+}
+
+/* ── SPECIMEN BOXES — Tokens ── */
+.specimen-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.specimen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid var(--sepia);
+  background: var(--surface);
+  padding: 8px 12px 4px;
+  border-radius: 2px;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: default;
+  animation: ink-dry 0.6s ease-out both;
+}
+
+.specimen:hover {
+  transform: rotate(-1.5deg) scale(1.05);
+  box-shadow: 2px 3px 10px var(--shadow-color);
+}
+
+.specimen-char {
+  font-family: 'Fira Code', monospace;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.specimen-id {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+
+.specimen-label {
+  position: absolute;
+  top: -8px;
+  right: -4px;
+  font-family: 'Caveat', cursive;
+  font-size: 0.65rem;
+  color: var(--annotation);
+  transform: rotate(8deg);
+}
+
+@keyframes ink-dry {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+/* Stagger specimens */
+.specimen:nth-child(1)  { animation-delay: 0.05s; }
+.specimen:nth-child(2)  { animation-delay: 0.10s; }
+.specimen:nth-child(3)  { animation-delay: 0.15s; }
+.specimen:nth-child(4)  { animation-delay: 0.20s; }
+.specimen:nth-child(5)  { animation-delay: 0.25s; }
+.specimen:nth-child(6)  { animation-delay: 0.30s; }
+.specimen:nth-child(7)  { animation-delay: 0.35s; }
+.specimen:nth-child(8)  { animation-delay: 0.40s; }
+.specimen:nth-child(9)  { animation-delay: 0.45s; }
+.specimen:nth-child(10) { animation-delay: 0.50s; }
+
+/* ── SCIENTIFIC TABLE — Heatmap ── */
+.sci-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 2px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  margin: 16px 0;
+}
+
+.sci-table caption {
+  font-family: 'Caveat', cursive;
+  font-size: 1rem;
+  color: var(--text-dim);
+  text-align: left;
+  caption-side: top;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.sci-table th {
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  text-align: center;
+  font-size: 0.65rem;
+  letter-spacing: 0.5px;
+}
+
+.sci-table td {
+  text-align: center;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 1px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+}
+
+.sci-table td:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 8px var(--glow-ink);
+  z-index: 1;
+  position: relative;
+}
+
+.sci-table .row-label {
+  font-family: 'Caveat', cursive;
+  font-size: 0.9rem;
+  color: var(--sepia-light);
+  text-align: right;
+  border: none;
+  padding-right: 12px;
+}
+
+/* ── NEURAL DIAGRAM — Botanical branching ── */
+.nn-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 24px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.nn-layer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+.nn-layer-label {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.neuron {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--sepia);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.5rem;
+  color: var(--text-dim);
+  transition: background 0.3s, border-color 0.3s, transform 0.3s;
+  cursor: default;
+}
+
+.neuron:hover {
+  border-color: var(--herbier);
+  background: var(--herbier-dim);
+  color: var(--text);
+  transform: scale(1.2);
+}
+
+.neuron.active {
+  background: var(--herbier);
+  border-color: var(--herbier);
+  color: var(--paper);
+}
+
+.nn-connections {
+  width: 60px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+/* ── ATTENTION — Loupe et lignes ── */
+.attention-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px 16px;
+  align-items: start;
+  margin: 16px 0;
+}
+
+.attn-tokens {
+  display: flex;
+  gap: 6px;
+}
+
+.attn-token {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.25s, background 0.25s;
+}
+
+.attn-token.focus {
+  border-color: var(--specimen);
+  background: color-mix(in oklch, var(--specimen) 15%, var(--surface));
+  color: var(--specimen);
+  font-weight: 600;
+}
+
+.attn-weights {
+  display: flex;
+  gap: 4px;
+  align-items: end;
+}
+
+.attn-bar {
+  width: 28px;
+  border-radius: 2px 2px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  transition: height 0.4s ease;
+  position: relative;
+}
+
+.attn-bar-label {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Fira Code', monospace;
+  font-size: 0.55rem;
+  color: var(--text-muted);
+}
+
+/* ── LOSS CHART — Graphique scientifique ── */
+.chart-wrapper {
+  position: relative;
+  margin: 16px 0;
+}
+
+.chart-wrapper canvas {
+  width: 100%;
+  height: 180px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--surface);
+  display: block;
+}
+
+.chart-label {
+  font-family: 'Caveat', cursive;
+  font-size: 0.85rem;
+  color: var(--annotation);
+  position: absolute;
+}
+
+.chart-label.y-axis {
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  transform-origin: left center;
+}
+
+.chart-label.x-axis {
+  bottom: -20px;
+  right: 0;
+}
+
+/* ── PROBABILITY BARS — Barres d'inference ── */
+.prob-list {
+  list-style: none;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prob-item {
+  display: grid;
+  grid-template-columns: 40px 1fr 50px;
+  align-items: center;
+  gap: 10px;
+}
+
+.prob-char {
+  font-family: 'Fira Code', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 2px 0;
+  background: var(--surface);
+}
+
+.prob-track {
+  height: 16px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.prob-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.8s ease;
+}
+
+.prob-fill.high    { background: var(--herbier); }
+.prob-fill.medium  { background: var(--gold); }
+.prob-fill.low     { background: var(--sepia-light); }
+
+.prob-pct {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* ── STATS GRID ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.stat-card {
+  text-align: center;
+  padding: 16px 12px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--surface);
+  transition: border-color 0.25s;
+}
+
+.stat-card:hover { border-color: var(--sepia-light); }
+
+.stat-value {
+  font-family: 'Fira Code', monospace;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--herbier);
+  line-height: 1;
+}
+
+.stat-label {
+  font-family: 'Caveat', cursive;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* ── ANNOTATION ARROWS (SVG decorative) ── */
+.annotation-arrow {
+  position: absolute;
+  stroke: var(--annotation);
+  fill: none;
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
+  opacity: 0.5;
+}
+
+/* ── STEPS LIST — Liste d'etapes du cahier ── */
+.steps-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.step-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 12px;
+  border-left: 2px solid var(--sepia);
+  transition: border-color 0.25s, background 0.25s;
+  cursor: default;
+}
+
+.step-item:hover {
+  border-color: var(--herbier);
+  background: var(--surface);
+}
+
+.step-num {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  min-width: 18px;
+}
+
+.step-label {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.step-desc {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  display: block;
+}
+
+/* ── DATASET CHIPS ── */
+.chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.chip {
+  font-family: 'Caveat', cursive;
+  font-size: 0.95rem;
+  padding: 4px 14px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.chip:hover {
+  border-color: var(--sepia-light);
+  color: var(--text);
+}
+
+.chip.active {
+  border-color: var(--herbier);
+  color: var(--herbier);
+  background: color-mix(in oklch, var(--herbier) 10%, var(--surface));
+  font-weight: 600;
+}
+
+/* ── HANDWRITTEN DIVIDER ── */
+.divider {
+  text-align: center;
+  margin: 32px 0;
+  position: relative;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  height: 1px;
+  background: var(--border);
+}
+
+.divider span {
+  position: relative;
+  background: var(--bg);
+  padding: 0 16px;
+  font-family: 'Architects Daughter', cursive;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── FOOTER ── */
+footer {
+  text-align: center;
+  padding: 32px 24px;
+  font-family: 'Caveat', cursive;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  max-width: 960px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+footer a {
+  color: var(--sepia-light);
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 3px;
+}
+
+/* ── INK WRITING ANIMATION ── */
+@keyframes write-in {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+
+.write-animate {
+  animation: write-in 0.8s ease-out both;
+}
+
+/* ── PAGE APPEAR ── */
+@keyframes page-appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px) rotate(0.5deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+}
+
+.panel { animation: page-appear 0.5s ease-out both; }
+.panel:nth-child(2) { animation-delay: 0.08s; }
+.panel:nth-child(3) { animation-delay: 0.16s; }
+.panel:nth-child(4) { animation-delay: 0.24s; }
+.panel:nth-child(5) { animation-delay: 0.32s; }
+.panel:nth-child(6) { animation-delay: 0.40s; }
+.panel:nth-child(7) { animation-delay: 0.48s; }
+
+/* ── REDUCED MOTION ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  main { padding: 20px 16px 60px; }
+  .panel { padding: 20px 18px; }
+  .hero h1 { font-size: 1.6rem; }
+  .hero h2 { font-size: 1.1rem; }
+  .steps-list { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .nn-diagram { transform: scale(0.85); transform-origin: center; }
+  .margin-note { display: none; }
+  .tab { padding: 8px 10px; font-size: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOPBAR ═══ -->
+<nav class="topbar">
+  <div class="topbar-brand">
+    <!-- Quill icon -->
+    <svg viewBox="0 0 24 24"><path d="M20 2L4 18l-2 4 4-2L20 2zm-3 5l-2-2"/><path d="M15 7l2 2" stroke-linecap="round"/></svg>
+    microGPT
+  </div>
+  <button class="tab active"><span class="tab-num">0</span>Accueil</button>
+  <button class="tab"><span class="tab-num">1</span>Tokenisation</button>
+  <button class="tab"><span class="tab-num">2</span>Plongements</button>
+  <button class="tab"><span class="tab-num">3</span>Propagation</button>
+  <button class="tab"><span class="tab-num">4</span>Attention</button>
+  <button class="tab"><span class="tab-num">5</span>Entrainement</button>
+  <button class="tab"><span class="tab-num">6</span>Inference</button>
+  <button class="tab"><span class="tab-num">7</span>Synthese</button>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Changer de theme" aria-label="Changer de theme">
+    <span class="theme-icon">&#9790;</span>
+  </button>
+</nav>
+<div class="progress-bar"><div class="progress-fill"></div></div>
+
+<main>
+
+<!-- ═══ HERO — Couverture ═══ -->
+<section class="panel hero">
+  <div class="margin-note">cahier de laboratoire n.1</div>
+  <!-- Microscope icon -->
+  <svg class="hero-icon" viewBox="0 0 64 64">
+    <circle cx="32" cy="18" r="10"/>
+    <line x1="32" y1="28" x2="32" y2="48"/>
+    <line x1="22" y1="48" x2="42" y2="48"/>
+    <line x1="18" y1="54" x2="46" y2="54"/>
+    <circle cx="32" cy="18" r="4" stroke-dasharray="2 2"/>
+    <line x1="38" y1="12" x2="48" y2="6" stroke-dasharray="3 2"/>
+    <line x1="26" y1="12" x2="16" y2="6" stroke-dasharray="3 2"/>
+  </svg>
+  <h1>Le Cahier du Savant</h1>
+  <h2>Dissection d'un reseau de neurones miniature</h2>
+  <p class="hero-desc">
+    Ouvre ce carnet de terrain et decouvre, planche par planche,
+    comment fonctionne un cerveau artificiel qui invente des prenoms.
+  </p>
+  <button class="btn-start" onclick="activateTab(1)">Ouvrir le cahier</button>
+</section>
+
+<!-- ═══ PLANCHE I — Tokenisation ═══ -->
+<section class="panel">
+  <div class="panel-title">
+    Planche I — Tokenisation
+    <span class="planche-num">SPEC. 001</span>
+  </div>
+  <div class="panel-subtitle">Classification des specimens textuels</div>
+  <p class="panel-text">
+    Chaque lettre du prenom est isolee et cataloguee comme un specimen
+    dans une boite de naturaliste. Un numero d'identification unique
+    lui est attribue.
+  </p>
+
+  <div class="chip-row">
+    <button class="chip active">prenoms_fr</button>
+    <button class="chip">prenoms_us</button>
+    <button class="chip">prenoms_ar</button>
+  </div>
+
+  <div class="specimen-row">
+    <div class="specimen" style="animation-delay:0.05s">
+      <span class="specimen-label">pos.0</span>
+      <span class="specimen-char">E</span>
+      <span class="specimen-id">sp. #05</span>
+    </div>
+    <div class="specimen" style="animation-delay:0.10s">
+      <span class="specimen-label">pos.1</span>
+      <span class="specimen-char">m</span>
+      <span class="specimen-id">sp. #13</span>
+    </div>
+    <div class="specimen" style="animation-delay:0.15s">
+      <span class="specimen-label">pos.2</span>
+      <span class="specimen-char">m</span>
+      <span class="specimen-id">sp. #13</span>
+    </div>
+    <div class="specimen" style="animation-delay:0.20s">
+      <span class="specimen-label">pos.3</span>
+      <span class="specimen-char">a</span>
+      <span class="specimen-id">sp. #01</span>
+    </div>
+    <div class="specimen" style="animation-delay:0.25s">
+      <span class="specimen-label">pos.4</span>
+      <span class="specimen-char">.</span>
+      <span class="specimen-id">sp. #00</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PLANCHE II — Plongements ═══ -->
+<section class="panel">
+  <div class="panel-title">
+    Planche II — Plongements
+    <span class="planche-num">SPEC. 002</span>
+  </div>
+  <div class="panel-subtitle">Cartographie vectorielle des specimens</div>
+  <p class="panel-text">
+    Chaque specimen recoit un vecteur de coordonnees — comme une fiche
+    d'herbier avec latitude, longitude et altitude. Les specimens similaires
+    ont des coordonnees proches.
+  </p>
+
+  <table class="sci-table">
+    <caption>Fig. 2a — Matrice d'enchassement (wte), dimensions 0-7</caption>
+    <thead>
+      <tr>
+        <th></th>
+        <th>d0</th><th>d1</th><th>d2</th><th>d3</th>
+        <th>d4</th><th>d5</th><th>d6</th><th>d7</th>
+      </tr>
+    </thead>
+    <tbody id="heatmap-body">
+      <!-- Filled by JS -->
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══ PLANCHE III — Propagation ═══ -->
+<section class="panel">
+  <div class="panel-title">
+    Planche III — Propagation
+    <span class="planche-num">SPEC. 003</span>
+  </div>
+  <div class="panel-subtitle">Schema anatomique du reseau</div>
+  <p class="panel-text">
+    L'information circule de couche en couche, comme la seve dans un arbre.
+    Chaque neurone recoit, transforme et transmet un signal.
+  </p>
+
+  <div class="nn-diagram">
+    <div class="nn-layer">
+      <div class="nn-layer-label">Entree</div>
+      <div class="neuron active">e</div>
+      <div class="neuron active">m</div>
+      <div class="neuron active">m</div>
+      <div class="neuron active">a</div>
+    </div>
+    <svg class="nn-connections" viewBox="0 0 60 160" style="width:60px;height:160px">
+      <g stroke="var(--sepia)" stroke-width="0.5" opacity="0.3">
+        <line x1="0" y1="20" x2="60" y2="20"/>
+        <line x1="0" y1="20" x2="60" y2="55"/>
+        <line x1="0" y1="20" x2="60" y2="90"/>
+        <line x1="0" y1="20" x2="60" y2="125"/>
+        <line x1="0" y1="55" x2="60" y2="20"/>
+        <line x1="0" y1="55" x2="60" y2="55"/>
+        <line x1="0" y1="55" x2="60" y2="90"/>
+        <line x1="0" y1="55" x2="60" y2="125"/>
+        <line x1="0" y1="90" x2="60" y2="20"/>
+        <line x1="0" y1="90" x2="60" y2="55"/>
+        <line x1="0" y1="90" x2="60" y2="90"/>
+        <line x1="0" y1="90" x2="60" y2="125"/>
+        <line x1="0" y1="125" x2="60" y2="20"/>
+        <line x1="0" y1="125" x2="60" y2="55"/>
+        <line x1="0" y1="125" x2="60" y2="90"/>
+        <line x1="0" y1="125" x2="60" y2="125"/>
+      </g>
+    </svg>
+    <div class="nn-layer">
+      <div class="nn-layer-label">Cache</div>
+      <div class="neuron">h1</div>
+      <div class="neuron active">h2</div>
+      <div class="neuron">h3</div>
+      <div class="neuron active">h4</div>
+    </div>
+    <svg class="nn-connections" viewBox="0 0 60 160" style="width:60px;height:160px">
+      <g stroke="var(--herbier)" stroke-width="0.5" opacity="0.3">
+        <line x1="0" y1="20" x2="60" y2="20"/>
+        <line x1="0" y1="20" x2="60" y2="55"/>
+        <line x1="0" y1="20" x2="60" y2="90"/>
+        <line x1="0" y1="20" x2="60" y2="125"/>
+        <line x1="0" y1="55" x2="60" y2="20"/>
+        <line x1="0" y1="55" x2="60" y2="55"/>
+        <line x1="0" y1="55" x2="60" y2="90"/>
+        <line x1="0" y1="55" x2="60" y2="125"/>
+        <line x1="0" y1="90" x2="60" y2="20"/>
+        <line x1="0" y1="90" x2="60" y2="55"/>
+        <line x1="0" y1="90" x2="60" y2="90"/>
+        <line x1="0" y1="90" x2="60" y2="125"/>
+        <line x1="0" y1="125" x2="60" y2="20"/>
+        <line x1="0" y1="125" x2="60" y2="55"/>
+        <line x1="0" y1="125" x2="60" y2="90"/>
+        <line x1="0" y1="125" x2="60" y2="125"/>
+      </g>
+    </svg>
+    <div class="nn-layer">
+      <div class="nn-layer-label">Sortie</div>
+      <div class="neuron">s1</div>
+      <div class="neuron active">s2</div>
+      <div class="neuron">s3</div>
+      <div class="neuron">s4</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PLANCHE IV — Attention ═══ -->
+<section class="panel">
+  <div class="panel-title">
+    Planche IV — Attention
+    <span class="planche-num">SPEC. 004</span>
+  </div>
+  <div class="panel-subtitle">Analyse de l'orientation du regard</div>
+  <p class="panel-text">
+    Comme un naturaliste qui braque sa loupe sur un detail precis,
+    le mecanisme d'attention decide quel specimen observer
+    le plus attentivement a chaque instant.
+  </p>
+
+  <div class="attention-grid">
+    <div style="font-family:'Caveat';color:var(--text-dim);font-size:0.9rem">
+      Cible :
+    </div>
+    <div class="attn-tokens">
+      <div class="attn-token">E</div>
+      <div class="attn-token focus">m</div>
+      <div class="attn-token">m</div>
+      <div class="attn-token">a</div>
+    </div>
+    <div style="font-family:'Caveat';color:var(--text-dim);font-size:0.9rem">
+      Poids :
+    </div>
+    <div class="attn-weights">
+      <div class="attn-bar" style="height:45px;background:color-mix(in oklch, var(--herbier) 55%, var(--surface))">
+        <span class="attn-bar-label">0.30</span>
+      </div>
+      <div class="attn-bar" style="height:75px;background:color-mix(in oklch, var(--specimen) 70%, var(--surface))">
+        <span class="attn-bar-label">0.50</span>
+      </div>
+      <div class="attn-bar" style="height:22px;background:color-mix(in oklch, var(--herbier) 30%, var(--surface))">
+        <span class="attn-bar-label">0.12</span>
+      </div>
+      <div class="attn-bar" style="height:15px;background:color-mix(in oklch, var(--herbier) 20%, var(--surface))">
+        <span class="attn-bar-label">0.08</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PLANCHE V — Entrainement ═══ -->
+<section class="panel">
+  <div class="panel-title">
+    Planche V — Entrainement
+    <span class="planche-num">SPEC. 005</span>
+  </div>
+  <div class="panel-subtitle">Courbe d'apprentissage — observations temporelles</div>
+  <p class="panel-text">
+    L'erreur (loss) diminue au fil des iterations, comme un eleve
+    qui fait de moins en moins de fautes. Le graphique ci-dessous
+    consigne cette progression.
+  </p>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">347</div>
+      <div class="stat-label">iterations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--specimen)">2.41</div>
+      <div class="stat-label">loss actuelle</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--gold)">0.003</div>
+      <div class="stat-label">taux d'apprentissage</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">27</div>
+      <div class="stat-label">parametres</div>
+    </div>
+  </div>
+
+  <div class="chart-wrapper">
+    <canvas id="loss-chart"></canvas>
+    <span class="chart-label y-axis">perte (loss)</span>
+    <span class="chart-label x-axis" style="bottom:-22px;right:4px">iterations →</span>
+  </div>
+</section>
+
+<!-- ═══ PLANCHE VI — Inference ═══ -->
+<section class="panel">
+  <div class="panel-title">
+    Planche VI — Inference
+    <span class="planche-num">SPEC. 006</span>
+  </div>
+  <div class="panel-subtitle">Predictions du modele — specimens generes</div>
+  <p class="panel-text">
+    Le reseau propose le prochain caractere le plus probable.
+    Comme un naturaliste qui predit la prochaine espece dans
+    un ecosysteme, il s'appuie sur les motifs appris.
+  </p>
+
+  <ul class="prob-list">
+    <li class="prob-item">
+      <span class="prob-char">a</span>
+      <div class="prob-track"><div class="prob-fill high" style="width:42%"></div></div>
+      <span class="prob-pct">42.1%</span>
+    </li>
+    <li class="prob-item">
+      <span class="prob-char">e</span>
+      <div class="prob-track"><div class="prob-fill medium" style="width:28%"></div></div>
+      <span class="prob-pct">28.3%</span>
+    </li>
+    <li class="prob-item">
+      <span class="prob-char">i</span>
+      <div class="prob-track"><div class="prob-fill low" style="width:14%"></div></div>
+      <span class="prob-pct">14.0%</span>
+    </li>
+    <li class="prob-item">
+      <span class="prob-char">n</span>
+      <div class="prob-track"><div class="prob-fill low" style="width:9%"></div></div>
+      <span class="prob-pct">9.2%</span>
+    </li>
+    <li class="prob-item">
+      <span class="prob-char">.</span>
+      <div class="prob-track"><div class="prob-fill low" style="width:6.4%"></div></div>
+      <span class="prob-pct">6.4%</span>
+    </li>
+  </ul>
+</section>
+
+<div class="divider"><span>fin des observations</span></div>
+
+</main>
+
+<footer>
+  Base sur <a href="https://github.com/karpathy/micrograd">microgpt.py</a> d'Andrej Karpathy.
+  Cahier illustre par <a href="https://mon-atelier-ia.org">mon-atelier-ia</a>.
+</footer>
+
+<script>
+/* ── Theme toggle ── */
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.querySelector('.theme-icon').textContent = next === 'dark' ? '\u263E' : '\u2600';
+}
+
+/* ── Tab navigation ── */
+const tabs = document.querySelectorAll('.tab');
+function activateTab(i) {
+  tabs.forEach((t, j) => t.classList.toggle('active', j === i));
+}
+tabs.forEach((t, i) => t.addEventListener('click', () => activateTab(i)));
+
+/* ── Chip selection ── */
+document.querySelectorAll('.chip-row').forEach(row => {
+  row.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      row.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+});
+
+/* ── Heatmap generation ── */
+(function buildHeatmap() {
+  const labels = ['E', 'm', 'a', '.', 'l', 'i'];
+  const tbody = document.getElementById('heatmap-body');
+  if (!tbody) return;
+
+  // Deterministic pseudo-random
+  let seed = 42;
+  function rand() { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; }
+
+  for (const label of labels) {
+    const tr = document.createElement('tr');
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'row-label';
+    tdLabel.textContent = label;
+    tr.appendChild(tdLabel);
+
+    for (let d = 0; d < 8; d++) {
+      const v = (rand() - 0.5) * 0.6;
+      const td = document.createElement('td');
+      td.textContent = v.toFixed(2);
+      td.title = `${label} dim${d}: ${v.toFixed(4)}`;
+
+      // Color: sepia (negative) → surface (zero) → herbier (positive)
+      const t = Math.max(-1, Math.min(1, v / 0.3));
+      if (t > 0) {
+        td.style.background = `color-mix(in oklch, var(--herbier) ${(t * 60).toFixed(0)}%, var(--surface))`;
+      } else {
+        td.style.background = `color-mix(in oklch, var(--specimen) ${(-t * 60).toFixed(0)}%, var(--surface))`;
+      }
+      td.style.color = 'var(--text)';
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+})();
+
+/* ── Loss chart (scientific graph style) ── */
+(function drawLossChart() {
+  const canvas = document.getElementById('loss-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  function draw() {
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    const style = getComputedStyle(document.documentElement);
+    const sepia = style.getPropertyValue('--sepia').trim() || '#8B7355';
+    const herbier = style.getPropertyValue('--herbier').trim() || '#6B8E4E';
+    const specimen = style.getPropertyValue('--specimen').trim() || '#A0522D';
+    const border = style.getPropertyValue('--border').trim() || '#555';
+    const textMuted = style.getPropertyValue('--text-muted').trim() || '#888';
+
+    const pad = { top: 16, right: 16, bottom: 28, left: 42 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    // Generate loss curve (exponential decay + noise)
+    const N = 80;
+    const data = [];
+    for (let i = 0; i < N; i++) {
+      const t = i / N;
+      const base = 3.8 * Math.exp(-3.5 * t) + 0.8;
+      const noise = Math.sin(i * 0.7) * 0.15 * (1 - t);
+      data.push(base + noise);
+    }
+
+    const maxY = 4.2;
+    const minY = 0;
+
+    // Grid lines
+    ctx.strokeStyle = border;
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([3, 4]);
+    for (let y = 1; y <= 4; y++) {
+      const py = pad.top + plotH * (1 - (y - minY) / (maxY - minY));
+      ctx.beginPath();
+      ctx.moveTo(pad.left, py);
+      ctx.lineTo(pad.left + plotW, py);
+      ctx.stroke();
+
+      // Y labels
+      ctx.fillStyle = textMuted;
+      ctx.font = '10px "Fira Code", monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(y.toFixed(0), pad.left - 6, py + 3);
+    }
+    ctx.setLineDash([]);
+
+    // Axes
+    ctx.strokeStyle = sepia;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, pad.top);
+    ctx.lineTo(pad.left, pad.top + plotH);
+    ctx.lineTo(pad.left + plotW, pad.top + plotH);
+    ctx.stroke();
+
+    // Data points + line
+    ctx.strokeStyle = specimen;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const x = pad.left + (i / (N - 1)) * plotW;
+      const y = pad.top + plotH * (1 - (data[i] - minY) / (maxY - minY));
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Dots every 10th point
+    for (let i = 0; i < N; i += 8) {
+      const x = pad.left + (i / (N - 1)) * plotW;
+      const y = pad.top + plotH * (1 - (data[i] - minY) / (maxY - minY));
+      ctx.beginPath();
+      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = specimen;
+      ctx.fill();
+      ctx.strokeStyle = sepia;
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+
+    // Annotation arrow + text
+    const annIdx = 25;
+    const ax = pad.left + (annIdx / (N - 1)) * plotW;
+    const ay = pad.top + plotH * (1 - (data[annIdx] - minY) / (maxY - minY));
+    ctx.beginPath();
+    ctx.moveTo(ax + 30, ay - 30);
+    ctx.lineTo(ax + 4, ay - 4);
+    ctx.strokeStyle = herbier;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = herbier;
+    ctx.font = '13px "Caveat", cursive';
+    ctx.textAlign = 'left';
+    ctx.fillText('convergence rapide', ax + 32, ay - 30);
+
+    // X labels
+    ctx.fillStyle = textMuted;
+    ctx.font = '10px "Fira Code", monospace';
+    ctx.textAlign = 'center';
+    for (let i = 0; i <= 4; i++) {
+      const step = Math.round((i / 4) * 347);
+      const x = pad.left + (i / 4) * plotW;
+      ctx.fillText(step.toString(), x, pad.top + plotH + 16);
+    }
+  }
+
+  draw();
+
+  // Redraw on resize & theme change
+  new ResizeObserver(draw).observe(canvas);
+  new MutationObserver(draw).observe(document.documentElement, {
+    attributes: true, attributeFilter: ['data-theme']
+  });
+})();
+</script>
+
+</body>
+</html>
