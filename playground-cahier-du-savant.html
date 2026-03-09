@@ -6,947 +6,807 @@
 <title>microGPT — Le Cahier du Savant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* ══════════════════════════════════════════════════════════
-   LE CAHIER DU SAVANT — Journal de naturaliste / XIXe
-   Un objet physique, pas un ecran.
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   LE CAHIER DU SAVANT — v3 — Da Vinci meets neural networks
+   Every pixel must feel hand-drawn, inked, PHYSICAL.
+   ══════════════════════════════════════════════════════════════ */
 
-/* ── Palette oklch — cuir & encre ── */
+/* ── SVG filters for ink effects ── */
+svg.ink-filters { position: absolute; width: 0; height: 0; }
+
+/* ── oklch palette ── */
 :root, [data-theme="dark"] {
-  --paper:       oklch(0.22 0.025 65);
-  --paper-aged:  oklch(0.19 0.03 55);
-  --paper-edge:  oklch(0.16 0.03 50);
-  --margin-line: oklch(0.40 0.12 15 / 0.25);
-  --ruling:      oklch(0.35 0.03 250 / 0.08);
+  --parchment:    oklch(0.25 0.03 65);
+  --parchment-lt: oklch(0.28 0.025 68);
+  --parchment-dk: oklch(0.18 0.035 55);
+  --foxing:       oklch(0.32 0.05 50);
 
-  --ink:         oklch(0.82 0.02 80);
-  --ink-dim:     oklch(0.60 0.03 70);
-  --ink-faint:   oklch(0.42 0.03 65);
-  --sepia:       oklch(0.55 0.07 60);
-  --sepia-light: oklch(0.68 0.06 65);
+  --ink:          oklch(0.85 0.015 80);
+  --ink-mid:      oklch(0.65 0.025 70);
+  --ink-faint:    oklch(0.45 0.025 65);
+  --ink-wash:     oklch(0.85 0.015 80 / 0.08);
 
-  --herbier:     oklch(0.62 0.15 148);
-  --herbier-dim: oklch(0.42 0.10 148);
-  --herbier-bg:  oklch(0.62 0.15 148 / 0.08);
-  --specimen:    oklch(0.60 0.17 28);
-  --specimen-bg: oklch(0.60 0.17 28 / 0.08);
-  --annotation:  oklch(0.55 0.13 250);
-  --annotation-bg: oklch(0.55 0.13 250 / 0.06);
-  --gold:        oklch(0.72 0.12 85);
+  --sepia:        oklch(0.58 0.07 58);
+  --sepia-dk:     oklch(0.42 0.06 55);
 
-  --stamp-red:   oklch(0.55 0.20 25 / 0.7);
-  --pin-red:     oklch(0.58 0.22 25);
-  --pin-green:   oklch(0.55 0.18 148);
-  --tape:        oklch(0.65 0.05 85 / 0.18);
-  --tape-border: oklch(0.65 0.05 85 / 0.10);
+  --herbier:      oklch(0.65 0.16 148);
+  --herbier-wash: oklch(0.65 0.16 148 / 0.12);
+  --sanguine:     oklch(0.58 0.18 28);
+  --sanguine-wash:oklch(0.58 0.18 28 / 0.10);
+  --bleu:         oklch(0.55 0.12 250);
+  --bleu-wash:    oklch(0.55 0.12 250 / 0.08);
+  --gold:         oklch(0.72 0.13 85);
 
-  --shadow:      oklch(0.08 0.02 50 / 0.6);
-  --shadow-soft: oklch(0.08 0.02 50 / 0.25);
-  --coffee:      oklch(0.35 0.06 55 / 0.15);
+  --margin-red:   oklch(0.50 0.15 20 / 0.20);
+  --ruling:       oklch(0.40 0.02 250 / 0.07);
+
+  --shadow:       oklch(0.06 0.02 50 / 0.7);
+  --shadow-md:    oklch(0.06 0.02 50 / 0.35);
+  --shadow-sm:    oklch(0.06 0.02 50 / 0.15);
 }
 
 [data-theme="light"] {
-  --paper:       oklch(0.95 0.015 82);
-  --paper-aged:  oklch(0.92 0.02 78);
-  --paper-edge:  oklch(0.88 0.025 72);
-  --margin-line: oklch(0.60 0.15 15 / 0.18);
-  --ruling:      oklch(0.70 0.03 250 / 0.10);
+  --parchment:    oklch(0.93 0.018 80);
+  --parchment-lt: oklch(0.95 0.015 83);
+  --parchment-dk: oklch(0.88 0.025 72);
+  --foxing:       oklch(0.85 0.04 60);
 
-  --ink:         oklch(0.20 0.03 55);
-  --ink-dim:     oklch(0.38 0.03 60);
-  --ink-faint:   oklch(0.55 0.02 65);
-  --sepia:       oklch(0.42 0.08 55);
-  --sepia-light: oklch(0.52 0.07 60);
+  --ink:          oklch(0.18 0.03 55);
+  --ink-mid:      oklch(0.35 0.03 60);
+  --ink-faint:    oklch(0.52 0.025 65);
+  --ink-wash:     oklch(0.18 0.03 55 / 0.05);
 
-  --herbier:     oklch(0.48 0.16 148);
-  --herbier-dim: oklch(0.38 0.12 148);
-  --herbier-bg:  oklch(0.48 0.16 148 / 0.06);
-  --specimen:    oklch(0.50 0.18 28);
-  --specimen-bg: oklch(0.50 0.18 28 / 0.06);
-  --annotation:  oklch(0.42 0.15 250);
-  --annotation-bg: oklch(0.42 0.15 250 / 0.05);
-  --gold:        oklch(0.58 0.14 85);
+  --sepia:        oklch(0.45 0.08 55);
+  --sepia-dk:     oklch(0.35 0.07 52);
 
-  --stamp-red:   oklch(0.52 0.22 25 / 0.55);
-  --pin-red:     oklch(0.52 0.24 25);
-  --pin-green:   oklch(0.48 0.20 148);
-  --tape:        oklch(0.82 0.04 85 / 0.45);
-  --tape-border: oklch(0.72 0.04 80 / 0.30);
+  --herbier:      oklch(0.45 0.17 148);
+  --herbier-wash: oklch(0.45 0.17 148 / 0.08);
+  --sanguine:     oklch(0.48 0.20 28);
+  --sanguine-wash:oklch(0.48 0.20 28 / 0.07);
+  --bleu:         oklch(0.40 0.14 250);
+  --bleu-wash:    oklch(0.40 0.14 250 / 0.06);
+  --gold:         oklch(0.58 0.15 85);
 
-  --shadow:      oklch(0.40 0.03 60 / 0.18);
-  --shadow-soft: oklch(0.40 0.03 60 / 0.08);
-  --coffee:      oklch(0.55 0.08 55 / 0.12);
+  --margin-red:   oklch(0.55 0.18 20 / 0.15);
+  --ruling:       oklch(0.60 0.02 250 / 0.10);
+
+  --shadow:       oklch(0.30 0.03 60 / 0.25);
+  --shadow-md:    oklch(0.30 0.03 60 / 0.12);
+  --shadow-sm:    oklch(0.30 0.03 60 / 0.06);
 }
 
-/* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── Body — the desk surface ── */
 body {
   font-family: 'Caveat', cursive;
   font-weight: 500;
   font-size: 1.25rem;
-  line-height: 1.55;
+  line-height: 1.5;
   color: var(--ink);
-  background: var(--paper-edge);
+  background: var(--parchment-dk);
   min-height: 100vh;
   overflow-x: hidden;
   transition: background 0.5s, color 0.5s;
 }
 
-/* ══ PAPER TEXTURE — layered noise + fibers + aging ══ */
+/* ══════════════════════════════════════════
+   PARCHMENT TEXTURE — VISIBLE, RICH, LAYERED
+   ══════════════════════════════════════════ */
+
+/* Layer 1: coarse fiber noise */
 body::before {
   content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    /* Fiber noise */
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"),
-    /* Aging vignette */
-    radial-gradient(ellipse 120% 120% at 50% 50%, transparent 40%, var(--coffee) 100%);
-  background-size: 512px 512px, 100% 100%;
-  opacity: 0.9;
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='6' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)' opacity='0.12'/%3E%3C/svg%3E");
+  background-size: 400px 400px;
 }
 
-/* ══ COFFEE RING STAIN — top right ══ */
+/* Layer 2: foxing spots + aging */
 body::after {
   content: '';
-  position: fixed;
-  top: 12%;
-  right: 8%;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  border: 12px solid var(--coffee);
-  filter: blur(6px);
-  opacity: 0.5;
-  pointer-events: none;
-  z-index: 0;
-  transform: rotate(-8deg);
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  background:
+    /* Coffee ring */
+    radial-gradient(circle 65px at 82% 15%, var(--foxing) 30%, transparent 70%),
+    radial-gradient(circle 50px at 83% 16%, transparent 40%, var(--foxing) 52%, transparent 60%),
+    /* Small foxing spots */
+    radial-gradient(circle 8px at 15% 35%, var(--foxing) 0%, transparent 100%),
+    radial-gradient(circle 12px at 70% 60%, var(--foxing) 0%, transparent 100%),
+    radial-gradient(circle 6px at 45% 80%, var(--foxing) 0%, transparent 100%),
+    radial-gradient(circle 10px at 25% 70%, var(--foxing) 0%, transparent 100%),
+    radial-gradient(circle 5px at 88% 45%, var(--foxing) 0%, transparent 100%),
+    /* Edge darkening */
+    radial-gradient(ellipse 130% 130% at 50% 50%, transparent 35%, var(--parchment-dk) 100%);
+  opacity: 0.7;
 }
 
-/* ══ NOTEBOOK WRAPPER — the actual notebook ══ */
+/* ══ THE NOTEBOOK — centered, with spine shadow ══ */
 .notebook {
-  position: relative;
-  z-index: 1;
-  max-width: 880px;
+  position: relative; z-index: 1;
+  max-width: 900px;
   margin: 0 auto;
+  background: var(--parchment);
   min-height: 100vh;
-  background: var(--paper);
-  box-shadow:
-    4px 0 20px var(--shadow),
-    -2px 0 8px var(--shadow-soft),
-    inset 0 0 80px var(--shadow-soft);
-  /* Margin line — classic French cahier */
+  /* French cahier: ruled lines + red margin */
   background-image:
     linear-gradient(var(--ruling) 1px, transparent 1px),
-    linear-gradient(90deg, transparent 67px, var(--margin-line) 67px, var(--margin-line) 68px, transparent 68px);
-  background-size: 100% 32px, 100% 100%;
-  background-position: 0 0;
+    linear-gradient(90deg, transparent 72px, var(--margin-red) 72px, var(--margin-red) 73.5px, transparent 73.5px);
+  background-size: 100% 30px, 100% 100%;
+  box-shadow:
+    -8px 0 30px var(--shadow),
+    8px 0 30px var(--shadow),
+    inset 6px 0 20px var(--shadow-sm),
+    inset -2px 0 10px var(--shadow-sm);
 }
 
-/* ══ BOOKMARK TABS — right edge, physical paper ══ */
+/* ══ BOOKMARKS — physical paper tabs, right edge ══ */
 .bookmarks {
   position: fixed;
-  right: max(0px, calc((100vw - 880px) / 2 - 4px));
-  top: 80px;
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  right: max(0px, calc((100vw - 900px) / 2 - 6px));
+  top: 60px; z-index: 50;
+  display: flex; flex-direction: column; gap: 2px;
 }
 
 .bkmk {
-  font-family: 'Architects Daughter', cursive;
-  font-size: 0.7rem;
-  color: var(--ink-dim);
-  background: var(--paper-aged);
-  border: 1px solid var(--sepia);
+  font-family: 'Caveat', cursive;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-mid);
+  background: var(--parchment-lt);
+  border: 1px solid var(--sepia-dk);
   border-right: none;
-  padding: 5px 10px 5px 8px;
+  padding: 4px 6px 4px 8px;
   cursor: pointer;
   border-radius: 3px 0 0 3px;
-  width: 38px;
+  min-width: 32px;
   text-align: center;
   transition: all 0.3s ease;
-  box-shadow: -2px 1px 4px var(--shadow-soft);
+  box-shadow: -2px 1px 5px var(--shadow-sm);
   position: relative;
+  /* Slightly different rotation for each — natural imperfection */
 }
+.bkmk:nth-child(odd) { transform: translateX(2px); }
+.bkmk:nth-child(3n)  { transform: translateX(-1px) rotate(-0.5deg); }
 
 .bkmk:hover {
-  width: 100px;
+  min-width: 105px;
+  background: var(--parchment);
   color: var(--ink);
-  background: var(--paper);
+  text-align: left;
+  padding-left: 12px;
 }
 
 .bkmk.active {
-  width: 110px;
-  background: var(--paper);
+  min-width: 115px;
+  background: var(--parchment);
   color: var(--herbier);
-  font-weight: 600;
-  border-color: var(--herbier-dim);
-  box-shadow: -3px 2px 8px var(--shadow);
+  border-color: var(--herbier);
+  box-shadow: -3px 2px 10px var(--shadow-md);
+  text-align: left;
+  padding-left: 12px;
+  font-weight: 700;
   z-index: 2;
 }
 
-.bkmk .bkmk-label {
-  opacity: 0;
-  position: absolute;
-  left: 28px;
-  top: 50%;
-  transform: translateY(-50%);
-  white-space: nowrap;
-  font-size: 0.65rem;
-  transition: opacity 0.2s;
-}
-.bkmk:hover .bkmk-label,
-.bkmk.active .bkmk-label { opacity: 1; }
-
-/* ══ TOPBAR — minimal, like a notebook header stamp ══ */
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 40;
+/* ══ HEADER — laboratory notebook stamp ══ */
+.header {
+  position: sticky; top: 0; z-index: 40;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 24px 10px 80px;
-  background: var(--paper);
-  border-bottom: 1px solid var(--ruling);
-  backdrop-filter: blur(8px);
+  padding: 8px 20px 8px 84px;
+  background: color-mix(in oklch, var(--parchment) 92%, transparent);
+  backdrop-filter: blur(6px);
+  border-bottom: 0.5px solid var(--sepia-dk);
 }
 
-.topbar-title {
+.header-title {
   font-family: 'EB Garamond', serif;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-style: italic;
   color: var(--sepia);
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
 }
 
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.header-right { display: flex; align-items: center; gap: 14px; }
 
-.topbar-date {
+.header-date {
   font-family: 'Fira Code', monospace;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: var(--ink-faint);
 }
 
 .theme-btn {
-  font-size: 0.85rem;
-  background: none;
-  border: 1px solid var(--sepia);
-  color: var(--sepia-light);
-  padding: 4px 10px;
-  border-radius: 2px;
-  cursor: pointer;
-  font-family: 'EB Garamond', serif;
-  transition: all 0.3s;
-}
-.theme-btn:hover {
-  color: var(--ink);
-  border-color: var(--ink-dim);
-}
-
-/* ══ MAIN CONTENT ══ */
-.content {
-  padding: 32px 40px 80px 88px; /* 88px = past the margin line */
-  position: relative;
-}
-
-/* ══ PLANCHE — each section is a "plate" ══ */
-.planche {
-  margin-bottom: 48px;
-  position: relative;
-  animation: inkAppear 0.7s ease-out both;
-}
-
-@keyframes inkAppear {
-  from { opacity: 0; filter: blur(3px); transform: translateY(8px) rotate(0.3deg); }
-  to   { opacity: 1; filter: blur(0);   transform: translateY(0) rotate(0deg); }
-}
-
-.planche:nth-child(2) { animation-delay: 0.1s; }
-.planche:nth-child(3) { animation-delay: 0.2s; }
-.planche:nth-child(4) { animation-delay: 0.3s; }
-.planche:nth-child(5) { animation-delay: 0.4s; }
-.planche:nth-child(6) { animation-delay: 0.5s; }
-.planche:nth-child(7) { animation-delay: 0.6s; }
-
-/* ── Planche header ── */
-.planche-header {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 6px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--sepia);
-}
-
-.planche-num {
   font-family: 'EB Garamond', serif;
   font-size: 0.75rem;
   font-style: italic;
+  background: none;
+  border: 1px solid var(--sepia-dk);
   color: var(--sepia);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.planche-title {
-  font-family: 'Architects Daughter', cursive;
-  font-size: 1.5rem;
-  color: var(--ink);
-  letter-spacing: 0.5px;
-}
-
-.planche-subtitle {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.9rem;
-  font-style: italic;
-  color: var(--sepia-light);
-  margin-bottom: 16px;
-  margin-top: 2px;
-}
-
-.planche-text {
-  max-width: 580px;
-  margin-bottom: 16px;
-  color: var(--ink-dim);
-}
-
-/* ══ MARGIN ANNOTATIONS — handwritten notes in the left margin ══ */
-.margin-note {
-  position: absolute;
-  left: -72px;
-  width: 60px;
-  font-family: 'Caveat', cursive;
-  font-size: 0.72rem;
-  color: var(--annotation);
-  text-align: right;
-  line-height: 1.3;
-  transform: rotate(-2deg);
-}
-
-.margin-note::after {
-  content: '';
-  position: absolute;
-  right: -10px;
-  top: 50%;
-  width: 8px;
-  height: 1px;
-  background: var(--annotation);
-  opacity: 0.5;
-}
-
-/* ══ WASHI TAPE — semi-transparent decorative strips ══ */
-.tape {
-  position: absolute;
-  width: 80px;
-  height: 22px;
-  background: var(--tape);
-  border: 1px solid var(--tape-border);
-  z-index: 3;
-  /* Subtle crosshatch pattern */
-  background-image: repeating-linear-gradient(
-    45deg, transparent, transparent 3px,
-    oklch(0.5 0 0 / 0.03) 3px, oklch(0.5 0 0 / 0.03) 4px
-  );
-}
-
-.tape-tl { top: -8px; left: 20px; transform: rotate(-4deg); }
-.tape-tr { top: -6px; right: 24px; transform: rotate(2.5deg); width: 65px; }
-.tape-bl { bottom: -7px; left: 30px; transform: rotate(1deg); width: 70px; }
-
-/* ══ SPECIMEN BOXES — pinned cards ══ */
-.specimens {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin: 20px 0;
-  padding: 16px;
-  background: var(--paper-aged);
-  border: 1px dashed var(--sepia);
-  position: relative;
-}
-
-.specimen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: var(--paper);
-  border: 1px solid var(--sepia);
-  padding: 14px 16px 6px;
-  min-width: 64px;
-  position: relative;
-  cursor: default;
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
-  box-shadow: 1px 2px 6px var(--shadow-soft);
-  animation: pinDrop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-@keyframes pinDrop {
-  from { opacity: 0; transform: translateY(-20px) rotate(3deg) scale(0.8); }
-  60%  { transform: translateY(2px) rotate(-0.5deg) scale(1.02); }
-  to   { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
-}
-
-.specimen:nth-child(1) { animation-delay: 0.08s; transform: rotate(-0.5deg); }
-.specimen:nth-child(2) { animation-delay: 0.14s; transform: rotate(0.3deg); }
-.specimen:nth-child(3) { animation-delay: 0.20s; transform: rotate(-0.8deg); }
-.specimen:nth-child(4) { animation-delay: 0.26s; transform: rotate(0.6deg); }
-.specimen:nth-child(5) { animation-delay: 0.32s; transform: rotate(-0.2deg); }
-
-.specimen:hover {
-  transform: translateY(-8px) rotate(-1.5deg) scale(1.06) !important;
-  box-shadow: 3px 6px 16px var(--shadow);
-  z-index: 5;
-}
-
-/* Pin */
-.specimen::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--pin-red);
-  box-shadow: 0 1px 3px var(--shadow), inset 0 -2px 3px oklch(0 0 0 / 0.2);
-  z-index: 4;
-}
-
-.specimen:nth-child(even)::before { background: var(--pin-green); }
-
-.specimen-char {
-  font-family: 'Fira Code', monospace;
-  font-size: 1.6rem;
-  font-weight: 500;
-  color: var(--ink);
-  line-height: 1;
-  margin-bottom: 6px;
-}
-
-.specimen-id {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.6rem;
-  font-style: italic;
-  color: var(--ink-faint);
-  border-top: 1px solid var(--ruling);
-  padding-top: 3px;
-  width: 100%;
-  text-align: center;
-}
-
-.specimen-pos {
-  position: absolute;
-  top: 2px;
-  right: 3px;
-  font-family: 'Caveat', cursive;
-  font-size: 0.55rem;
-  color: var(--annotation);
-}
-
-/* ══ RED STAMP — "SPECIMEN" or "CONFIDENTIEL" ══ */
-.stamp {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  color: var(--stamp-red);
-  border: 2px solid var(--stamp-red);
   padding: 3px 12px;
-  transform: rotate(-6deg);
-  display: inline-block;
-  position: absolute;
-  animation: stampHit 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  animation-delay: 0.8s;
-}
-
-@keyframes stampHit {
-  from { opacity: 0; transform: rotate(-6deg) scale(1.8); }
-  to   { opacity: 1; transform: rotate(-6deg) scale(1); }
-}
-
-/* ══ SCIENTIFIC TABLE — Heatmap ══ */
-.fig-wrap {
-  margin: 20px 0;
-  position: relative;
-}
-
-.fig-caption {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.8rem;
-  font-style: italic;
-  color: var(--sepia);
-  margin-bottom: 8px;
-}
-
-.fig-caption b {
-  font-style: normal;
-  color: var(--ink-dim);
-}
-
-.sci-table {
-  border-collapse: separate;
-  border-spacing: 1px;
-  font-family: 'Fira Code', monospace;
-  font-size: 0.68rem;
-  width: 100%;
-}
-
-.sci-table thead th {
-  font-family: 'EB Garamond', serif;
-  font-style: italic;
-  font-weight: 400;
-  color: var(--ink-faint);
-  padding: 3px 6px;
-  font-size: 0.65rem;
-}
-
-.sci-table tbody td {
-  text-align: center;
-  padding: 7px 5px;
-  border: 0.5px solid oklch(0.5 0 0 / 0.06);
-  cursor: default;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
-}
-
-.sci-table tbody td:hover {
-  transform: scale(1.25);
-  box-shadow: 0 2px 10px var(--shadow);
-  z-index: 2;
-  position: relative;
-}
-
-.sci-table .row-label {
-  font-family: 'Architects Daughter', cursive;
-  font-size: 0.85rem;
-  color: var(--sepia-light);
-  text-align: right;
-  padding-right: 10px;
-  border: none;
-}
-
-/* ══ BOTANICAL NN DIAGRAM — SVG hand-drawn ══ */
-.nn-wrap {
-  margin: 20px 0;
-  display: flex;
-  justify-content: center;
-}
-
-.nn-svg {
-  max-width: 100%;
-  height: auto;
-}
-
-.nn-svg .conn {
-  stroke: var(--sepia);
-  stroke-width: 1;
-  fill: none;
-  opacity: 0.3;
-  transition: opacity 0.3s, stroke 0.3s;
-}
-
-.nn-svg .conn:hover {
-  opacity: 0.8;
-  stroke: var(--herbier);
-  stroke-width: 1.5;
-}
-
-.nn-svg .node {
-  fill: var(--paper);
-  stroke: var(--sepia);
-  stroke-width: 1.2;
-  transition: all 0.3s;
-}
-
-.nn-svg .node:hover {
-  fill: var(--herbier-bg);
-  stroke: var(--herbier);
-  stroke-width: 2;
-}
-
-.nn-svg .node.active {
-  fill: var(--herbier-bg);
-  stroke: var(--herbier);
-}
-
-.nn-svg .node-label {
-  font-family: 'Fira Code', monospace;
-  font-size: 8px;
-  fill: var(--ink-dim);
-  text-anchor: middle;
-}
-
-.nn-svg .layer-label {
-  font-family: 'Architects Daughter', cursive;
-  font-size: 11px;
-  fill: var(--sepia-light);
-  text-anchor: middle;
-}
-
-.nn-svg .ann-text {
-  font-family: 'Caveat', cursive;
-  font-size: 11px;
-  fill: var(--annotation);
-}
-
-.nn-svg .ann-arrow {
-  stroke: var(--annotation);
-  stroke-width: 0.8;
-  fill: none;
-  stroke-dasharray: 3 2;
-  opacity: 0.6;
-}
-
-/* SVG path drawing animation */
-.nn-svg .draw-path {
-  stroke-dasharray: 200;
-  stroke-dashoffset: 200;
-  animation: drawLine 1.2s ease forwards;
-}
-@keyframes drawLine {
-  to { stroke-dashoffset: 0; }
-}
-
-/* ══ ATTENTION — weights with ink wash ══ */
-.attn-row {
-  display: flex;
-  gap: 6px;
-  align-items: end;
-  margin: 16px 0;
-  padding: 12px 16px;
-  background: var(--paper-aged);
-  border-left: 3px solid var(--annotation);
-}
-
-.attn-bar-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.attn-char {
-  font-family: 'Fira Code', monospace;
-  font-size: 0.8rem;
-  color: var(--ink-dim);
-}
-
-.attn-bar {
-  width: 36px;
-  border-radius: 2px 2px 0 0;
-  transition: height 0.5s ease;
-  position: relative;
-}
-
-.attn-val {
-  font-family: 'Fira Code', monospace;
-  font-size: 0.5rem;
-  color: var(--ink-faint);
-  text-align: center;
-  margin-top: 2px;
-}
-
-/* ══ GRAPH PAPER CHART — loss curve ══ */
-.chart-wrap {
-  position: relative;
-  margin: 20px 0;
-  padding: 2px;
-  border: 1px solid var(--sepia);
-  background: var(--paper);
-  /* Graph paper grid */
-  background-image:
-    linear-gradient(var(--ruling) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ruling) 1px, transparent 1px),
-    linear-gradient(oklch(0.5 0.03 250 / 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.5 0.03 250 / 0.04) 1px, transparent 1px);
-  background-size: 40px 40px, 40px 40px, 8px 8px, 8px 8px;
-}
-
-.chart-wrap canvas {
-  width: 100%;
-  height: 200px;
-  display: block;
-}
-
-.chart-ann {
-  position: absolute;
-  font-family: 'Caveat', cursive;
-  font-size: 0.8rem;
-  color: var(--herbier);
-  pointer-events: none;
-}
-
-/* ══ PROBABILITY — inference cards ══ */
-.prob-list {
-  list-style: none;
-  margin: 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.prob-item {
-  display: grid;
-  grid-template-columns: 44px 1fr 48px;
-  gap: 10px;
-  align-items: center;
-}
-
-.prob-char-box {
-  font-family: 'Fira Code', monospace;
-  font-size: 1.1rem;
-  font-weight: 500;
-  text-align: center;
-  color: var(--ink);
-  background: var(--paper-aged);
-  border: 1px solid var(--sepia);
-  padding: 3px 0;
-  position: relative;
-}
-/* Pin dot */
-.prob-char-box::after {
-  content: '';
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--pin-red);
-  position: absolute;
-  top: -2px; right: -2px;
-  box-shadow: 0 1px 2px var(--shadow-soft);
-}
-
-.prob-track {
-  height: 14px;
-  background: var(--paper-aged);
-  border: 0.5px solid var(--sepia);
-  overflow: hidden;
-}
-
-.prob-fill {
-  height: 100%;
-  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.prob-fill.hi  { background: var(--herbier); }
-.prob-fill.md  { background: var(--gold); }
-.prob-fill.lo  { background: var(--sepia-light); }
-
-.prob-pct {
-  font-family: 'Fira Code', monospace;
-  font-size: 0.65rem;
-  color: var(--ink-faint);
-  text-align: right;
-}
-
-/* ══ STATS — small data cards ══ */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin: 16px 0;
-}
-
-.stat-card {
-  text-align: center;
-  padding: 12px 8px;
-  border: 1px solid var(--sepia);
-  background: var(--paper-aged);
-  position: relative;
-}
-
-.stat-val {
-  font-family: 'Fira Code', monospace;
-  font-size: 1.3rem;
-  font-weight: 500;
-  line-height: 1;
-  margin-bottom: 2px;
-}
-.stat-val.green { color: var(--herbier); }
-.stat-val.red   { color: var(--specimen); }
-.stat-val.gold  { color: var(--gold); }
-
-.stat-lbl {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.65rem;
-  font-style: italic;
-  color: var(--ink-faint);
-}
-
-/* ══ DATASET CHIPS — small paper tags ══ */
-.tags {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 12px 0;
-}
-
-.tag {
-  font-family: 'EB Garamond', serif;
-  font-size: 0.8rem;
-  font-style: italic;
-  padding: 3px 14px;
-  border: 1px solid var(--sepia);
-  background: var(--paper);
-  color: var(--ink-dim);
   cursor: pointer;
   transition: all 0.25s;
 }
-.tag:hover {
-  border-color: var(--ink-dim);
-  color: var(--ink);
-}
-.tag.active {
-  border-color: var(--herbier);
-  color: var(--herbier);
-  background: var(--herbier-bg);
-}
+.theme-btn:hover { color: var(--ink); border-color: var(--ink-mid); }
 
-/* ══ CROSSED-OUT TEXT — corrections ══ */
-.correction {
-  text-decoration: line-through;
-  text-decoration-color: var(--specimen);
-  opacity: 0.5;
-}
-.correction-new {
-  color: var(--herbier);
-  font-weight: 600;
-  margin-left: 6px;
-}
-
-/* ══ DIVIDER — ink flourish ══ */
-.flourish {
-  text-align: center;
-  margin: 40px 0;
-  color: var(--sepia);
-  font-family: 'EB Garamond', serif;
-  font-size: 1.1rem;
-  letter-spacing: 8px;
-  opacity: 0.5;
-}
-
-/* ══ HERO — notebook cover ══ */
-.cover {
-  text-align: center;
-  padding: 56px 20px 48px;
+/* ══ CONTENT — past the margin line ══ */
+.pages {
+  padding: 28px 36px 80px 90px;
   position: relative;
-  border: 2px solid var(--sepia);
-  margin-bottom: 40px;
 }
 
-/* Double-line frame */
-.cover::before {
+/* ══════════════════════════════════════════
+   PLANCHE — each section = a naturalist plate
+   ══════════════════════════════════════════ */
+.planche {
+  margin-bottom: 50px;
+  position: relative;
+  animation: fadeInk 0.8s ease-out both;
+}
+
+@keyframes fadeInk {
+  from { opacity: 0; filter: blur(4px) saturate(0.3); transform: translateY(6px); }
+  to   { opacity: 1; filter: blur(0) saturate(1);     transform: translateY(0); }
+}
+
+.planche:nth-child(2) { animation-delay: 0.08s; }
+.planche:nth-child(3) { animation-delay: 0.16s; }
+.planche:nth-child(4) { animation-delay: 0.24s; }
+.planche:nth-child(5) { animation-delay: 0.32s; }
+.planche:nth-child(6) { animation-delay: 0.40s; }
+.planche:nth-child(7) { animation-delay: 0.48s; }
+.planche:nth-child(8) { animation-delay: 0.56s; }
+
+/* ── Planche title — underlined with a hand-drawn rule ── */
+.pl-head {
+  margin-bottom: 4px;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid var(--sepia);
+  position: relative;
+}
+/* Double-line effect */
+.pl-head::after {
   content: '';
   position: absolute;
-  inset: 5px;
-  border: 1px solid var(--sepia);
+  bottom: -4px; left: 0; right: 30%;
+  height: 0.5px;
+  background: var(--sepia-dk);
   opacity: 0.4;
+}
+
+.pl-num {
+  font-family: 'EB Garamond', serif;
+  font-size: 0.68rem;
+  font-variant: small-caps;
+  letter-spacing: 2px;
+  color: var(--sepia-dk);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.pl-title {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 1.55rem;
+  color: var(--ink);
+  /* Ink bleeding effect */
+  text-shadow: 0 0 0.5px var(--ink-wash);
+}
+
+.pl-sub {
+  font-family: 'EB Garamond', serif;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--sepia);
+  margin: 4px 0 14px;
+}
+
+.pl-text {
+  color: var(--ink-mid);
+  max-width: 560px;
+  margin-bottom: 14px;
+}
+
+/* ══ MARGIN NOTES — handwritten annotations left of margin ══ */
+.m-note {
+  position: absolute;
+  left: -78px;
+  width: 64px;
+  font-family: 'Caveat', cursive;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--bleu);
+  text-align: right;
+  line-height: 1.25;
+  transform: rotate(-1.5deg);
+}
+
+/* Arrow pointing right from margin note */
+.m-note::after {
+  content: '→';
+  position: absolute;
+  right: -14px;
+  top: 2px;
+  font-size: 0.65rem;
+  color: var(--bleu);
+  opacity: 0.6;
+}
+
+/* ══ SANGUINE NOTE — Da Vinci red chalk annotations ══ */
+.sang-note {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  color: var(--sanguine);
+  font-size: 0.85rem;
+}
+
+/* ══ WASHI TAPE ══ */
+.tape {
+  position: absolute; z-index: 3;
+  height: 24px;
+  background: var(--ink-wash);
+  border-top: 0.5px solid oklch(0.5 0 0 / 0.05);
+  border-bottom: 0.5px solid oklch(0.5 0 0 / 0.05);
+  background-image: repeating-linear-gradient(
+    60deg, transparent, transparent 4px,
+    oklch(0.5 0 0 / 0.015) 4px, oklch(0.5 0 0 / 0.015) 5px
+  );
+}
+
+/* ══ RED STAMP ══ */
+.stamp {
+  font-family: 'EB Garamond', serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--sanguine);
+  border: 2.5px solid var(--sanguine);
+  padding: 2px 14px;
+  display: inline-block;
+  opacity: 0.7;
+  animation: stampSlam 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes stampSlam {
+  from { opacity: 0; transform: rotate(var(--stamp-rot, -5deg)) scale(2); }
+  to   { opacity: 0.7; transform: rotate(var(--stamp-rot, -5deg)) scale(1); }
+}
+
+/* ══ CROSSED-OUT / CORRECTIONS ══ */
+.struck { text-decoration: line-through; text-decoration-color: var(--sanguine); opacity: 0.45; }
+.corr   { color: var(--herbier); font-weight: 600; }
+
+/* ══════════════════════════════════════════
+   COVER — the notebook frontispiece
+   ══════════════════════════════════════════ */
+.cover {
+  text-align: center;
+  padding: 44px 24px 40px;
+  border: 2px solid var(--sepia);
+  position: relative;
+  margin-bottom: 44px;
+}
+.cover::before {
+  content: ''; position: absolute; inset: 6px;
+  border: 0.5px solid var(--sepia); opacity: 0.35;
   pointer-events: none;
 }
-
-.cover-icon {
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 20px;
-}
-
-.cover-icon .icon-path {
-  fill: none;
-  stroke: var(--herbier);
-  stroke-width: 1.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 300;
-  stroke-dashoffset: 300;
-  animation: drawLine 2s ease forwards 0.3s;
+.cover::after {
+  content: ''; position: absolute; inset: 10px;
+  border: 0.5px solid var(--sepia-dk); opacity: 0.15;
+  pointer-events: none;
 }
 
 .cover h1 {
   font-family: 'Architects Daughter', cursive;
-  font-size: 2.2rem;
+  font-size: 2.3rem;
   color: var(--ink);
-  margin-bottom: 6px;
+  text-shadow: 0 0 1px var(--ink-wash);
+  margin-bottom: 2px;
 }
 
 .cover h2 {
   font-family: 'EB Garamond', serif;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-style: italic;
   font-weight: 400;
-  color: var(--sepia-light);
-  margin-bottom: 20px;
-  letter-spacing: 1px;
+  color: var(--sepia);
+  letter-spacing: 1.5px;
+  margin-bottom: 18px;
 }
 
 .cover-desc {
+  color: var(--ink-mid);
+  max-width: 460px;
+  margin: 0 auto 24px;
   font-size: 1.15rem;
-  color: var(--ink-dim);
-  max-width: 480px;
-  margin: 0 auto 28px;
-}
-
-.cover .stamp {
-  bottom: 16px;
-  right: 20px;
 }
 
 .btn-open {
   font-family: 'EB Garamond', serif;
   font-size: 1rem;
-  letter-spacing: 1px;
-  color: var(--paper);
+  letter-spacing: 1.5px;
+  color: var(--parchment);
   background: var(--herbier);
   border: none;
-  padding: 10px 32px;
+  padding: 10px 34px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 2px 3px 8px var(--shadow);
+  box-shadow: 2px 3px 8px var(--shadow-md);
 }
-.btn-open:hover {
-  transform: translateY(-2px);
-  box-shadow: 3px 5px 14px var(--shadow);
+.btn-open:hover { transform: translateY(-2px) scale(1.03); box-shadow: 3px 5px 14px var(--shadow); }
+
+/* ══════════════════════════════════════════
+   SPECIMEN BOXES — pinned museum labels
+   ══════════════════════════════════════════ */
+.specimens {
+  display: flex; flex-wrap: wrap; gap: 16px;
+  margin: 18px 0;
+  padding: 18px 16px;
+  border: 1px dashed var(--sepia-dk);
+  background: var(--parchment-dk);
+  position: relative;
 }
 
-/* ══ BOTANICAL ORNAMENT — pressed leaf silhouette ══ */
-.leaf-watermark {
+.spec {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--parchment-lt);
+  border: 1px solid var(--sepia);
+  padding: 16px 18px 8px;
+  min-width: 68px;
+  position: relative;
+  cursor: default;
+  box-shadow: 1px 2px 6px var(--shadow-sm);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+  animation: pinDrop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes pinDrop {
+  0%   { opacity: 0; transform: translateY(-24px) rotate(4deg) scale(0.7); }
+  65%  { transform: translateY(3px) rotate(-0.5deg) scale(1.03); }
+  100% { opacity: 1; transform: translateY(0) rotate(var(--rot, 0deg)) scale(1); }
+}
+.spec:nth-child(1) { --rot: -0.8deg; animation-delay: 0.1s; }
+.spec:nth-child(2) { --rot: 0.5deg; animation-delay: 0.18s; }
+.spec:nth-child(3) { --rot: -1.2deg; animation-delay: 0.26s; }
+.spec:nth-child(4) { --rot: 0.7deg; animation-delay: 0.34s; }
+.spec:nth-child(5) { --rot: -0.3deg; animation-delay: 0.42s; }
+
+.spec:hover {
+  transform: translateY(-10px) rotate(-2deg) scale(1.08) !important;
+  box-shadow: 4px 8px 20px var(--shadow);
+  z-index: 5;
+}
+
+/* Colored pin */
+.spec::before {
+  content: '';
   position: absolute;
-  opacity: 0.04;
-  pointer-events: none;
-  z-index: 0;
+  top: -6px; left: 50%; transform: translateX(-50%);
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, oklch(0.75 0.15 28), var(--sanguine));
+  box-shadow: 0 2px 4px var(--shadow-md), inset 0 1px 2px oklch(1 0 0 / 0.3);
+  z-index: 4;
+}
+.spec:nth-child(even)::before {
+  background: radial-gradient(circle at 35% 35%, oklch(0.75 0.12 148), var(--herbier));
 }
 
-[data-theme="light"] .leaf-watermark { opacity: 0.06; }
+/* Pin shadow on card */
+.spec::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--shadow-sm);
+  filter: blur(2px);
+}
 
-/* ══ FOOTER ══ */
-.colophon {
-  text-align: center;
-  padding: 24px;
+.spec-ch {
+  font-family: 'Fira Code', monospace;
+  font-size: 1.7rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.spec-id {
   font-family: 'EB Garamond', serif;
-  font-size: 0.8rem;
+  font-size: 0.6rem;
   font-style: italic;
   color: var(--ink-faint);
-  border-top: 1px solid var(--sepia);
+  border-top: 0.5px solid var(--sepia-dk);
+  padding-top: 4px;
+  width: 100%;
+  text-align: center;
 }
 
+.spec-pos {
+  position: absolute;
+  top: 5px; right: 4px;
+  font-family: 'Caveat', cursive;
+  font-size: 0.5rem;
+  color: var(--bleu);
+}
+
+/* ══════════════════════════════════════════
+   SCIENTIFIC TABLE — heatmap as journal figure
+   ══════════════════════════════════════════ */
+.fig { margin: 20px 0; position: relative; }
+
+.fig-cap {
+  font-family: 'EB Garamond', serif;
+  font-size: 0.78rem;
+  color: var(--sepia);
+  margin-bottom: 6px;
+}
+.fig-cap b { font-style: normal; color: var(--ink-mid); }
+.fig-cap i { font-style: italic; }
+
+.htable {
+  border-collapse: separate;
+  border-spacing: 1.5px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.65rem;
+  width: 100%;
+}
+.htable thead th {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ink-faint);
+  padding: 2px 4px;
+  font-size: 0.6rem;
+}
+.htable td {
+  text-align: center;
+  padding: 6px 4px;
+  border: 0.3px solid oklch(0.5 0 0 / 0.04);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+  cursor: default;
+}
+.htable td:hover {
+  transform: scale(1.3);
+  box-shadow: 0 3px 12px var(--shadow-md);
+  z-index: 2; position: relative;
+}
+.htable .rl {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 0.85rem;
+  color: var(--sepia);
+  text-align: right;
+  padding-right: 8px;
+  border: none;
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════
+   NN DIAGRAM — Da Vinci anatomical illustration
+   Cross-hatching, annotations, organic curves
+   ══════════════════════════════════════════ */
+.nn-plate {
+  margin: 24px 0;
+  padding: 16px;
+  border: 1px solid var(--sepia-dk);
+  background: var(--parchment-dk);
+  position: relative;
+}
+/* Corner decorations like old engravings */
+.nn-plate::before, .nn-plate::after {
+  content: '✦';
+  position: absolute;
+  font-size: 0.5rem;
+  color: var(--sepia-dk);
+  opacity: 0.4;
+}
+.nn-plate::before { top: 4px; left: 6px; }
+.nn-plate::after { bottom: 4px; right: 6px; }
+
+.nn-plate svg { width: 100%; height: auto; display: block; }
+
+/* ══ SVG Drawing Animation ══ */
+.draw {
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  animation: drawStroke 1.5s ease forwards;
+}
+@keyframes drawStroke { to { stroke-dashoffset: 0; } }
+
+/* ══ ATTENTION BARS ══ */
+.attn-fig {
+  display: flex; gap: 8px; align-items: end;
+  margin: 16px 0;
+  padding: 14px 18px;
+  border-left: 3px solid var(--bleu);
+  background: var(--bleu-wash);
+}
+.attn-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.attn-bar {
+  width: 38px;
+  border-radius: 2px 2px 0 0;
+  transition: height 0.5s ease;
+}
+.attn-ch {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  color: var(--ink-mid);
+}
+.attn-ch.focus { color: var(--sanguine); font-weight: 600; }
+.attn-v {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.5rem;
+  color: var(--ink-faint);
+}
+
+/* ══ GRAPH PAPER CHART ══ */
+.chart-plate {
+  position: relative;
+  margin: 20px 0;
+  border: 1px solid var(--sepia-dk);
+  /* Graph paper: major + minor grid */
+  background:
+    var(--parchment),
+    linear-gradient(var(--bleu-wash) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bleu-wash) 1px, transparent 1px),
+    linear-gradient(oklch(0.5 0.05 250 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.5 0.05 250 / 0.03) 1px, transparent 1px);
+  background-size: auto, 40px 40px, 40px 40px, 8px 8px, 8px 8px;
+}
+
+.chart-plate canvas { width: 100%; height: 200px; display: block; }
+
+.chart-ann {
+  position: absolute;
+  font-family: 'Caveat', cursive;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--herbier);
+  pointer-events: none;
+}
+
+/* ══ PROBABILITY BARS ══ */
+.probs { list-style: none; margin: 16px 0; display: flex; flex-direction: column; gap: 6px; }
+.prob {
+  display: grid;
+  grid-template-columns: 42px 1fr 48px;
+  gap: 8px; align-items: center;
+}
+.prob-ch {
+  font-family: 'Fira Code', monospace;
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-align: center;
+  color: var(--ink);
+  background: var(--parchment-lt);
+  border: 1px solid var(--sepia);
+  padding: 2px 0;
+  position: relative;
+}
+.prob-ch::before {
+  content: '';
+  position: absolute; top: -3px; right: -3px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--sanguine);
+  box-shadow: 0 1px 3px var(--shadow-sm);
+}
+.prob-track {
+  height: 14px;
+  background: var(--parchment-dk);
+  border: 0.5px solid var(--sepia-dk);
+  overflow: hidden;
+}
+.prob-fill { height: 100%; transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.prob-fill.hi { background: var(--herbier); }
+.prob-fill.md { background: var(--gold); }
+.prob-fill.lo { background: var(--sepia); }
+.prob-pct {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.6rem;
+  color: var(--ink-faint);
+  text-align: right;
+}
+
+/* ══ STATS ══ */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 14px 0;
+}
+.st {
+  text-align: center;
+  padding: 10px 6px;
+  border: 1px solid var(--sepia-dk);
+  background: var(--parchment-dk);
+}
+.st-v {
+  font-family: 'Fira Code', monospace;
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.st-v.grn { color: var(--herbier); }
+.st-v.red { color: var(--sanguine); }
+.st-v.gld { color: var(--gold); }
+.st-l {
+  font-family: 'EB Garamond', serif;
+  font-size: 0.6rem;
+  font-style: italic;
+  color: var(--ink-faint);
+}
+
+/* ══ TAGS ══ */
+.tags { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+.tag {
+  font-family: 'EB Garamond', serif;
+  font-size: 0.78rem;
+  font-style: italic;
+  padding: 2px 14px;
+  border: 1px solid var(--sepia-dk);
+  background: var(--parchment);
+  color: var(--ink-mid);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.tag:hover { border-color: var(--ink-faint); color: var(--ink); }
+.tag.on { border-color: var(--herbier); color: var(--herbier); background: var(--herbier-wash); }
+
+/* ══ FLOURISH DIVIDERS ══ */
+.fl {
+  text-align: center;
+  margin: 40px 0;
+  position: relative;
+}
+.fl::before {
+  content: '';
+  position: absolute; left: 15%; right: 15%; top: 50%;
+  height: 0.5px;
+  background: linear-gradient(90deg, transparent, var(--sepia), transparent);
+}
+.fl span {
+  position: relative;
+  background: var(--parchment);
+  padding: 0 16px;
+  font-family: 'EB Garamond', serif;
+  font-size: 1rem;
+  color: var(--sepia-dk);
+  letter-spacing: 6px;
+}
+
+/* ══ COLOPHON ══ */
+.colophon {
+  text-align: center;
+  padding: 20px;
+  font-family: 'EB Garamond', serif;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--ink-faint);
+  border-top: 0.5px solid var(--sepia-dk);
+}
 .colophon a {
-  color: var(--sepia-light);
+  color: var(--sepia);
   text-decoration: underline;
   text-decoration-style: wavy;
   text-underline-offset: 3px;
 }
 
-/* ══ ANIMATIONS ══ */
+/* ══ RESPONSIVE ══ */
+@media (max-width: 768px) {
+  .bookmarks { display: none; }
+  .pages { padding: 16px 16px 60px 16px; }
+  .notebook { background-image: linear-gradient(var(--ruling) 1px, transparent 1px); background-size: 100% 30px; }
+  .m-note { display: none; }
+  .cover h1 { font-size: 1.7rem; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .specimens { gap: 10px; padding: 12px; }
+  .header { padding-left: 20px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -954,590 +814,740 @@ body::after {
     transition-duration: 0.01ms !important;
   }
 }
-
-/* ══ RESPONSIVE ══ */
-@media (max-width: 768px) {
-  .bookmarks { display: none; }
-  .content { padding: 20px 18px 60px 18px; }
-  .notebook {
-    background-image: linear-gradient(var(--ruling) 1px, transparent 1px);
-    background-size: 100% 32px;
-  }
-  .margin-note { display: none; }
-  .cover h1 { font-size: 1.6rem; }
-  .stats { grid-template-columns: repeat(2, 1fr); }
-  .specimens { padding: 12px; gap: 10px; }
-  .nn-wrap { overflow-x: auto; }
-}
 </style>
 </head>
 <body>
 
-<!-- ═══ BOOKMARK TABS — right edge ═══ -->
-<nav class="bookmarks" aria-label="Navigation par planches">
-  <button class="bkmk active" title="Accueil">0<span class="bkmk-label">Accueil</span></button>
-  <button class="bkmk" title="Tokenisation">1<span class="bkmk-label">Tokenisation</span></button>
-  <button class="bkmk" title="Plongements">2<span class="bkmk-label">Plongements</span></button>
-  <button class="bkmk" title="Propagation">3<span class="bkmk-label">Propagation</span></button>
-  <button class="bkmk" title="Attention">4<span class="bkmk-label">Attention</span></button>
-  <button class="bkmk" title="Entrainement">5<span class="bkmk-label">Entrainement</span></button>
-  <button class="bkmk" title="Inference">6<span class="bkmk-label">Inference</span></button>
-  <button class="bkmk" title="Synthese">7<span class="bkmk-label">Synthese</span></button>
+<!-- SVG filters for ink effects -->
+<svg class="ink-filters">
+  <defs>
+    <filter id="ink-bleed">
+      <feMorphology operator="dilate" radius="0.3"/>
+      <feGaussianBlur stdDeviation="0.4"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="rough-edge">
+      <feTurbulence type="turbulence" baseFrequency="0.04" numOctaves="4" result="turbulence"/>
+      <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="2"/>
+    </filter>
+    <!-- Hand-drawn wobble: makes SVG strokes look pen-drawn, not computer-perfect -->
+    <filter id="hand-drawn" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="turbulence" baseFrequency="0.03" numOctaves="3" seed="5" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <!-- Ink pen effect: slightly rougher edges than hand-drawn -->
+    <filter id="ink-pen" x="-3%" y="-3%" width="106%" height="106%">
+      <feTurbulence type="turbulence" baseFrequency="0.04" numOctaves="2" seed="12" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <!-- Foxing spots via SVG filter (more organic than CSS radial-gradients) -->
+    <filter id="foxing-f" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="turbulence" baseFrequency="0.012" numOctaves="3" seed="7" result="spots"/>
+      <feComponentTransfer in="spots" result="spotted">
+        <feFuncR type="discrete" tableValues="0 0 0 0 0 0 0.15 0.3"/>
+        <feFuncG type="discrete" tableValues="0 0 0 0 0 0 0.1 0.18"/>
+        <feFuncB type="discrete" tableValues="0 0 0 0 0 0 0.02 0.05"/>
+        <feFuncA type="discrete" tableValues="0 0 0 0 0 0 0.08 0.15"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+</svg>
+
+<!-- ═══ BOOKMARKS ═══ -->
+<nav class="bookmarks" aria-label="Planches">
+  <button class="bkmk active">0 &middot; Couverture</button>
+  <button class="bkmk">I</button>
+  <button class="bkmk">II</button>
+  <button class="bkmk">III</button>
+  <button class="bkmk">IV</button>
+  <button class="bkmk">V</button>
+  <button class="bkmk">VI</button>
+  <button class="bkmk">&#167;</button>
 </nav>
 
 <!-- ═══ NOTEBOOK ═══ -->
 <div class="notebook">
-
-  <!-- Topbar — header stamp -->
-  <header class="topbar">
-    <span class="topbar-title">Cahier de laboratoire N&#x00B0;1 — microGPT</span>
-    <div class="topbar-right">
-      <span class="topbar-date">2026-03-09</span>
-      <button class="theme-btn" onclick="toggleTheme()" aria-label="Changer de theme">
-        <span id="theme-icon">&#9789;</span> theme
-      </button>
+  <!-- SVG foxing overlay (organic age spots via turbulence filter) -->
+  <svg width="100%" height="100%" style="position:absolute;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:0.6">
+    <rect width="100%" height="100%" filter="url(#foxing-f)"/>
+  </svg>
+  <header class="header">
+    <span class="header-title">Cahier de laboratoire N&#x00B0;1 &mdash; Dissection d'un r&#233;seau de neurones</span>
+    <div class="header-right">
+      <span class="header-date">2026&#8209;03&#8209;09</span>
+      <button class="theme-btn" onclick="toggleTheme()"><span id="ti">&#9789;</span> encre</button>
     </div>
   </header>
 
-  <div class="content">
+  <div class="pages">
 
-    <!-- ═══ COVER — Couverture ═══ -->
+    <!-- ═══════════ COVER ═══════════ -->
     <section class="planche cover">
-      <!-- Botanical icon — magnifying glass + leaf -->
-      <svg class="cover-icon" viewBox="0 0 72 72">
-        <circle class="icon-path" cx="30" cy="28" r="16"/>
-        <line class="icon-path" x1="42" y1="40" x2="58" y2="56" stroke-width="2.5"/>
-        <!-- Leaf inside lens -->
-        <path class="icon-path" d="M24 32 C24 22, 36 18, 36 28 C36 18, 24 22, 24 32Z" stroke-width="0.8"/>
-        <line class="icon-path" x1="30" y1="24" x2="30" y2="32" stroke-width="0.6"/>
+      <!-- Da Vinci anatomical study — Étude I : le neurone artificiel -->
+      <svg viewBox="0 0 520 400" width="100%" style="max-width:520px;margin:0 auto 18px;display:block" aria-label="Planche anatomique d'un neurone, style Léonard de Vinci" filter="url(#hand-drawn)">
+        <defs>
+          <!-- Cross-hatching patterns at different densities -->
+          <pattern id="xh" width="3.5" height="3.5" patternUnits="userSpaceOnUse" patternTransform="rotate(40)">
+            <line x1="0" y1="0" x2="0" y2="3.5" stroke="var(--herbier)" stroke-width="0.35" opacity="0.35"/>
+          </pattern>
+          <pattern id="xhd" width="2" height="2" patternUnits="userSpaceOnUse" patternTransform="rotate(40)">
+            <line x1="0" y1="0" x2="0" y2="2" stroke="var(--herbier)" stroke-width="0.4" opacity="0.5"/>
+          </pattern>
+          <pattern id="xh2" width="3.5" height="3.5" patternUnits="userSpaceOnUse" patternTransform="rotate(-50)">
+            <line x1="0" y1="0" x2="0" y2="3.5" stroke="var(--herbier)" stroke-width="0.3" opacity="0.25"/>
+          </pattern>
+          <clipPath id="soma-sh"><circle cx="260" cy="195" r="38"/></clipPath>
+        </defs>
+
+        <!-- ═══ CONSTRUCTION GEOMETRY — circle inscribed in square ═══ -->
+        <rect x="222" y="157" width="76" height="76" fill="none" stroke="var(--sepia-dk)" stroke-width="0.3" stroke-dasharray="4 3" opacity="0.25"/>
+        <circle cx="260" cy="195" r="54" fill="none" stroke="var(--sepia-dk)" stroke-width="0.25" stroke-dasharray="5 4" opacity="0.18"/>
+        <line x1="250" y1="195" x2="270" y2="195" stroke="var(--sepia-dk)" stroke-width="0.25" opacity="0.18"/>
+        <line x1="260" y1="185" x2="260" y2="205" stroke="var(--sepia-dk)" stroke-width="0.25" opacity="0.18"/>
+        <!-- Golden ratio spiral hint -->
+        <path d="M222 157 Q260 157 260 195" fill="none" stroke="var(--gold)" stroke-width="0.3" opacity="0.12"/>
+
+        <!-- ═══ SOMA — cross-hatched cell body ═══ -->
+        <circle cx="260" cy="195" r="38" fill="url(#xh)" stroke="var(--herbier)" stroke-width="1.5" class="draw" style="stroke-dasharray:240;animation-delay:0.3s"/>
+        <!-- Shadow side: perpendicular cross-hatch -->
+        <g clip-path="url(#soma-sh)">
+          <rect x="268" y="157" width="35" height="76" fill="url(#xh2)" opacity="0.6"/>
+          <rect x="278" y="165" width="22" height="55" fill="url(#xhd)" opacity="0.3"/>
+        </g>
+        <!-- Outer membrane double line -->
+        <circle cx="260" cy="195" r="40.5" fill="none" stroke="var(--herbier)" stroke-width="0.35" opacity="0.45"/>
+        <!-- Nucleus + nucleolus -->
+        <circle cx="256" cy="192" r="10" fill="none" stroke="var(--sepia)" stroke-width="0.7" stroke-dasharray="2.5 1.5"/>
+        <circle cx="254" cy="190" r="3" fill="var(--sepia)" opacity="0.15"/>
+        <circle cx="255" cy="191" r="1.2" fill="var(--sepia)" opacity="0.3"/>
+
+        <!-- ═══ DENDRITES — organic branching from left ═══ -->
+        <!-- Primary dendrite 1 (upper-left) -->
+        <path d="M222 190 C198 182, 170 162, 142 142" stroke="var(--herbier)" stroke-width="1.8" fill="none" stroke-linecap="round" class="draw" style="stroke-dasharray:130;animation-delay:0.6s"/>
+        <path d="M142 142 C128 128, 112 112, 95 102" stroke="var(--herbier)" stroke-width="1" fill="none" stroke-linecap="round" class="draw" style="stroke-dasharray:70;animation-delay:0.8s"/>
+        <path d="M142 142 C132 148, 118 155, 105 152" stroke="var(--herbier)" stroke-width="0.6" fill="none" class="draw" style="stroke-dasharray:50;animation-delay:0.85s"/>
+        <path d="M95 102 C85 92, 72 84, 60 78" stroke="var(--herbier)" stroke-width="0.5" fill="none" class="draw" style="stroke-dasharray:50;animation-delay:0.9s"/>
+        <path d="M95 102 C88 108, 78 112, 68 110" stroke="var(--herbier)" stroke-width="0.4" fill="none"/>
+        <!-- Dendritic spines -->
+        <circle cx="125" cy="138" r="1.2" fill="var(--herbier)" opacity="0.4"/>
+        <circle cx="110" cy="148" r="1" fill="var(--herbier)" opacity="0.3"/>
+        <circle cx="102" cy="108" r="1" fill="var(--herbier)" opacity="0.3"/>
+
+        <!-- Primary dendrite 2 (left-center) -->
+        <path d="M222 198 C195 198, 168 202, 135 198" stroke="var(--herbier)" stroke-width="1.5" fill="none" stroke-linecap="round" class="draw" style="stroke-dasharray:90;animation-delay:0.7s"/>
+        <path d="M135 198 C115 192, 95 182, 75 178" stroke="var(--herbier)" stroke-width="0.9" fill="none" class="draw" style="stroke-dasharray:65;animation-delay:0.9s"/>
+        <path d="M135 198 C120 206, 102 212, 85 208" stroke="var(--herbier)" stroke-width="0.5" fill="none"/>
+        <circle cx="118" cy="195" r="1" fill="var(--herbier)" opacity="0.35"/>
+
+        <!-- Primary dendrite 3 (lower-left) -->
+        <path d="M225 210 C200 225, 172 242, 145 255" stroke="var(--herbier)" stroke-width="1.6" fill="none" stroke-linecap="round" class="draw" style="stroke-dasharray:120;animation-delay:0.75s"/>
+        <path d="M145 255 C130 265, 115 278, 100 285" stroke="var(--herbier)" stroke-width="0.8" fill="none" class="draw" style="stroke-dasharray:60;animation-delay:0.95s"/>
+        <path d="M145 255 C135 248, 122 242, 108 245" stroke="var(--herbier)" stroke-width="0.5" fill="none"/>
+        <path d="M145 255 C140 262, 132 272, 125 278" stroke="var(--herbier)" stroke-width="0.5" fill="none"/>
+        <circle cx="152" cy="248" r="1.2" fill="var(--herbier)" opacity="0.4"/>
+
+        <!-- Primary dendrite 4 (top) -->
+        <path d="M258 157 C254 135, 248 115, 235 95" stroke="var(--herbier)" stroke-width="1.2" fill="none" stroke-linecap="round" class="draw" style="stroke-dasharray:80;animation-delay:0.8s"/>
+        <path d="M235 95 C228 78, 220 62, 215 48" stroke="var(--herbier)" stroke-width="0.6" fill="none"/>
+        <path d="M235 95 C245 85, 252 72, 255 58" stroke="var(--herbier)" stroke-width="0.5" fill="none"/>
+
+        <!-- ═══ AXON — single output with myelin sheaths ═══ -->
+        <!-- Axon hillock -->
+        <path d="M298 197 C318 198, 338 200, 352 201" stroke="var(--sanguine)" stroke-width="2" fill="none" stroke-linecap="round" class="draw" style="stroke-dasharray:60;animation-delay:1.0s"/>
+        <!-- Myelin sheaths (oval insulation segments) -->
+        <ellipse cx="368" cy="202" rx="14" ry="6.5" fill="var(--sanguine-wash)" stroke="var(--sanguine)" stroke-width="0.8"/>
+        <!-- Cross-hatch inside first sheath -->
+        <line x1="358" y1="198" x2="378" y2="206" stroke="var(--sanguine)" stroke-width="0.2" opacity="0.2"/>
+        <line x1="360" y1="197" x2="376" y2="205" stroke="var(--sanguine)" stroke-width="0.2" opacity="0.15"/>
+        <ellipse cx="400" cy="204" rx="12" ry="5.5" fill="var(--sanguine-wash)" stroke="var(--sanguine)" stroke-width="0.8"/>
+        <ellipse cx="428" cy="206" rx="12" ry="5.5" fill="var(--sanguine-wash)" stroke="var(--sanguine)" stroke-width="0.8"/>
+        <!-- Nodes of Ranvier (gaps between sheaths) -->
+        <line x1="382" y1="198" x2="382" y2="209" stroke="var(--sanguine)" stroke-width="0.5" stroke-dasharray="1 1"/>
+        <line x1="412" y1="200" x2="412" y2="211" stroke="var(--sanguine)" stroke-width="0.5" stroke-dasharray="1 1"/>
+        <!-- Axon core line -->
+        <path d="M352 201 C360 201, 438 207, 446 210" stroke="var(--sanguine)" stroke-width="0.5" fill="none"/>
+
+        <!-- Synaptic terminals (boutons) -->
+        <path d="M446 210 C455 215, 462 222, 468 230" stroke="var(--sanguine)" stroke-width="1" fill="none" class="draw" style="stroke-dasharray:35;animation-delay:1.2s"/>
+        <circle cx="470" cy="233" r="4.5" fill="var(--sanguine-wash)" stroke="var(--sanguine)" stroke-width="0.7"/>
+        <path d="M446 210 C458 206, 468 203, 478 200" stroke="var(--sanguine)" stroke-width="0.8" fill="none" class="draw" style="stroke-dasharray:40;animation-delay:1.25s"/>
+        <circle cx="481" cy="199" r="3.8" fill="var(--sanguine-wash)" stroke="var(--sanguine)" stroke-width="0.7"/>
+        <path d="M446 210 C452 218, 458 228, 462 240" stroke="var(--sanguine)" stroke-width="0.6" fill="none"/>
+        <circle cx="463" cy="243" r="3" fill="var(--sanguine-wash)" stroke="var(--sanguine)" stroke-width="0.6"/>
+        <!-- Neurotransmitter dots inside bouton -->
+        <circle cx="469" cy="231" r="0.8" fill="var(--sanguine)" opacity="0.4"/>
+        <circle cx="471" cy="234" r="0.7" fill="var(--sanguine)" opacity="0.3"/>
+        <circle cx="468" cy="235" r="0.6" fill="var(--sanguine)" opacity="0.35"/>
+
+        <!-- ═══ ANNOTATIONS — leader lines + labels ═══ -->
+        <path d="M65 78 C72 85, 80 95, 88 105" stroke="var(--bleu)" stroke-width="0.5" stroke-dasharray="3 2" fill="none" opacity="0.6"/>
+        <text x="18" y="75" font-family="Caveat" font-size="12" fill="var(--bleu)">dendrites</text>
+
+        <path d="M300 168 C320 158, 340 150, 358 144" stroke="var(--bleu)" stroke-width="0.5" stroke-dasharray="3 2" fill="none" opacity="0.6"/>
+        <text x="360" y="142" font-family="Caveat" font-size="11" fill="var(--bleu)">soma (corps cellulaire)</text>
+
+        <path d="M256 182 C262 168, 270 156, 282 148" stroke="var(--ink-faint)" stroke-width="0.4" stroke-dasharray="2 2" fill="none" opacity="0.5"/>
+        <text x="284" y="146" font-family="EB Garamond" font-size="9" font-style="italic" fill="var(--ink-faint)">noyau</text>
+
+        <path d="M392 192 C398 180, 405 168, 412 158" stroke="var(--sanguine)" stroke-width="0.5" stroke-dasharray="3 2" fill="none" opacity="0.6"/>
+        <text x="398" y="155" font-family="Caveat" font-size="11" fill="var(--sanguine)">axone</text>
+
+        <path d="M368 210 C368 222, 365 232, 360 240" stroke="var(--ink-faint)" stroke-width="0.4" stroke-dasharray="2 2" fill="none" opacity="0.5"/>
+        <text x="310" y="252" font-family="EB Garamond" font-size="8.5" font-style="italic" fill="var(--ink-faint)">gaine de my&#233;line</text>
+
+        <path d="M382 209 C378 220, 372 228, 365 233" stroke="var(--ink-faint)" stroke-width="0.3" stroke-dasharray="1.5 1.5" fill="none" opacity="0.4"/>
+        <text x="325" y="240" font-family="EB Garamond" font-size="7.5" font-style="italic" fill="var(--ink-faint)">n&#339;ud de Ranvier</text>
+
+        <path d="M478 199 C488 192, 492 185, 496 178" stroke="var(--sanguine)" stroke-width="0.4" stroke-dasharray="2 2" fill="none" opacity="0.5"/>
+        <text x="458" y="175" font-family="Caveat" font-size="9.5" fill="var(--sanguine)">terminaisons</text>
+        <text x="458" y="186" font-family="Caveat" font-size="9.5" fill="var(--sanguine)">synaptiques</text>
+
+        <!-- ═══ MARGINAL SKETCHES ═══ -->
+        <!-- Signal waveform (top-right corner) -->
+        <g transform="translate(418, 28)" opacity="0.45">
+          <text x="0" y="-2" font-family="Caveat" font-size="8.5" fill="var(--bleu)">signal &#8594;</text>
+          <polyline points="0,12 8,12 10,3 14,21 18,7 22,17 26,10 32,14 38,12 50,12" stroke="var(--sanguine)" stroke-width="0.8" fill="none"/>
+        </g>
+
+        <!-- Mini 3-neuron network sketch (bottom-left) -->
+        <g transform="translate(22, 315)" opacity="0.4">
+          <text x="0" y="-6" font-family="Caveat" font-size="8.5" fill="var(--ink-faint)">r&#233;seau minimal</text>
+          <circle cx="10" cy="12" r="5" fill="none" stroke="var(--herbier)" stroke-width="0.6"/>
+          <circle cx="10" cy="32" r="5" fill="none" stroke="var(--herbier)" stroke-width="0.6"/>
+          <circle cx="45" cy="22" r="6.5" fill="url(#xh)" stroke="var(--herbier)" stroke-width="0.8"/>
+          <circle cx="80" cy="22" r="5" fill="none" stroke="var(--sanguine)" stroke-width="0.6"/>
+          <line x1="15" y1="12" x2="38" y2="20" stroke="var(--sepia)" stroke-width="0.4"/>
+          <line x1="15" y1="32" x2="38" y2="24" stroke="var(--sepia)" stroke-width="0.4"/>
+          <line x1="52" y1="22" x2="75" y2="22" stroke="var(--sepia)" stroke-width="0.4"/>
+        </g>
+
+        <!-- Mirror text — Da Vinci signature style (horizontally flipped) -->
+        <g transform="translate(500, 0) scale(-1, 1)">
+          <text x="22" y="388" font-family="EB Garamond" font-size="7.5" font-style="italic" fill="var(--ink-faint)" opacity="0.25">neurone artificiel &#8212; &#233;tude I</text>
+        </g>
+
+        <!-- Scale bar -->
+        <line x1="28" y1="375" x2="82" y2="375" stroke="var(--sepia)" stroke-width="0.6"/>
+        <line x1="28" y1="372" x2="28" y2="378" stroke="var(--sepia)" stroke-width="0.4"/>
+        <line x1="82" y1="372" x2="82" y2="378" stroke="var(--sepia)" stroke-width="0.4"/>
+        <text x="40" y="385" font-family="EB Garamond" font-size="7.5" font-style="italic" fill="var(--ink-faint)">50 &#956;m</text>
+
+        <!-- Folio number -->
+        <text x="498" y="392" font-family="EB Garamond" font-size="8" fill="var(--ink-faint)" opacity="0.35" text-anchor="end">f. 1r</text>
       </svg>
+
       <h1>Le Cahier du Savant</h1>
-      <h2>Dissection d'un reseau de neurones miniature</h2>
+      <h2>Dissection d'un r&#233;seau de neurones miniature</h2>
       <p class="cover-desc">
-        Ouvre ce carnet de terrain et decouvre, planche par planche,
-        comment fonctionne un cerveau artificiel qui invente des prenoms.
+        Ouvre ce carnet de terrain et d&#233;couvre, planche par planche,
+        comment fonctionne un cerveau artificiel qui invente des pr&#233;noms.
       </p>
       <button class="btn-open" onclick="activateTab(1)">Ouvrir le cahier</button>
-      <div class="stamp" style="bottom:16px;right:20px">Specimen</div>
-
-      <!-- Pressed leaf watermark -->
-      <svg class="leaf-watermark" style="right:-20px;top:10px;width:180px" viewBox="0 0 100 140">
-        <path d="M50 5 C20 25, 5 60, 15 95 C25 120, 45 135, 50 135 C55 135, 75 120, 85 95 C95 60, 80 25, 50 5Z" fill="var(--herbier)" />
-        <line x1="50" y1="5" x2="50" y2="135" stroke="var(--herbier)" stroke-width="0.5" opacity="0.3"/>
-        <path d="M50 30 C35 35, 20 50, 25 65" fill="none" stroke="var(--herbier)" stroke-width="0.3" opacity="0.3"/>
-        <path d="M50 50 C65 55, 80 60, 75 75" fill="none" stroke="var(--herbier)" stroke-width="0.3" opacity="0.3"/>
-        <path d="M50 70 C35 75, 22 80, 30 95" fill="none" stroke="var(--herbier)" stroke-width="0.3" opacity="0.3"/>
-      </svg>
+      <div class="stamp" style="--stamp-rot:-7deg;position:absolute;bottom:14px;right:18px;font-size:0.6rem;animation-delay:1.5s">Specimen</div>
     </section>
 
-    <!-- ═══ PLANCHE I — Tokenisation ═══ -->
+    <!-- ═══════════ PLANCHE I — TOKENISATION ═══════════ -->
     <section class="planche">
-      <div class="tape tape-tl"></div>
-      <div class="tape tape-tr"></div>
-      <div class="margin-note" style="top:12px">
-        cf. Karpathy<br>micrograd
+      <div class="tape" style="width:85px;top:-8px;left:15px;transform:rotate(-3.5deg)"></div>
+      <div class="tape" style="width:60px;top:-5px;right:20px;transform:rotate(2deg)"></div>
+      <div class="m-note" style="top:10px">cf. Karpathy<br/>micrograd</div>
+      <div class="pl-head">
+        <span class="pl-num">Planche I</span>
+        <span class="pl-title">Tokenisation</span>
       </div>
-      <div class="planche-header">
-        <span class="planche-num">Planche I</span>
-        <span class="planche-title">Tokenisation</span>
-      </div>
-      <div class="planche-subtitle">Classification des specimens textuels</div>
-      <p class="planche-text">
-        Chaque lettre du prenom est isolee et
-        <span class="correction">classifiee</span><span class="correction-new">epinglee</span>
-        comme un specimen dans une boite de naturaliste. Un numero
-        d'identification unique lui est attribue.
+      <div class="pl-sub">Classification des sp&#233;cimens textuels — catalogage et identification</div>
+      <p class="pl-text">
+        Chaque lettre du pr&#233;nom est isol&#233;e et
+        <span class="struck">classifi&#233;e</span> <span class="corr">&#233;pingl&#233;e</span>
+        comme un sp&#233;cimen dans une bo&#238;te de naturaliste.
+        Un num&#233;ro d'identification unique lui est attribu&#233;.
       </p>
 
       <div class="tags">
-        <button class="tag active">prenoms_fr</button>
-        <button class="tag">prenoms_us</button>
-        <button class="tag">prenoms_ar</button>
+        <button class="tag on">pr&#233;noms_fr</button>
+        <button class="tag">pr&#233;noms_us</button>
+        <button class="tag">pr&#233;noms_ar</button>
       </div>
 
       <div class="specimens">
-        <div class="stamp" style="top:8px;right:12px;font-size:0.55rem;padding:2px 8px">Catalogue</div>
-        <div class="specimen">
-          <span class="specimen-pos">0</span>
-          <span class="specimen-char">E</span>
-          <span class="specimen-id">sp. n&#x00B0;05</span>
-        </div>
-        <div class="specimen">
-          <span class="specimen-pos">1</span>
-          <span class="specimen-char">m</span>
-          <span class="specimen-id">sp. n&#x00B0;13</span>
-        </div>
-        <div class="specimen">
-          <span class="specimen-pos">2</span>
-          <span class="specimen-char">m</span>
-          <span class="specimen-id">sp. n&#x00B0;13</span>
-        </div>
-        <div class="specimen">
-          <span class="specimen-pos">3</span>
-          <span class="specimen-char">a</span>
-          <span class="specimen-id">sp. n&#x00B0;01</span>
-        </div>
-        <div class="specimen">
-          <span class="specimen-pos">4</span>
-          <span class="specimen-char">.</span>
-          <span class="specimen-id">sp. n&#x00B0;00</span>
-        </div>
+        <div class="stamp" style="--stamp-rot:-4deg;position:absolute;top:6px;right:10px;font-size:0.5rem;padding:1px 8px;animation-delay:1s">Catalogue</div>
+        <div class="spec"><span class="spec-pos">0</span><span class="spec-ch">E</span><span class="spec-id">sp. n&#x00B0;05</span></div>
+        <div class="spec"><span class="spec-pos">1</span><span class="spec-ch">m</span><span class="spec-id">sp. n&#x00B0;13</span></div>
+        <div class="spec"><span class="spec-pos">2</span><span class="spec-ch">m</span><span class="spec-id">sp. n&#x00B0;13</span></div>
+        <div class="spec"><span class="spec-pos">3</span><span class="spec-ch">a</span><span class="spec-id">sp. n&#x00B0;01</span></div>
+        <div class="spec"><span class="spec-pos">4</span><span class="spec-ch">.</span><span class="spec-id">sp. n&#x00B0;00 (fin)</span></div>
       </div>
+
+      <!-- Inline sketch: the tokenization process -->
+      <svg viewBox="0 0 500 60" width="100%" height="60" style="margin-top:10px" filter="url(#ink-pen)">
+        <text x="10" y="22" font-family="Caveat" font-size="14" fill="var(--ink-mid)">"Emma."</text>
+        <path d="M80 20 L110 20" stroke="var(--sepia)" stroke-width="1" marker-end="url(#arrowhead)" class="draw" style="animation-delay:0.6s"/>
+        <text x="120" y="18" font-family="Fira Code" font-size="10" fill="var(--herbier)">['E','m','m','a','.']</text>
+        <path d="M280 20 L310 20" stroke="var(--sepia)" stroke-width="1" class="draw" style="animation-delay:0.8s"/>
+        <text x="320" y="18" font-family="Fira Code" font-size="10" fill="var(--sanguine)">[5, 13, 13, 1, 0]</text>
+        <text x="120" y="48" font-family="Caveat" font-size="11" fill="var(--bleu)" style="font-style:italic">d&#233;coupage lettre par lettre</text>
+        <text x="320" y="48" font-family="Caveat" font-size="11" fill="var(--bleu)" style="font-style:italic">index dans le vocabulaire</text>
+        <defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="var(--sepia)"/>
+        </marker></defs>
+      </svg>
     </section>
 
-    <!-- ═══ PLANCHE II — Plongements ═══ -->
+    <!-- ═══════════ PLANCHE II — PLONGEMENTS ═══════════ -->
     <section class="planche">
-      <div class="tape tape-tl"></div>
-      <div class="margin-note" style="top:60px">
-        16 dims<br>= 16<br>coordonnees
+      <div class="tape" style="width:75px;top:-7px;left:30px;transform:rotate(-2deg)"></div>
+      <div class="m-note" style="top:50px">16 dims<br/>= 16 axes<br/>de variation</div>
+      <div class="pl-head">
+        <span class="pl-num">Planche II</span>
+        <span class="pl-title">Plongements</span>
       </div>
-      <div class="planche-header">
-        <span class="planche-num">Planche II</span>
-        <span class="planche-title">Plongements</span>
-      </div>
-      <div class="planche-subtitle">Cartographie vectorielle des specimens</div>
-      <p class="planche-text">
-        Chaque specimen recoit un vecteur de coordonnees — comme une fiche
-        d'herbier avec latitude, longitude et altitude.
+      <div class="pl-sub">Cartographie vectorielle des sp&#233;cimens &mdash; matrice d'encha&#238;nement</div>
+      <p class="pl-text">
+        Chaque sp&#233;cimen re&#231;oit un vecteur de coordonn&#233;es &mdash; comme une
+        fiche d'herbier avec latitude, longitude et altitude.
+        Les sp&#233;cimens similaires ont des coordonn&#233;es proches.
       </p>
 
-      <div class="fig-wrap">
-        <div class="fig-caption"><b>Fig. 2a</b> — Matrice d'enchassement (<i>wte</i>), dimensions 0–7</div>
-        <table class="sci-table">
-          <thead>
-            <tr><th></th><th>d<sub>0</sub></th><th>d<sub>1</sub></th><th>d<sub>2</sub></th><th>d<sub>3</sub></th><th>d<sub>4</sub></th><th>d<sub>5</sub></th><th>d<sub>6</sub></th><th>d<sub>7</sub></th></tr>
-          </thead>
-          <tbody id="heatmap-body"></tbody>
+      <div class="fig">
+        <div class="fig-cap"><b>Fig. 2a</b> &mdash; Matrice d'encha&#238;nement (<i>wte</i>), dimensions 0&ndash;7</div>
+        <table class="htable">
+          <thead><tr><th></th><th>d<sub>0</sub></th><th>d<sub>1</sub></th><th>d<sub>2</sub></th><th>d<sub>3</sub></th><th>d<sub>4</sub></th><th>d<sub>5</sub></th><th>d<sub>6</sub></th><th>d<sub>7</sub></th></tr></thead>
+          <tbody id="hm"></tbody>
         </table>
+        <div style="margin-top:8px">
+          <span class="sang-note">N.B.</span>
+          <span style="font-size:0.85rem;color:var(--ink-faint);font-family:'EB Garamond',serif;font-style:italic">
+            &mdash; les lettres proches dans l'espace vectoriel partagent des motifs statistiques similaires.
+          </span>
+        </div>
       </div>
     </section>
 
-    <div class="flourish">&#10043; &#10043; &#10043;</div>
+    <div class="fl"><span>&#10043; &#8258; &#10043;</span></div>
 
-    <!-- ═══ PLANCHE III — Propagation ═══ -->
+    <!-- ═══════════ PLANCHE III — PROPAGATION ═══════════ -->
     <section class="planche">
-      <div class="tape tape-tr"></div>
-      <div class="tape tape-bl"></div>
-      <div class="margin-note" style="top:40px">
-        la seve<br>circule !
+      <div class="tape" style="width:90px;top:-6px;right:18px;transform:rotate(1.5deg)"></div>
+      <div class="tape" style="width:70px;bottom:-8px;left:25px;transform:rotate(-1deg)"></div>
+      <div class="m-note" style="top:35px"><span class="sang-note">la s&#232;ve<br/>circule !</span></div>
+      <div class="pl-head">
+        <span class="pl-num">Planche III</span>
+        <span class="pl-title">Propagation</span>
       </div>
-      <div class="planche-header">
-        <span class="planche-num">Planche III</span>
-        <span class="planche-title">Propagation</span>
-      </div>
-      <div class="planche-subtitle">Schema anatomique du reseau — coupe transversale</div>
-      <p class="planche-text">
-        L'information circule de couche en couche, comme la seve dans un arbre.
-      </p>
+      <div class="pl-sub">Sch&#233;ma anatomique du r&#233;seau &mdash; coupe transversale</div>
 
-      <div class="nn-wrap">
-        <svg class="nn-svg" viewBox="0 0 440 200" width="440" height="200">
-          <!-- Connections: input → hidden (wobbly bezier curves) -->
-          <g>
-            <path class="conn draw-path" d="M80,40 C140,38 160,35 200,30" style="animation-delay:0.1s"/>
-            <path class="conn draw-path" d="M80,40 C130,55 170,65 200,70" style="animation-delay:0.15s"/>
-            <path class="conn draw-path" d="M80,40 C140,60 160,95 200,110" style="animation-delay:0.2s"/>
-            <path class="conn draw-path" d="M80,40 C130,70 170,120 200,150" style="animation-delay:0.25s"/>
-            <path class="conn draw-path" d="M80,80 C130,60 170,38 200,30" style="animation-delay:0.12s"/>
-            <path class="conn draw-path" d="M80,80 C140,78 160,72 200,70" style="animation-delay:0.18s"/>
-            <path class="conn draw-path" d="M80,80 C130,95 170,105 200,110" style="animation-delay:0.22s"/>
-            <path class="conn draw-path" d="M80,80 C140,100 160,130 200,150" style="animation-delay:0.28s"/>
-            <path class="conn draw-path" d="M80,120 C140,100 160,50 200,30" style="animation-delay:0.14s"/>
-            <path class="conn draw-path" d="M80,120 C130,105 170,80 200,70" style="animation-delay:0.20s"/>
-            <path class="conn draw-path" d="M80,120 C140,118 160,112 200,110" style="animation-delay:0.26s"/>
-            <path class="conn draw-path" d="M80,120 C130,135 170,145 200,150" style="animation-delay:0.30s"/>
-            <path class="conn draw-path" d="M80,160 C140,140 160,60 200,30" style="animation-delay:0.16s"/>
-            <path class="conn draw-path" d="M80,160 C130,145 170,90 200,70" style="animation-delay:0.24s"/>
-            <path class="conn draw-path" d="M80,160 C140,155 160,125 200,110" style="animation-delay:0.30s"/>
-            <path class="conn draw-path" d="M80,160 C130,158 170,152 200,150" style="animation-delay:0.35s"/>
+      <div class="nn-plate">
+        <div class="fig-cap" style="margin:0 0 8px"><b>Fig. 3a</b> &mdash; Architecture compl&#232;te : entr&#233;e (4) &#8594; cach&#233; (6) &#8594; sortie (4)</div>
+        <svg viewBox="0 0 520 240" width="100%" style="max-height:260px" filter="url(#hand-drawn)">
+          <!-- Cross-hatching background pattern for "engraving" feel -->
+          <defs>
+            <pattern id="hatch" patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="4" stroke="var(--sepia-dk)" stroke-width="0.15" opacity="0.15"/>
+            </pattern>
+            <pattern id="nn-xh" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(40)">
+              <line x1="0" y1="0" x2="0" y2="3" stroke="var(--herbier)" stroke-width="0.3" opacity="0.25"/>
+            </pattern>
+            <pattern id="nn-xh2" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(-50)">
+              <line x1="0" y1="0" x2="0" y2="3" stroke="var(--sepia)" stroke-width="0.25" opacity="0.2"/>
+            </pattern>
+          </defs>
+
+          <!-- Background anatomy region -->
+          <ellipse cx="260" cy="120" rx="220" ry="105" fill="url(#hatch)" stroke="none"/>
+
+          <!-- Connections input→hidden (organic curves) -->
+          <g opacity="0.25">
+            <path d="M90,35 C140,33 180,28 230,25" stroke="var(--sepia)" stroke-width="0.6" fill="none"/>
+            <path d="M90,35 C130,45 180,55 230,60" stroke="var(--sepia)" stroke-width="0.6" fill="none"/>
+            <path d="M90,35 C140,50 180,75 230,95" stroke="var(--sepia)" stroke-width="0.8" fill="none"/>
+            <path d="M90,35 C130,60 180,100 230,130" stroke="var(--herbier)" stroke-width="0.9" fill="none"/>
+            <path d="M90,35 C140,70 180,130 230,165" stroke="var(--sepia)" stroke-width="0.5" fill="none"/>
+            <path d="M90,35 C130,75 180,155 230,200" stroke="var(--sepia)" stroke-width="0.5" fill="none"/>
+
+            <path d="M90,80 C140,60 180,35 230,25" stroke="var(--sepia)" stroke-width="0.5" fill="none"/>
+            <path d="M90,80 C130,75 180,65 230,60" stroke="var(--herbier)" stroke-width="0.8" fill="none"/>
+            <path d="M90,80 C140,82 180,90 230,95" stroke="var(--sepia)" stroke-width="0.6" fill="none"/>
+            <path d="M90,80 C130,95 180,115 230,130" stroke="var(--sepia)" stroke-width="0.7" fill="none"/>
+            <path d="M90,80 C140,100 180,145 230,165" stroke="var(--sepia)" stroke-width="0.5" fill="none"/>
+            <path d="M90,80 C130,105 180,170 230,200" stroke="var(--sepia)" stroke-width="0.4" fill="none"/>
+
+            <path d="M90,145 C140,120 180,50 230,25" stroke="var(--sepia)" stroke-width="0.4" fill="none"/>
+            <path d="M90,145 C130,130 180,80 230,60" stroke="var(--sepia)" stroke-width="0.5" fill="none"/>
+            <path d="M90,145 C140,138 180,105 230,95" stroke="var(--sepia)" stroke-width="0.7" fill="none"/>
+            <path d="M90,145 C130,142 180,135 230,130" stroke="var(--herbier)" stroke-width="0.9" fill="none"/>
+            <path d="M90,145 C140,150 180,160 230,165" stroke="var(--sepia)" stroke-width="0.6" fill="none"/>
+            <path d="M90,145 C130,160 180,185 230,200" stroke="var(--sepia)" stroke-width="0.5" fill="none"/>
+
+            <path d="M90,200 C140,175 180,60 230,25" stroke="var(--sepia)" stroke-width="0.3" fill="none"/>
+            <path d="M90,200 C130,180 180,100 230,60" stroke="var(--sepia)" stroke-width="0.4" fill="none"/>
+            <path d="M90,200 C140,190 180,120 230,95" stroke="var(--sepia)" stroke-width="0.5" fill="none"/>
+            <path d="M90,200 C130,195 180,150 230,130" stroke="var(--sepia)" stroke-width="0.6" fill="none"/>
+            <path d="M90,200 C140,198 180,175 230,165" stroke="var(--herbier)" stroke-width="0.8" fill="none"/>
+            <path d="M90,200 C130,200 180,198 230,200" stroke="var(--sepia)" stroke-width="0.7" fill="none"/>
           </g>
-          <!-- Connections: hidden → output -->
-          <g>
-            <path class="conn draw-path" d="M230,30 C280,32 310,35 360,40" style="animation-delay:0.4s"/>
-            <path class="conn draw-path" d="M230,30 C270,50 320,65 360,80" style="animation-delay:0.42s"/>
-            <path class="conn draw-path" d="M230,30 C280,45 310,95 360,120" style="animation-delay:0.44s"/>
-            <path class="conn draw-path" d="M230,30 C270,55 320,120 360,160" style="animation-delay:0.46s"/>
-            <path class="conn draw-path" d="M230,70 C280,60 310,45 360,40" style="animation-delay:0.42s"/>
-            <path class="conn draw-path" d="M230,70 C270,72 320,78 360,80" style="animation-delay:0.45s"/>
-            <path class="conn draw-path" d="M230,70 C280,85 310,105 360,120" style="animation-delay:0.48s"/>
-            <path class="conn draw-path" d="M230,70 C270,90 320,135 360,160" style="animation-delay:0.50s"/>
-            <path class="conn draw-path" d="M230,110 C280,95 310,55 360,40" style="animation-delay:0.44s"/>
-            <path class="conn draw-path" d="M230,110 C270,100 320,88 360,80" style="animation-delay:0.48s"/>
-            <path class="conn draw-path" d="M230,110 C280,112 310,115 360,120" style="animation-delay:0.50s"/>
-            <path class="conn draw-path" d="M230,110 C270,125 320,145 360,160" style="animation-delay:0.52s"/>
-            <path class="conn draw-path" d="M230,150 C280,135 310,65 360,40" style="animation-delay:0.46s"/>
-            <path class="conn draw-path" d="M230,150 C270,140 320,100 360,80" style="animation-delay:0.50s"/>
-            <path class="conn draw-path" d="M230,150 C280,145 310,128 360,120" style="animation-delay:0.52s"/>
-            <path class="conn draw-path" d="M230,150 C270,152 320,158 360,160" style="animation-delay:0.55s"/>
+
+          <!-- Connections hidden→output -->
+          <g opacity="0.25">
+            <path d="M260,25 C310,28 360,30 420,48" stroke="var(--sepia)" stroke-width="0.7" fill="none"/>
+            <path d="M260,60 C310,55 360,50 420,48" stroke="var(--herbier)" stroke-width="0.9" fill="none"/>
+            <path d="M260,95 C310,85 360,65 420,48" stroke="var(--sepia)" stroke-width="0.5" fill="none"/>
+            <path d="M260,25 C310,40 360,70 420,100" stroke="var(--sepia)" stroke-width="0.5" fill="none"/>
+            <path d="M260,60 C310,68 360,80 420,100" stroke="var(--sepia)" stroke-width="0.6" fill="none"/>
+            <path d="M260,95 C310,95 360,97 420,100" stroke="var(--herbier)" stroke-width="0.8" fill="none"/>
+            <path d="M260,130 C310,120 360,108 420,100" stroke="var(--sepia)" stroke-width="0.6" fill="none"/>
+            <path d="M260,130 C310,138 360,145 420,148" stroke="var(--sepia)" stroke-width="0.7" fill="none"/>
+            <path d="M260,165 C310,160 360,155 420,148" stroke="var(--herbier)" stroke-width="0.9" fill="none"/>
+            <path d="M260,165 C310,175 360,185 420,195" stroke="var(--sepia)" stroke-width="0.5" fill="none"/>
+            <path d="M260,200 C310,200 360,198 420,195" stroke="var(--sepia)" stroke-width="0.7" fill="none"/>
+            <path d="M260,200 C310,185 360,165 420,148" stroke="var(--sepia)" stroke-width="0.4" fill="none"/>
           </g>
 
-          <!-- Nodes — input -->
-          <circle class="node active" cx="80" cy="40" r="14"/>
-          <text class="node-label" x="80" y="43">e</text>
-          <circle class="node active" cx="80" cy="80" r="14"/>
-          <text class="node-label" x="80" y="83">m</text>
-          <circle class="node active" cx="80" cy="120" r="14"/>
-          <text class="node-label" x="80" y="123">m</text>
-          <circle class="node active" cx="80" cy="160" r="14"/>
-          <text class="node-label" x="80" y="163">a</text>
+          <!-- Input neurons — cross-hatched anatomical cells -->
+          <g>
+            <circle cx="90" cy="35" r="16" fill="url(#nn-xh)" stroke="var(--herbier)" stroke-width="1.5"/>
+            <circle cx="90" cy="35" r="17.5" fill="none" stroke="var(--herbier)" stroke-width="0.3" opacity="0.4"/>
+            <circle cx="88" cy="33" r="4" fill="none" stroke="var(--herbier)" stroke-width="0.3" stroke-dasharray="1.5 1" opacity="0.5"/>
+            <text x="90" y="39" text-anchor="middle" font-family="Fira Code" font-size="10" fill="var(--ink)">e</text>
+          </g>
+          <g>
+            <circle cx="90" cy="80" r="16" fill="url(#nn-xh)" stroke="var(--herbier)" stroke-width="1.5"/>
+            <circle cx="90" cy="80" r="17.5" fill="none" stroke="var(--herbier)" stroke-width="0.3" opacity="0.4"/>
+            <circle cx="88" cy="78" r="4" fill="none" stroke="var(--herbier)" stroke-width="0.3" stroke-dasharray="1.5 1" opacity="0.5"/>
+            <text x="90" y="84" text-anchor="middle" font-family="Fira Code" font-size="10" fill="var(--ink)">m</text>
+          </g>
+          <g>
+            <circle cx="90" cy="145" r="16" fill="url(#nn-xh)" stroke="var(--herbier)" stroke-width="1.5"/>
+            <circle cx="90" cy="145" r="17.5" fill="none" stroke="var(--herbier)" stroke-width="0.3" opacity="0.4"/>
+            <circle cx="88" cy="143" r="4" fill="none" stroke="var(--herbier)" stroke-width="0.3" stroke-dasharray="1.5 1" opacity="0.5"/>
+            <text x="90" y="149" text-anchor="middle" font-family="Fira Code" font-size="10" fill="var(--ink)">m</text>
+          </g>
+          <g>
+            <circle cx="90" cy="200" r="16" fill="url(#nn-xh)" stroke="var(--herbier)" stroke-width="1.5"/>
+            <circle cx="90" cy="200" r="17.5" fill="none" stroke="var(--herbier)" stroke-width="0.3" opacity="0.4"/>
+            <circle cx="88" cy="198" r="4" fill="none" stroke="var(--herbier)" stroke-width="0.3" stroke-dasharray="1.5 1" opacity="0.5"/>
+            <text x="90" y="204" text-anchor="middle" font-family="Fira Code" font-size="10" fill="var(--ink)">a</text>
+          </g>
 
-          <!-- Nodes — hidden -->
-          <circle class="node" cx="215" cy="30" r="14"/>
-          <text class="node-label" x="215" y="33">h1</text>
-          <circle class="node active" cx="215" cy="70" r="14"/>
-          <text class="node-label" x="215" y="73">h2</text>
-          <circle class="node" cx="215" cy="110" r="14"/>
-          <text class="node-label" x="215" y="113">h3</text>
-          <circle class="node active" cx="215" cy="150" r="14"/>
-          <text class="node-label" x="215" y="153">h4</text>
+          <!-- Hidden neurons — cross-hatched, double-membrane anatomical cells -->
+          <g>
+            <circle cx="245" cy="25" r="14" fill="url(#nn-xh2)" stroke="var(--sepia)" stroke-width="1"/>
+            <circle cx="245" cy="25" r="15.5" fill="none" stroke="var(--sepia)" stroke-width="0.25" opacity="0.4"/>
+            <circle cx="243" cy="23" r="4" fill="none" stroke="var(--sepia-dk)" stroke-width="0.35" stroke-dasharray="1.5 1" opacity="0.5"/>
+            <text x="245" y="29" text-anchor="middle" font-family="Fira Code" font-size="8" fill="var(--ink-faint)">h1</text>
+          </g>
+          <g>
+            <circle cx="245" cy="60" r="14" fill="url(#nn-xh)" stroke="var(--herbier)" stroke-width="1.5"/>
+            <circle cx="245" cy="60" r="15.5" fill="none" stroke="var(--herbier)" stroke-width="0.25" opacity="0.4"/>
+            <circle cx="243" cy="58" r="4" fill="none" stroke="var(--herbier)" stroke-width="0.35" stroke-dasharray="1.5 1" opacity="0.5"/>
+            <text x="245" y="64" text-anchor="middle" font-family="Fira Code" font-size="8" fill="var(--ink)">h2</text>
+          </g>
+          <g>
+            <circle cx="245" cy="95" r="14" fill="url(#nn-xh2)" stroke="var(--sepia)" stroke-width="1"/>
+            <circle cx="245" cy="95" r="15.5" fill="none" stroke="var(--sepia)" stroke-width="0.25" opacity="0.4"/>
+            <circle cx="243" cy="93" r="4" fill="none" stroke="var(--sepia-dk)" stroke-width="0.35" stroke-dasharray="1.5 1" opacity="0.5"/>
+            <text x="245" y="99" text-anchor="middle" font-family="Fira Code" font-size="8" fill="var(--ink-faint)">h3</text>
+          </g>
+          <g>
+            <circle cx="245" cy="130" r="14" fill="url(#nn-xh)" stroke="var(--herbier)" stroke-width="1.5"/>
+            <circle cx="245" cy="130" r="15.5" fill="none" stroke="var(--herbier)" stroke-width="0.25" opacity="0.4"/>
+            <circle cx="243" cy="128" r="4" fill="none" stroke="var(--herbier)" stroke-width="0.35" stroke-dasharray="1.5 1" opacity="0.5"/>
+            <text x="245" y="134" text-anchor="middle" font-family="Fira Code" font-size="8" fill="var(--ink)">h4</text>
+          </g>
+          <g>
+            <circle cx="245" cy="165" r="14" fill="url(#nn-xh2)" stroke="var(--sepia)" stroke-width="1"/>
+            <circle cx="245" cy="165" r="15.5" fill="none" stroke="var(--sepia)" stroke-width="0.25" opacity="0.4"/>
+            <circle cx="243" cy="163" r="4" fill="none" stroke="var(--sepia-dk)" stroke-width="0.35" stroke-dasharray="1.5 1" opacity="0.5"/>
+            <text x="245" y="169" text-anchor="middle" font-family="Fira Code" font-size="8" fill="var(--ink-faint)">h5</text>
+          </g>
+          <g>
+            <circle cx="245" cy="200" r="14" fill="url(#nn-xh)" stroke="var(--herbier)" stroke-width="1.5"/>
+            <circle cx="245" cy="200" r="15.5" fill="none" stroke="var(--herbier)" stroke-width="0.25" opacity="0.4"/>
+            <circle cx="243" cy="198" r="4" fill="none" stroke="var(--herbier)" stroke-width="0.35" stroke-dasharray="1.5 1" opacity="0.5"/>
+            <text x="245" y="204" text-anchor="middle" font-family="Fira Code" font-size="8" fill="var(--ink)">h6</text>
+          </g>
 
-          <!-- Nodes — output -->
-          <circle class="node" cx="360" cy="40" r="14"/>
-          <text class="node-label" x="360" y="43">s1</text>
-          <circle class="node active" cx="360" cy="80" r="14"/>
-          <text class="node-label" x="360" y="83">s2</text>
-          <circle class="node" cx="360" cy="120" r="14"/>
-          <text class="node-label" x="360" y="123">s3</text>
-          <circle class="node" cx="360" cy="160" r="14"/>
-          <text class="node-label" x="360" y="163">s4</text>
+          <!-- Output neurons — cross-hatched -->
+          <g>
+            <circle cx="420" cy="48" r="16" fill="url(#nn-xh2)" stroke="var(--sepia)" stroke-width="1"/>
+            <circle cx="420" cy="48" r="17.5" fill="none" stroke="var(--sepia)" stroke-width="0.25" opacity="0.35"/>
+            <text x="420" y="52" text-anchor="middle" font-family="Fira Code" font-size="9" fill="var(--ink-faint)">s1</text>
+          </g>
+          <g>
+            <circle cx="420" cy="100" r="16" fill="url(#nn-xh)" stroke="var(--sanguine)" stroke-width="1.5"/>
+            <circle cx="420" cy="100" r="17.5" fill="none" stroke="var(--sanguine)" stroke-width="0.3" opacity="0.4"/>
+            <circle cx="418" cy="98" r="4.5" fill="none" stroke="var(--sanguine)" stroke-width="0.3" stroke-dasharray="1.5 1" opacity="0.4"/>
+            <text x="420" y="104" text-anchor="middle" font-family="Fira Code" font-size="9" fill="var(--ink)">s2</text>
+          </g>
+          <g>
+            <circle cx="420" cy="148" r="16" fill="url(#nn-xh2)" stroke="var(--sepia)" stroke-width="1"/>
+            <circle cx="420" cy="148" r="17.5" fill="none" stroke="var(--sepia)" stroke-width="0.25" opacity="0.35"/>
+            <text x="420" y="152" text-anchor="middle" font-family="Fira Code" font-size="9" fill="var(--ink-faint)">s3</text>
+          </g>
+          <g>
+            <circle cx="420" cy="195" r="16" fill="url(#nn-xh2)" stroke="var(--sepia)" stroke-width="1"/>
+            <circle cx="420" cy="195" r="17.5" fill="none" stroke="var(--sepia)" stroke-width="0.25" opacity="0.35"/>
+            <text x="420" y="199" text-anchor="middle" font-family="Fira Code" font-size="9" fill="var(--ink-faint)">s4</text>
+          </g>
 
-          <!-- Layer labels -->
-          <text class="layer-label" x="80" y="192">Entree</text>
-          <text class="layer-label" x="215" y="192">Cache</text>
-          <text class="layer-label" x="360" y="192">Sortie</text>
+          <!-- Layer labels — engraving style with decorative brackets -->
+          <text x="90" y="232" text-anchor="middle" font-family="EB Garamond" font-size="11" font-style="italic" fill="var(--sepia)">Entr&#233;e</text>
+          <text x="245" y="232" text-anchor="middle" font-family="EB Garamond" font-size="11" font-style="italic" fill="var(--sepia)">Cach&#233;</text>
+          <text x="420" y="232" text-anchor="middle" font-family="EB Garamond" font-size="11" font-style="italic" fill="var(--sepia)">Sortie</text>
 
-          <!-- Annotation arrow -->
-          <path class="ann-arrow" d="M252,65 C270,50 290,42 310,30"/>
-          <text class="ann-text" x="312" y="28">neurone actif!</text>
+          <!-- Da Vinci annotations with leader lines -->
+          <path d="M280,58 C300,45 330,32 355,25" fill="none" stroke="var(--bleu)" stroke-width="0.6" stroke-dasharray="3 2" opacity="0.6"/>
+          <text x="357" y="22" font-family="Caveat" font-size="10" fill="var(--bleu)">neurone actif !</text>
+
+          <path d="M445,100 C460,95 475,88 485,82" fill="none" stroke="var(--sanguine)" stroke-width="0.6" stroke-dasharray="3 2" opacity="0.6"/>
+          <text x="462" y="75" font-family="Caveat" font-size="9" fill="var(--sanguine)">pr&#233;diction</text>
+          <text x="462" y="85" font-family="Caveat" font-size="9" fill="var(--sanguine)">dominante</text>
+
+          <!-- Section bracket with label -->
+          <path d="M55,20 L55,215" fill="none" stroke="var(--sepia-dk)" stroke-width="0.5" stroke-dasharray="4 3"/>
+          <text x="45" y="120" text-anchor="middle" font-family="Caveat" font-size="8" fill="var(--ink-faint)" transform="rotate(-90,45,120)">position de contexte</text>
+
+          <!-- Zoomed detail callout: single synapse connection -->
+          <circle cx="330" cy="55" r="22" fill="none" stroke="var(--bleu)" stroke-width="0.4" stroke-dasharray="2.5 2" opacity="0.4"/>
+          <path d="M308,55 C290,50 275,48 268,50" fill="none" stroke="var(--bleu)" stroke-width="0.3" stroke-dasharray="2 2" opacity="0.3"/>
+          <!-- Inside the callout: magnified connection -->
+          <line x1="315" y1="55" x2="340" y2="55" stroke="var(--sepia)" stroke-width="1.5" opacity="0.4"/>
+          <circle cx="315" cy="55" r="3" fill="url(#nn-xh)" stroke="var(--herbier)" stroke-width="0.5"/>
+          <circle cx="340" cy="55" r="3" fill="url(#nn-xh2)" stroke="var(--sepia)" stroke-width="0.5"/>
+          <!-- Weight annotation -->
+          <text x="322" y="48" font-family="Fira Code" font-size="5.5" fill="var(--ink-faint)">w=0.42</text>
+          <text x="322" y="67" font-family="EB Garamond" font-size="6" font-style="italic" fill="var(--bleu)" opacity="0.6">synapse</text>
         </svg>
       </div>
     </section>
 
-    <!-- ═══ PLANCHE IV — Attention ═══ -->
+    <!-- ═══════════ PLANCHE IV — ATTENTION ═══════════ -->
     <section class="planche">
-      <div class="tape tape-tl"></div>
-      <div class="margin-note" style="top:20px">
-        le regard<br>se focalise
+      <div class="tape" style="width:80px;top:-7px;left:20px;transform:rotate(-4deg)"></div>
+      <div class="m-note" style="top:18px">le regard<br/>se focalise</div>
+      <div class="pl-head">
+        <span class="pl-num">Planche IV</span>
+        <span class="pl-title">Attention</span>
       </div>
-      <div class="planche-header">
-        <span class="planche-num">Planche IV</span>
-        <span class="planche-title">Attention</span>
-      </div>
-      <div class="planche-subtitle">Analyse de l'orientation du regard — mecanisme Q&#183;K</div>
-      <p class="planche-text">
-        Comme un naturaliste qui braque sa loupe sur un detail,
-        le mecanisme d'attention decide quel specimen observer le plus attentivement.
+      <div class="pl-sub">Analyse de l'orientation du regard &mdash; m&#233;canisme Q&#183;K</div>
+      <p class="pl-text">
+        Comme un naturaliste qui braque sa loupe sur un d&#233;tail,
+        le m&#233;canisme d'attention d&#233;cide quel sp&#233;cimen observer.
       </p>
 
-      <div class="fig-wrap">
-        <div class="fig-caption"><b>Fig. 4a</b> — Poids d'attention pour la position 2 ("<i>m</i>")</div>
-        <div class="attn-row">
-          <div class="attn-bar-group">
-            <div class="attn-bar" style="height:55px;background:color-mix(in oklch, var(--herbier) 50%, var(--paper-aged))"></div>
-            <span class="attn-char">E</span>
-            <span class="attn-val">0.30</span>
+      <div class="fig">
+        <div class="fig-cap"><b>Fig. 4a</b> &mdash; Poids d'attention, position 2 ("<i>m</i>" &#8594; tout le contexte)</div>
+        <div class="attn-fig">
+          <div class="attn-col">
+            <div class="attn-bar" style="height:55px;background:color-mix(in oklch,var(--herbier) 45%,var(--parchment-dk))"></div>
+            <span class="attn-ch">E</span><span class="attn-v">0.30</span>
           </div>
-          <div class="attn-bar-group">
-            <div class="attn-bar" style="height:90px;background:color-mix(in oklch, var(--specimen) 65%, var(--paper-aged))"></div>
-            <span class="attn-char" style="color:var(--specimen);font-weight:600">m</span>
-            <span class="attn-val">0.50</span>
+          <div class="attn-col">
+            <div class="attn-bar" style="height:92px;background:color-mix(in oklch,var(--sanguine) 60%,var(--parchment-dk))"></div>
+            <span class="attn-ch focus">m</span><span class="attn-v">0.50</span>
           </div>
-          <div class="attn-bar-group">
-            <div class="attn-bar" style="height:24px;background:color-mix(in oklch, var(--herbier) 28%, var(--paper-aged))"></div>
-            <span class="attn-char">m</span>
-            <span class="attn-val">0.12</span>
+          <div class="attn-col">
+            <div class="attn-bar" style="height:24px;background:color-mix(in oklch,var(--herbier) 25%,var(--parchment-dk))"></div>
+            <span class="attn-ch">m</span><span class="attn-v">0.12</span>
           </div>
-          <div class="attn-bar-group">
-            <div class="attn-bar" style="height:16px;background:color-mix(in oklch, var(--herbier) 18%, var(--paper-aged))"></div>
-            <span class="attn-char">a</span>
-            <span class="attn-val">0.08</span>
+          <div class="attn-col">
+            <div class="attn-bar" style="height:16px;background:color-mix(in oklch,var(--herbier) 15%,var(--parchment-dk))"></div>
+            <span class="attn-ch">a</span><span class="attn-v">0.08</span>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="flourish">&#8258;</div>
+    <div class="fl"><span>&#8258;</span></div>
 
-    <!-- ═══ PLANCHE V — Entrainement ═══ -->
+    <!-- ═══════════ PLANCHE V — ENTRAINEMENT ═══════════ -->
     <section class="planche">
-      <div class="tape tape-tr"></div>
-      <div class="tape tape-bl"></div>
-      <div class="margin-note" style="top:30px">
-        la perte<br>diminue !
+      <div class="tape" style="width:70px;top:-6px;right:22px;transform:rotate(2.5deg)"></div>
+      <div class="tape" style="width:85px;bottom:-8px;left:18px;transform:rotate(-1.5deg)"></div>
+      <div class="m-note" style="top:28px"><span class="sang-note">la perte<br/>diminue !</span></div>
+      <div class="pl-head">
+        <span class="pl-num">Planche V</span>
+        <span class="pl-title">Entra&#238;nement</span>
       </div>
-      <div class="planche-header">
-        <span class="planche-num">Planche V</span>
-        <span class="planche-title">Entrainement</span>
-      </div>
-      <div class="planche-subtitle">Courbe d'apprentissage — observations temporelles</div>
-      <p class="planche-text">
-        L'erreur diminue au fil des iterations, comme un eleve
-        qui fait de moins en moins de fautes.
-      </p>
+      <div class="pl-sub">Courbe d'apprentissage &mdash; observations temporelles</div>
 
       <div class="stats">
-        <div class="stat-card">
-          <div class="stat-val green">347</div>
-          <div class="stat-lbl">iterations</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val red">2.41</div>
-          <div class="stat-lbl">perte actuelle</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val gold">0.003</div>
-          <div class="stat-lbl">taux d'app.</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val">27</div>
-          <div class="stat-lbl">parametres</div>
-        </div>
+        <div class="st"><div class="st-v grn">347</div><div class="st-l">it&#233;rations</div></div>
+        <div class="st"><div class="st-v red">2.41</div><div class="st-l">perte actuelle</div></div>
+        <div class="st"><div class="st-v gld">0.003</div><div class="st-l">taux d'app.</div></div>
+        <div class="st"><div class="st-v">27</div><div class="st-l">param&#232;tres</div></div>
       </div>
 
-      <div class="fig-wrap">
-        <div class="fig-caption"><b>Fig. 5a</b> — Evolution de la perte (loss) en fonction des iterations</div>
-        <div class="chart-wrap">
-          <canvas id="loss-chart"></canvas>
-          <span class="chart-ann" style="right:20%;top:25%">convergence &#8594;</span>
+      <div class="fig">
+        <div class="fig-cap"><b>Fig. 5a</b> &mdash; &#201;volution de la perte en fonction des it&#233;rations</div>
+        <div class="chart-plate">
+          <canvas id="lc"></canvas>
+          <span class="chart-ann" style="right:18%;top:22%">convergence &#8594;</span>
         </div>
       </div>
     </section>
 
-    <!-- ═══ PLANCHE VI — Inference ═══ -->
+    <!-- ═══════════ PLANCHE VI — INFERENCE ═══════════ -->
     <section class="planche">
-      <div class="tape tape-tl"></div>
-      <div class="margin-note" style="top:40px">
-        prediction<br>= hypothese
+      <div class="tape" style="width:75px;top:-7px;left:25px;transform:rotate(-2.5deg)"></div>
+      <div class="m-note" style="top:35px">pr&#233;diction<br/>= hypoth&#232;se</div>
+      <div class="pl-head">
+        <span class="pl-num">Planche VI</span>
+        <span class="pl-title">Inf&#233;rence</span>
       </div>
-      <div class="planche-header">
-        <span class="planche-num">Planche VI</span>
-        <span class="planche-title">Inference</span>
-      </div>
-      <div class="planche-subtitle">Predictions du modele — specimens generes</div>
-      <p class="planche-text">
-        Le reseau propose le prochain caractere le plus probable,
-        comme un naturaliste qui predit la prochaine espece dans un ecosysteme.
-      </p>
+      <div class="pl-sub">Pr&#233;dictions du mod&#232;le &mdash; sp&#233;cimens g&#233;n&#233;r&#233;s</div>
 
-      <div class="fig-wrap">
-        <div class="fig-caption"><b>Fig. 6a</b> — Distribution de probabilite apres "Emm"</div>
-        <ul class="prob-list">
-          <li class="prob-item">
-            <span class="prob-char-box">a</span>
-            <div class="prob-track"><div class="prob-fill hi" style="width:42%"></div></div>
-            <span class="prob-pct">42.1%</span>
-          </li>
-          <li class="prob-item">
-            <span class="prob-char-box">e</span>
-            <div class="prob-track"><div class="prob-fill md" style="width:28%"></div></div>
-            <span class="prob-pct">28.3%</span>
-          </li>
-          <li class="prob-item">
-            <span class="prob-char-box">i</span>
-            <div class="prob-track"><div class="prob-fill lo" style="width:14%"></div></div>
-            <span class="prob-pct">14.0%</span>
-          </li>
-          <li class="prob-item">
-            <span class="prob-char-box">n</span>
-            <div class="prob-track"><div class="prob-fill lo" style="width:9%"></div></div>
-            <span class="prob-pct">9.2%</span>
-          </li>
-          <li class="prob-item">
-            <span class="prob-char-box">.</span>
-            <div class="prob-track"><div class="prob-fill lo" style="width:6.4%"></div></div>
-            <span class="prob-pct">6.4%</span>
-          </li>
+      <div class="fig">
+        <div class="fig-cap"><b>Fig. 6a</b> &mdash; Distribution de probabilit&#233; apr&#232;s "Emm"</div>
+        <ul class="probs">
+          <li class="prob"><span class="prob-ch">a</span><div class="prob-track"><div class="prob-fill hi" style="width:42%"></div></div><span class="prob-pct">42.1%</span></li>
+          <li class="prob"><span class="prob-ch">e</span><div class="prob-track"><div class="prob-fill md" style="width:28%"></div></div><span class="prob-pct">28.3%</span></li>
+          <li class="prob"><span class="prob-ch">i</span><div class="prob-track"><div class="prob-fill lo" style="width:14%"></div></div><span class="prob-pct">14.0%</span></li>
+          <li class="prob"><span class="prob-ch">n</span><div class="prob-track"><div class="prob-fill lo" style="width:9%"></div></div><span class="prob-pct">9.2%</span></li>
+          <li class="prob"><span class="prob-ch">.</span><div class="prob-track"><div class="prob-fill lo" style="width:6.4%"></div></div><span class="prob-pct">6.4%</span></li>
         </ul>
       </div>
     </section>
 
-    <div class="flourish">&#8258; &#10043; &#8258;</div>
+    <div class="fl"><span>&#10043; &#8258; &#10043;</span></div>
 
     <footer class="colophon">
-      Base sur <a href="https://github.com/karpathy/micrograd">microgpt.py</a> d'Andrej Karpathy.
-      &mdash; Cahier illustre par <a href="https://mon-atelier-ia.org">mon-atelier-ia</a>.
+      Bas&#233; sur <a href="#">microgpt.py</a> d'Andrej Karpathy &mdash;
+      Cahier illustr&#233; par <a href="#">mon-atelier-ia</a>
     </footer>
 
-  </div><!-- .content -->
-</div><!-- .notebook -->
+  </div>
+</div>
 
 <script>
-/* ── Theme ── */
 function toggleTheme() {
-  const html = document.documentElement;
-  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
-  html.dataset.theme = next;
-  document.getElementById('theme-icon').textContent = next === 'dark' ? '\u263D' : '\u2600';
+  const h = document.documentElement;
+  const n = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  h.dataset.theme = n;
+  document.getElementById('ti').textContent = n === 'dark' ? '\u263D' : '\u2600';
   drawLoss();
 }
 
-/* ── Bookmarks ── */
-const bkmks = document.querySelectorAll('.bkmk');
-function activateTab(i) {
-  bkmks.forEach((b, j) => b.classList.toggle('active', j === i));
-}
-bkmks.forEach((b, i) => b.addEventListener('click', () => activateTab(i)));
+const bks = document.querySelectorAll('.bkmk');
+function activateTab(i) { bks.forEach((b, j) => b.classList.toggle('active', j === i)); }
+bks.forEach((b, i) => b.addEventListener('click', () => activateTab(i)));
 
-/* ── Tags ── */
-document.querySelectorAll('.tags').forEach(row => {
-  row.querySelectorAll('.tag').forEach(tag => {
-    tag.addEventListener('click', () => {
-      row.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
-      tag.classList.add('active');
-    });
+document.querySelectorAll('.tags').forEach(r => {
+  r.querySelectorAll('.tag').forEach(t => {
+    t.addEventListener('click', () => { r.querySelectorAll('.tag').forEach(x => x.classList.remove('on')); t.classList.add('on'); });
   });
 });
 
-/* ── Heatmap ── */
-(function buildHeatmap() {
-  const labels = ['E', 'm', 'a', '.', 'l', 'i'];
-  const tbody = document.getElementById('heatmap-body');
-  if (!tbody) return;
-  let seed = 42;
-  function rand() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
-
-  for (const label of labels) {
+// Heatmap
+(function() {
+  const labels = ['E','m','a','.','/','i','n'];
+  const tb = document.getElementById('hm');
+  if (!tb) return;
+  let s = 42;
+  function r() { s = (s * 16807) % 2147483647; return (s-1)/2147483646; }
+  for (const l of labels) {
     const tr = document.createElement('tr');
-    const tdL = document.createElement('td');
-    tdL.className = 'row-label';
-    tdL.textContent = label;
-    tr.appendChild(tdL);
+    const tl = document.createElement('td');
+    tl.className = 'rl'; tl.textContent = l;
+    tr.appendChild(tl);
     for (let d = 0; d < 8; d++) {
-      const v = (rand() - 0.5) * 0.6;
+      const v = (r()-0.5)*0.6;
       const td = document.createElement('td');
       td.textContent = v.toFixed(2);
-      td.title = `${label} d${d}: ${v.toFixed(4)}`;
-      const t = Math.max(-1, Math.min(1, v / 0.3));
+      td.title = l+' d'+d+': '+v.toFixed(4);
+      const t = Math.max(-1,Math.min(1,v/0.3));
       td.style.background = t > 0
-        ? `color-mix(in oklch, var(--herbier) ${(t*55).toFixed(0)}%, var(--paper))`
-        : `color-mix(in oklch, var(--specimen) ${(-t*55).toFixed(0)}%, var(--paper))`;
+        ? `color-mix(in oklch,var(--herbier) ${(t*50).toFixed(0)}%,var(--parchment))`
+        : `color-mix(in oklch,var(--sanguine) ${(-t*50).toFixed(0)}%,var(--parchment))`;
       td.style.color = 'var(--ink)';
       tr.appendChild(td);
     }
-    tbody.appendChild(tr);
+    tb.appendChild(tr);
   }
 })();
 
-/* ── Loss chart — hand-plotted on graph paper ── */
+// Loss chart on graph paper — hand-drawn
 function drawLoss() {
-  const canvas = document.getElementById('loss-chart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const W = canvas.clientWidth, H = canvas.clientHeight;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  ctx.scale(dpr, dpr);
+  const c = document.getElementById('lc');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const dpr = devicePixelRatio || 1;
+  const W = c.clientWidth, H = c.clientHeight;
+  c.width = W*dpr; c.height = H*dpr;
+  ctx.scale(dpr,dpr);
 
-  const s = getComputedStyle(document.documentElement);
-  const sepia = s.getPropertyValue('--sepia').trim();
-  const herbier = s.getPropertyValue('--herbier').trim();
-  const specimen = s.getPropertyValue('--specimen').trim();
-  const inkFaint = s.getPropertyValue('--ink-faint').trim();
+  const cs = getComputedStyle(document.documentElement);
+  const sepia = cs.getPropertyValue('--sepia').trim();
+  const herb = cs.getPropertyValue('--herbier').trim();
+  const sang = cs.getPropertyValue('--sanguine').trim();
+  const faint = cs.getPropertyValue('--ink-faint').trim();
 
-  const pad = { t: 18, r: 20, b: 28, l: 38 };
-  const pW = W - pad.l - pad.r, pH = H - pad.t - pad.b;
-
-  // Generate data
-  const N = 60;
-  const data = [];
-  for (let i = 0; i < N; i++) {
-    const t = i / N;
-    data.push(3.8 * Math.exp(-3.5 * t) + 0.8 + Math.sin(i * 0.8) * 0.12 * (1 - t));
-  }
-  const maxY = 4.2, minY = 0;
+  const p = {t:16,r:16,b:26,l:36};
+  const pW = W-p.l-p.r, pH = H-p.t-p.b;
 
   // Axes
-  ctx.strokeStyle = sepia;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(pad.l, pad.t);
-  ctx.lineTo(pad.l, pad.t + pH);
-  ctx.lineTo(pad.l + pW, pad.t + pH);
-  ctx.stroke();
+  ctx.strokeStyle = sepia; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(p.l,p.t); ctx.lineTo(p.l,p.t+pH); ctx.lineTo(p.l+pW,p.t+pH); ctx.stroke();
 
   // Y ticks
-  ctx.fillStyle = inkFaint;
-  ctx.font = '9px "Fira Code", monospace';
-  ctx.textAlign = 'right';
-  for (let y = 1; y <= 4; y++) {
-    const py = pad.t + pH * (1 - y / maxY);
-    ctx.fillText(y.toString(), pad.l - 5, py + 3);
-    ctx.beginPath();
-    ctx.moveTo(pad.l, py);
-    ctx.lineTo(pad.l + 4, py);
-    ctx.stroke();
+  ctx.fillStyle = faint; ctx.font = '8px "Fira Code",monospace'; ctx.textAlign = 'right';
+  for (let y=1;y<=4;y++) {
+    const py = p.t+pH*(1-y/4.2);
+    ctx.fillText(y+'',p.l-4,py+3);
+    ctx.beginPath(); ctx.moveTo(p.l,py); ctx.lineTo(p.l+3,py); ctx.strokeStyle=sepia; ctx.lineWidth=0.8; ctx.stroke();
   }
 
   // X ticks
   ctx.textAlign = 'center';
-  for (let i = 0; i <= 4; i++) {
-    const step = Math.round((i / 4) * 347);
-    const px = pad.l + (i / 4) * pW;
-    ctx.fillText(step.toString(), px, pad.t + pH + 16);
+  for (let i=0;i<=4;i++) {
+    ctx.fillText(Math.round(i/4*347)+'',p.l+(i/4)*pW,p.t+pH+14);
   }
 
-  // Hand-drawn curve — slightly wobbly
-  ctx.strokeStyle = specimen;
-  ctx.lineWidth = 1.8;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
+  // Data
+  const N=60, data=[];
+  for (let i=0;i<N;i++) {
+    const t=i/N;
+    data.push(3.8*Math.exp(-3.5*t)+0.8+Math.sin(i*0.8)*0.12*(1-t));
+  }
+
+  // Hand-drawn curve — wobbly
+  ctx.strokeStyle = sang; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.beginPath();
-  for (let i = 0; i < N; i++) {
-    const x = pad.l + (i / (N - 1)) * pW;
-    const y = pad.t + pH * (1 - (data[i] - minY) / (maxY - minY));
-    // Add slight wobble for hand-drawn feel
-    const wx = x + (Math.sin(i * 2.3) * 0.8);
-    const wy = y + (Math.cos(i * 1.7) * 0.5);
-    if (i === 0) ctx.moveTo(wx, wy);
-    else ctx.lineTo(wx, wy);
+  for (let i=0;i<N;i++) {
+    const x = p.l+(i/(N-1))*pW + Math.sin(i*2.3)*0.7;
+    const y = p.t+pH*(1-data[i]/4.2) + Math.cos(i*1.7)*0.4;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
   }
   ctx.stroke();
 
-  // Data point dots — every 8th
-  for (let i = 0; i < N; i += 6) {
-    const x = pad.l + (i / (N - 1)) * pW;
-    const y = pad.t + pH * (1 - (data[i] - minY) / (maxY - minY));
-    // Ink dot
-    ctx.beginPath();
-    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
-    ctx.fillStyle = specimen;
-    ctx.fill();
-    // Outer ring on some
-    if (i % 18 === 0) {
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, Math.PI * 2);
-      ctx.strokeStyle = herbier;
-      ctx.lineWidth = 0.8;
-      ctx.setLineDash([2, 2]);
-      ctx.stroke();
-      ctx.setLineDash([]);
+  // Ink dots — every 5th
+  for (let i=0;i<N;i+=5) {
+    const x = p.l+(i/(N-1))*pW;
+    const y = p.t+pH*(1-data[i]/4.2);
+    ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2);
+    ctx.fillStyle = sang; ctx.fill();
+    // Circled observation every 15th
+    if (i%15===0) {
+      ctx.beginPath(); ctx.arc(x,y,6,0,Math.PI*2);
+      ctx.strokeStyle = herb; ctx.lineWidth = 0.7;
+      ctx.setLineDash([2,2]); ctx.stroke(); ctx.setLineDash([]);
     }
   }
 
-  // Hand-drawn annotation arrow
-  const ai = 18;
-  const ax = pad.l + (ai / (N - 1)) * pW;
-  const ay = pad.t + pH * (1 - (data[ai] - minY) / (maxY - minY));
+  // Annotation arrow (hand-drawn bezier)
+  const ai=15;
+  const ax = p.l+(ai/(N-1))*pW, ay = p.t+pH*(1-data[ai]/4.2);
   ctx.beginPath();
-  ctx.moveTo(ax + 35, ay - 25);
-  // Wobbly arrow
-  ctx.bezierCurveTo(ax + 20, ay - 22, ax + 10, ay - 15, ax + 4, ay - 5);
-  ctx.strokeStyle = herbier;
-  ctx.lineWidth = 1;
-  ctx.setLineDash([3, 2]);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  ctx.fillStyle = herbier;
-  ctx.font = '12px "Caveat", cursive';
-  ctx.textAlign = 'left';
-  ctx.fillText('inflexion', ax + 37, ay - 22);
+  ctx.moveTo(ax+40,ay-28);
+  ctx.bezierCurveTo(ax+25,ay-24,ax+12,ay-16,ax+4,ay-4);
+  ctx.strokeStyle = herb; ctx.lineWidth = 0.9;
+  ctx.setLineDash([3,2]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = herb; ctx.font = '12px "Caveat",cursive';
+  ctx.textAlign = 'left'; ctx.fillText('inflexion',ax+42,ay-26);
 }
 
 drawLoss();
-new ResizeObserver(drawLoss).observe(document.getElementById('loss-chart'));
-new MutationObserver(drawLoss).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+new ResizeObserver(drawLoss).observe(document.getElementById('lc'));
+new MutationObserver(drawLoss).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 </script>
 
 </body>
