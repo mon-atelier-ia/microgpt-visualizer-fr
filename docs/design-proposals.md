@@ -189,6 +189,10 @@ Les motifs Art Deco classiques (chevrons, sunbursts, losanges, eventails) peuven
 
 ## Proposition 5 — "Tableau Noir"
 
+**Playground** : `playground-tableau-noir.html`
+
+**Statut** : **v1 livree** — premier jet valide pour review.
+
 **Direction** : Neo-brutaliste / craie sur ardoise / salle de classe
 
 **Metaphore** : Tu es en cours. Le prof dessine le reseau a la craie sur le tableau noir. C'est brut, direct, pas de fioritures — mais c'est la que tu comprends vraiment. L'erreur est visible (raturee !), le processus est transparent.
