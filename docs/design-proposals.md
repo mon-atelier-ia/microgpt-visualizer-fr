@@ -78,6 +78,10 @@
 
 ## Proposition 2 — "Borne d'Arcade"
 
+**Playground** : `playground-borne-arcade.html`
+
+**Statut** : **v1 livree** — premier jet valide pour review.
+
 **Direction** : Retro gaming / pixel art / CRT terminal
 
 **Metaphore** : Apprendre l'IA, c'est jouer a un jeu video 8-bit. Chaque concept = un niveau. Chaque erreur du modele = une vie perdue. L'entrainement = le boss final.

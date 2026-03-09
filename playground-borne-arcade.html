@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>microGPT — Borne d'Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   BORNE D'ARCADE — CRT terminal / retro gaming / pixel art
+   oklch palette exclusively
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Palette ── */
+:root, [data-theme="dark"] {
+  --bg:          oklch(0.10 0.01 270);
+  --bg-deep:     oklch(0.07 0.012 275);
+  --surface:     oklch(0.13 0.012 270);
+  --surface2:    oklch(0.16 0.01 268);
+  --surface3:    oklch(0.20 0.012 265);
+  --border:      oklch(0.75 0.20 145 / 0.35);
+  --text:        oklch(0.75 0.20 145);
+  --text-dim:    oklch(0.55 0.12 145);
+  --text-muted:  oklch(0.38 0.06 145);
+
+  --green:       oklch(0.75 0.20 145);
+  --green-glow:  oklch(0.75 0.20 145 / 0.4);
+  --green-dim:   oklch(0.45 0.12 145);
+  --blue:        oklch(0.65 0.18 260);
+  --blue-glow:   oklch(0.65 0.18 260 / 0.35);
+  --magenta:     oklch(0.65 0.22 330);
+  --magenta-glow:oklch(0.65 0.22 330 / 0.35);
+  --yellow:      oklch(0.85 0.17 95);
+  --yellow-glow: oklch(0.85 0.17 95 / 0.3);
+  --red:         oklch(0.60 0.22 25);
+  --red-glow:    oklch(0.60 0.22 25 / 0.3);
+
+  --scanline:    oklch(0 0 0 / 0.12);
+  --vignette:    oklch(0 0 0 / 0.7);
+  --card-bg:     oklch(0.08 0.01 270 / 0.95);
+  --card-border: oklch(0.75 0.20 145 / 0.3);
+  --card-glow:   oklch(0.75 0.20 145 / 0.08);
+}
+
+[data-theme="light"] {
+  --bg:          oklch(0.88 0.008 200);
+  --bg-deep:     oklch(0.85 0.01 200);
+  --surface:     oklch(0.92 0.006 200);
+  --surface2:    oklch(0.86 0.008 200);
+  --surface3:    oklch(0.82 0.01 200);
+  --border:      oklch(0.50 0.08 145 / 0.3);
+  --text:        oklch(0.30 0.06 200);
+  --text-dim:    oklch(0.45 0.04 200);
+  --text-muted:  oklch(0.58 0.03 200);
+
+  --green:       oklch(0.45 0.12 145);
+  --green-glow:  oklch(0.45 0.12 145 / 0.15);
+  --green-dim:   oklch(0.55 0.06 145);
+  --blue:        oklch(0.50 0.14 260);
+  --blue-glow:   oklch(0.50 0.14 260 / 0.12);
+  --magenta:     oklch(0.50 0.16 330);
+  --magenta-glow:oklch(0.50 0.16 330 / 0.12);
+  --yellow:      oklch(0.55 0.12 95);
+  --yellow-glow: oklch(0.55 0.12 95 / 0.12);
+  --red:         oklch(0.50 0.16 25);
+  --red-glow:    oklch(0.50 0.16 25 / 0.12);
+
+  --scanline:    oklch(0 0 0 / 0.03);
+  --vignette:    oklch(0 0 0 / 0.15);
+  --card-bg:     oklch(0.94 0.005 200 / 0.9);
+  --card-border: oklch(0.50 0.08 145 / 0.25);
+  --card-glow:   oklch(0.45 0.12 145 / 0.05);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'VT323', monospace;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ══════════════════════════════════════════════
+   CRT EFFECTS — scanlines, vignette, flicker
+   ══════════════════════════════════════════════ */
+
+/* Scanlines overlay */
+.crt-scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    var(--scanline) 2px,
+    var(--scanline) 4px
+  );
+}
+
+/* CRT vignette — dark curved edges */
+.crt-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 75% 75% at 50% 50%,
+    transparent 50%,
+    var(--vignette) 100%
+  );
+}
+
+/* Subtle CRT flicker */
+.crt-flicker {
+  position: fixed;
+  inset: 0;
+  z-index: 98;
+  pointer-events: none;
+  animation: crtFlicker 0.15s infinite;
+  opacity: 1;
+}
+@keyframes crtFlicker {
+  0%   { opacity: 1; }
+  25%  { opacity: 0.988; }
+  50%  { opacity: 1; }
+  75%  { opacity: 0.992; }
+  100% { opacity: 0.997; }
+}
+
+/* Phosphor glow on the whole screen */
+.crt-phosphor {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 60% 60% at 50% 50%,
+    var(--card-glow) 0%,
+    transparent 70%
+  );
+}
+
+/* ══════════════════════════════════════════════
+   ARCADE CABINET FRAME
+   ══════════════════════════════════════════════ */
+.arcade-frame {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  border: 3px solid var(--green);
+  box-shadow:
+    inset 0 0 80px var(--card-glow),
+    0 0 30px var(--green-glow),
+    0 0 60px oklch(0.75 0.20 145 / 0.1);
+  margin: 0;
+}
+
+/* ══════════════════════════════════════════════
+   TOP BAR — Level select / lives display
+   ══════════════════════════════════════════════ */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: var(--bg-deep);
+  border-bottom: 2px solid var(--green);
+  box-shadow: 0 2px 20px var(--green-glow);
+}
+
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.topbar-logo .mark {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--bg);
+  background: var(--green);
+  padding: 6px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px var(--green-glow);
+  animation: logoGlow 2s ease-in-out infinite alternate;
+}
+@keyframes logoGlow {
+  from { box-shadow: 0 0 8px var(--green-glow); }
+  to   { box-shadow: 0 0 20px var(--green-glow), 0 0 40px oklch(0.75 0.20 145 / 0.15); }
+}
+.topbar-logo .brand {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: var(--green);
+  text-shadow: 0 0 10px var(--green-glow);
+}
+
+/* ── Level tabs ── */
+.step-tabs {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px;
+}
+.step-tabs::-webkit-scrollbar { display: none; }
+
+.step-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-muted);
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s, text-shadow 0.2s;
+  position: relative;
+}
+.step-tab:hover {
+  color: var(--text-dim);
+  border-color: var(--card-border);
+}
+.step-tab .n {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--text-muted);
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+.step-tab.active {
+  color: var(--green);
+  text-shadow: 0 0 8px var(--green-glow);
+  border-color: var(--green);
+}
+.step-tab.active .n {
+  background: var(--green);
+  color: var(--bg);
+  border-color: var(--green);
+  box-shadow: 0 0 8px var(--green-glow);
+  animation: levelBlink 1.2s ease-in-out infinite;
+}
+@keyframes levelBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+.step-tab.visited .n {
+  border-color: var(--green-dim);
+  color: var(--green-dim);
+  background: oklch(0.75 0.20 145 / 0.1);
+}
+.step-tab.visited::after {
+  content: '✓';
+  font-family: 'VT323', monospace;
+  font-size: 12px;
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  color: var(--green-dim);
+}
+.step-tab:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* ── Actions ── */
+.topbar-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--card-border);
+  background: none;
+  color: var(--text-dim);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'VT323', monospace;
+}
+.icon-btn:hover {
+  color: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 8px var(--green-glow);
+  text-shadow: 0 0 6px var(--green-glow);
+}
+
+/* ── Score bar (XP) ── */
+.score-bar {
+  height: 3px;
+  background: var(--surface2);
+  position: sticky;
+  top: 52px;
+  z-index: 29;
+}
+.score-fill {
+  height: 100%;
+  width: 28%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green-glow);
+  transition: width 0.6s ease;
+}
+
+/* ══════════════════════════════════════════════
+   MAIN CONTENT
+   ══════════════════════════════════════════════ */
+.main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+/* ── Hero — LEVEL TITLE ── */
+.hero { margin-bottom: 32px; }
+
+.hero-eyebrow {
+  display: inline-block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--yellow);
+  text-shadow: 0 0 10px var(--yellow-glow);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  padding: 6px 14px;
+  border: 1px solid oklch(0.85 0.17 95 / 0.3);
+  background: oklch(0.85 0.17 95 / 0.06);
+}
+
+.hero h1 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(14px, 2.5vw, 20px);
+  line-height: 2;
+  color: var(--green);
+  text-shadow:
+    0 0 10px var(--green-glow),
+    0 0 30px oklch(0.75 0.20 145 / 0.15);
+  margin-bottom: 16px;
+  animation: glitchTitle 8s ease-in-out infinite;
+}
+@keyframes glitchTitle {
+  0%, 93%, 95%, 97%, 100% { transform: none; }
+  94% { transform: skewX(-2deg) translateX(-2px); }
+  96% { transform: skewX(1.5deg) translateX(1px); }
+}
+
+.hero p {
+  font-size: 22px;
+  color: var(--text-dim);
+  max-width: 620px;
+  line-height: 1.6;
+}
+.hero p strong {
+  color: var(--blue);
+  text-shadow: 0 0 6px var(--blue-glow);
+}
+
+/* ── Dataset selector — cartridge selection ── */
+.datasets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.chip {
+  padding: 6px 14px;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  border: 1px solid var(--text-muted);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.chip:hover {
+  border-color: var(--green);
+  color: var(--green);
+  text-shadow: 0 0 6px var(--green-glow);
+}
+.chip.on {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--bg);
+  box-shadow: 0 0 12px var(--green-glow);
+  text-shadow: none;
+}
+
+/* ══════════════════════════════════════════════
+   CARDS — CRT panels
+   ══════════════════════════════════════════════ */
+.card {
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  padding: 22px;
+  margin-bottom: 22px;
+  position: relative;
+  box-shadow:
+    0 0 15px var(--card-glow),
+    inset 0 0 30px oklch(0.75 0.20 145 / 0.02);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+  border-color: var(--green);
+  box-shadow:
+    0 0 25px var(--green-glow),
+    inset 0 0 40px oklch(0.75 0.20 145 / 0.03);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.card-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: 0 0 6px var(--green-glow);
+}
+.card-label .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green-glow);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+.card-badge {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 4px 10px;
+  border: 1px solid var(--text-muted);
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+}
+
+/* ── Two-column row ── */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+/* ══════════════════════════════════════════════
+   CALLOUT — terminal message
+   ══════════════════════════════════════════════ */
+.callout {
+  padding: 14px 18px;
+  background: var(--surface);
+  border-left: 3px solid var(--green);
+  box-shadow: -3px 0 10px var(--green-glow);
+  font-size: 20px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+.callout strong {
+  color: var(--green);
+  text-shadow: 0 0 4px var(--green-glow);
+}
+.callout code {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--yellow);
+  text-shadow: 0 0 4px var(--yellow-glow);
+  background: oklch(0.85 0.17 95 / 0.08);
+  padding: 3px 8px;
+  border: 1px solid oklch(0.85 0.17 95 / 0.2);
+}
+
+/* ══════════════════════════════════════════════
+   TOKENS — Tetris blocks
+   ══════════════════════════════════════════════ */
+.tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.tok {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 2px solid var(--green-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  position: relative;
+}
+.tok:hover {
+  border-color: var(--green);
+  box-shadow: 0 0 12px var(--green-glow);
+  transform: translateY(-4px);
+}
+.tok:active { transform: scale(0.95); }
+.tok .ch {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: var(--green);
+  text-shadow: 0 0 8px var(--green-glow);
+  line-height: 1.2;
+}
+.tok .ix {
+  font-family: 'VT323', monospace;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.tok.bos {
+  background: oklch(0.65 0.22 330 / 0.1);
+  border-color: oklch(0.65 0.22 330 / 0.5);
+}
+.tok.bos .ch {
+  color: var(--magenta);
+  text-shadow: 0 0 8px var(--magenta-glow);
+  font-size: 7px;
+}
+.tok.sel {
+  border-color: var(--yellow);
+  background: oklch(0.85 0.17 95 / 0.08);
+  box-shadow: 0 0 15px var(--yellow-glow);
+  transform: translateY(-4px);
+}
+.tok.sel .ch {
+  color: var(--yellow);
+  text-shadow: 0 0 8px var(--yellow-glow);
+}
+
+/* Cursor blink after last token */
+.tokens::after {
+  content: '█';
+  font-family: 'VT323', monospace;
+  font-size: 24px;
+  color: var(--green);
+  animation: cursorBlink 1s step-end infinite;
+  text-shadow: 0 0 6px var(--green-glow);
+}
+@keyframes cursorBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.arrow {
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════════════
+   HEATMAP — Radar / phosphor green monochrome
+   ══════════════════════════════════════════════ */
+.heatmap { overflow-x: auto; }
+.heatmap table {
+  border-collapse: separate;
+  border-spacing: 1px;
+  width: 100%;
+}
+.heatmap th {
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  color: var(--text-muted);
+  font-weight: 400;
+  padding: 4px 6px;
+}
+.heatmap td {
+  text-align: center;
+  padding: 8px 4px;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  transition: all 0.2s;
+  cursor: default;
+  border: 1px solid oklch(0.75 0.20 145 / 0.08);
+}
+.heatmap td:hover {
+  box-shadow: 0 0 12px var(--green-glow);
+  z-index: 2;
+  position: relative;
+}
+
+/* Phosphor green monochrome ramp: h0 (dim) → h5 (bright) */
+.h0 { background: oklch(0.10 0.01 145); color: oklch(0.30 0.04 145); }
+.h1 { background: oklch(0.18 0.04 145); color: oklch(0.45 0.08 145); }
+.h2 { background: oklch(0.28 0.08 145); color: oklch(0.60 0.14 145); }
+.h3 { background: oklch(0.38 0.12 145); color: oklch(0.75 0.18 145); }
+.h4 { background: oklch(0.50 0.16 145); color: oklch(0.88 0.10 145); }
+.h5 { background: oklch(0.65 0.20 145); color: oklch(0.10 0.01 145); box-shadow: 0 0 6px var(--green-glow); }
+
+[data-theme="light"] .h0 { background: oklch(0.92 0.005 145); color: oklch(0.60 0.04 145); }
+[data-theme="light"] .h1 { background: oklch(0.84 0.03 145); color: oklch(0.45 0.06 145); }
+[data-theme="light"] .h2 { background: oklch(0.74 0.06 145); color: oklch(0.30 0.08 145); }
+[data-theme="light"] .h3 { background: oklch(0.64 0.09 145); color: oklch(0.20 0.06 145); }
+[data-theme="light"] .h4 { background: oklch(0.54 0.11 145); color: oklch(0.95 0.01 145); }
+[data-theme="light"] .h5 { background: oklch(0.45 0.12 145); color: oklch(0.97 0.005 145); }
+
+/* ══════════════════════════════════════════════
+   PROBABILITY BARS — power-up bars
+   ══════════════════════════════════════════════ */
+.probs { display: flex; flex-direction: column; gap: 10px; }
+.prob {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.prob-ch {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  width: 28px;
+  text-align: center;
+  color: var(--green);
+  text-shadow: 0 0 6px var(--green-glow);
+}
+.prob-track {
+  flex: 1;
+  height: 24px;
+  background: var(--surface2);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+}
+.prob-fill {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  color: var(--bg);
+  transition: width 0.8s ease;
+}
+.prob-fill.top {
+  background: var(--green);
+  box-shadow: inset 0 0 10px oklch(0.85 0.15 145 / 0.3);
+}
+.prob-fill.mid {
+  background: var(--blue);
+  box-shadow: inset 0 0 10px oklch(0.75 0.12 260 / 0.3);
+}
+.prob-fill.low {
+  background: var(--surface3);
+  color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════════════
+   STATS — High score display
+   ══════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  padding: 16px 12px;
+  text-align: center;
+  transition: all 0.2s;
+}
+.stat:hover {
+  border-color: var(--green);
+  box-shadow: 0 0 12px var(--green-glow);
+}
+.stat-v {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.stat-v.magenta { color: var(--magenta); text-shadow: 0 0 8px var(--magenta-glow); }
+.stat-v.green   { color: var(--green);   text-shadow: 0 0 8px var(--green-glow); }
+.stat-v.yellow  { color: var(--yellow);  text-shadow: 0 0 8px var(--yellow-glow); }
+.stat-v.blue    { color: var(--blue);    text-shadow: 0 0 8px var(--blue-glow); }
+.stat-l {
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ══════════════════════════════════════════════
+   LOSS SPARKLINE — health bar draining
+   ══════════════════════════════════════════════ */
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 52px;
+  padding: 4px 0;
+}
+.sbar {
+  flex: 1;
+  min-width: 4px;
+  transition: height 0.4s ease;
+  cursor: pointer;
+}
+.sbar:hover {
+  filter: brightness(1.4);
+  box-shadow: 0 0 6px var(--green-glow);
+}
+.sbar.hi { background: var(--magenta); box-shadow: 0 -2px 6px var(--magenta-glow); }
+.sbar.md { background: var(--yellow);  box-shadow: 0 -2px 6px var(--yellow-glow); }
+.sbar.lo { background: var(--green);   box-shadow: 0 -2px 6px var(--green-glow); }
+
+/* ══════════════════════════════════════════════
+   BUTTONS — arcade buttons
+   ══════════════════════════════════════════════ */
+.btn {
+  padding: 10px 22px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  border: 2px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: none;
+}
+.btn:active { transform: scale(0.96); }
+.btn:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
+.btn-primary {
+  border-color: var(--magenta);
+  color: var(--magenta);
+  text-shadow: 0 0 6px var(--magenta-glow);
+}
+.btn-primary:hover {
+  background: var(--magenta);
+  color: var(--bg);
+  box-shadow: 0 0 20px var(--magenta-glow);
+  text-shadow: none;
+  transform: translateY(-2px);
+}
+.btn-ghost {
+  border-color: var(--text-muted);
+  color: var(--text-muted);
+}
+.btn-ghost:hover {
+  border-color: var(--green);
+  color: var(--green);
+  text-shadow: 0 0 6px var(--green-glow);
+  transform: translateY(-2px);
+}
+.btns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ══════════════════════════════════════════════
+   ANIMATIONS — pixel entrance
+   ══════════════════════════════════════════════ */
+@keyframes pixelIn {
+  from { opacity: 0; transform: translateY(12px); filter: blur(2px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.rise { animation: pixelIn 0.4s ease both; }
+.rise-1 { animation-delay: 0.05s; }
+.rise-2 { animation-delay: 0.10s; }
+.rise-3 { animation-delay: 0.15s; }
+.rise-4 { animation-delay: 0.20s; }
+.rise-5 { animation-delay: 0.25s; }
+.rise-6 { animation-delay: 0.30s; }
+
+/* Token drop animation (Tetris-like) */
+@keyframes dropIn {
+  0%   { opacity: 0; transform: translateY(-30px); }
+  60%  { transform: translateY(4px); }
+  80%  { transform: translateY(-2px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.tokens-anim .tok {
+  animation: dropIn 0.35s ease both;
+}
+.tokens-anim .tok:nth-child(1) { animation-delay: 0.05s; }
+.tokens-anim .tok:nth-child(2) { animation-delay: 0.08s; }
+.tokens-anim .tok:nth-child(3) { animation-delay: 0.12s; }
+.tokens-anim .tok:nth-child(4) { animation-delay: 0.16s; }
+.tokens-anim .tok:nth-child(5) { animation-delay: 0.20s; }
+.tokens-anim .tok:nth-child(6) { animation-delay: 0.24s; }
+.tokens-anim .tok:nth-child(7) { animation-delay: 0.28s; }
+.tokens-anim .tok:nth-child(8) { animation-delay: 0.32s; }
+.tokens-anim .tok:nth-child(9) { animation-delay: 0.36s; }
+.tokens-anim .tok:nth-child(10) { animation-delay: 0.40s; }
+.tokens-anim .tok:nth-child(11) { animation-delay: 0.44s; }
+.tokens-anim .arrow {
+  animation: pixelIn 0.25s ease both;
+}
+
+/* ── Insert coin prompt at bottom ── */
+.insert-coin {
+  text-align: center;
+  padding: 24px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--yellow);
+  text-shadow: 0 0 10px var(--yellow-glow);
+  animation: coinBlink 1.5s step-end infinite;
+  letter-spacing: 2px;
+}
+@keyframes coinBlink {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0; }
+}
+
+/* ── Prediction text ── */
+.pred-text {
+  font-size: 20px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+.pred-text strong {
+  color: var(--green);
+  text-shadow: 0 0 4px var(--green-glow);
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .step-tabs { display: none; }
+  .row { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .main { padding: 20px 14px; }
+  .hero h1 { font-size: 12px; }
+}
+
+/* ══════════════════════════════════════════════
+   REDUCED MOTION — kill CRT effects
+   ══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .crt-flicker { display: none; }
+  .crt-scanlines { opacity: 0.05; }
+}
+</style>
+</head>
+<body>
+
+<!-- CRT effect layers -->
+<div class="crt-phosphor"></div>
+<div class="crt-flicker"></div>
+<div class="crt-vignette"></div>
+<div class="crt-scanlines"></div>
+
+<div class="arcade-frame">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      <span class="mark">uG</span>
+      <span class="brand">microGPT</span>
+    </div>
+
+    <nav class="step-tabs" aria-label="Niveaux">
+      <button class="step-tab visited"><span class="n">0</span> Accueil</button>
+      <button class="step-tab visited"><span class="n">1</span> Tokenisation</button>
+      <button class="step-tab active"><span class="n">2</span> Plongements</button>
+      <button class="step-tab"><span class="n">3</span> Propagation</button>
+      <button class="step-tab"><span class="n">4</span> Attention</button>
+      <button class="step-tab"><span class="n">5</span> Entrainement</button>
+      <button class="step-tab"><span class="n">6</span> Inference</button>
+      <button class="step-tab"><span class="n">7</span> Modele complet</button>
+      <button class="step-tab"><span class="n">8</span> Conclusion</button>
+    </nav>
+
+    <div class="topbar-actions">
+      <button class="icon-btn" id="themeBtn" aria-label="Changer de theme">☽</button>
+      <button class="icon-btn" aria-label="Partager">↗</button>
+    </div>
+  </header>
+
+  <!-- Score bar -->
+  <div class="score-bar"><div class="score-fill"></div></div>
+
+  <!-- Content -->
+  <main class="main">
+
+    <!-- Hero -->
+    <div class="hero rise rise-1">
+      <span class="hero-eyebrow">Niveau 2 / 8</span>
+      <h1>Les plongements donnent une adresse a chaque lettre</h1>
+      <p>Chaque caractere est transforme en un vecteur de <strong>16 nombres</strong>.
+        C'est comme donner des coordonnees GPS dans un espace a 16 dimensions
+        — le reseau apprend ces coordonnees tout seul.</p>
+    </div>
+
+    <!-- Dataset chips -->
+    <div class="datasets rise rise-2">
+      <button class="chip">Noms EN</button>
+      <button class="chip on">Prenoms simples</button>
+      <button class="chip">Top 1K</button>
+      <button class="chip">INSEE 33K</button>
+      <button class="chip">Pokemon</button>
+      <button class="chip">Dinosaures</button>
+    </div>
+
+    <!-- Tokens card -->
+    <div class="card rise rise-3">
+      <div class="card-head">
+        <span class="card-label"><span class="dot"></span> Tokens d'entree</span>
+        <span class="card-badge">6 tokens</span>
+      </div>
+      <div class="callout">
+        Le mot est decoupe lettre par lettre. Le symbole <code>&lt;S&gt;</code>
+        marque le <strong>debut</strong> du mot — c'est le signal de depart pour le reseau.
+      </div>
+      <div class="tokens tokens-anim">
+        <div class="tok bos"><span class="ch">&lt;S&gt;</span><span class="ix">0</span></div>
+        <span class="arrow">→</span>
+        <div class="tok"><span class="ch">m</span><span class="ix">13</span></div>
+        <span class="arrow">→</span>
+        <div class="tok"><span class="ch">a</span><span class="ix">1</span></div>
+        <span class="arrow">→</span>
+        <div class="tok sel"><span class="ch">r</span><span class="ix">18</span></div>
+        <span class="arrow">→</span>
+        <div class="tok"><span class="ch">i</span><span class="ix">9</span></div>
+        <span class="arrow">→</span>
+        <div class="tok"><span class="ch">e</span><span class="ix">5</span></div>
+      </div>
+    </div>
+
+    <!-- Two columns -->
+    <div class="row">
+      <!-- Embedding heatmap -->
+      <div class="card rise rise-4">
+        <div class="card-head">
+          <span class="card-label"><span class="dot" style="background:var(--blue);box-shadow:0 0 8px var(--blue-glow)"></span> Matrice wte</span>
+          <span class="card-badge">27 x 16</span>
+        </div>
+        <div class="heatmap">
+          <table aria-label="Matrice de plongements lexicaux">
+            <thead>
+              <tr><th></th><th>d0</th><th>d1</th><th>d2</th><th>d3</th><th>d4</th><th>d5</th><th>d6</th><th>d7</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>a</th><td class="h2">0.12</td><td class="h4">0.67</td><td class="h1">-.03</td><td class="h3">0.41</td><td class="h0">-.15</td><td class="h5">0.89</td><td class="h2">0.23</td><td class="h1">-.09</td></tr>
+              <tr><th>b</th><td class="h3">0.45</td><td class="h1">-.12</td><td class="h5">0.91</td><td class="h0">-.22</td><td class="h4">0.73</td><td class="h2">0.18</td><td class="h1">0.05</td><td class="h3">0.38</td></tr>
+              <tr><th>c</th><td class="h1">-.08</td><td class="h3">0.52</td><td class="h2">0.21</td><td class="h5">0.88</td><td class="h1">0.03</td><td class="h4">0.64</td><td class="h3">0.47</td><td class="h0">-.19</td></tr>
+              <tr><th>d</th><td class="h4">0.71</td><td class="h0">-.18</td><td class="h3">0.39</td><td class="h2">0.15</td><td class="h5">0.82</td><td class="h1">-.06</td><td class="h4">0.59</td><td class="h2">0.27</td></tr>
+              <tr><th>e</th><td class="h2">0.19</td><td class="h5">0.85</td><td class="h1">0.08</td><td class="h3">0.44</td><td class="h2">0.25</td><td class="h0">-.14</td><td class="h5">0.93</td><td class="h4">0.61</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Predictions -->
+      <div class="card rise rise-5">
+        <div class="card-head">
+          <span class="card-label"><span class="dot" style="background:var(--yellow);box-shadow:0 0 8px var(--yellow-glow)"></span> Prediction</span>
+          <span class="card-badge">top 5</span>
+        </div>
+        <p class="pred-text">
+          Apres <strong>mar</strong>, le modele predit :
+        </p>
+        <div class="probs">
+          <div class="prob"><span class="prob-ch">i</span><div class="prob-track"><div class="prob-fill top" style="width:72%">72%</div></div></div>
+          <div class="prob"><span class="prob-ch">c</span><div class="prob-track"><div class="prob-fill mid" style="width:14%">14%</div></div></div>
+          <div class="prob"><span class="prob-ch">t</span><div class="prob-track"><div class="prob-fill mid" style="width:8%">8%</div></div></div>
+          <div class="prob"><span class="prob-ch">a</span><div class="prob-track"><div class="prob-fill low" style="width:4%">4%</div></div></div>
+          <div class="prob"><span class="prob-ch">e</span><div class="prob-track"><div class="prob-fill low" style="width:2%">2%</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Training stats -->
+    <div class="card rise rise-6">
+      <div class="card-head">
+        <span class="card-label"><span class="dot" style="background:var(--magenta);box-shadow:0 0 8px var(--magenta-glow)"></span> Entrainement</span>
+        <span class="card-badge">en cours</span>
+      </div>
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-v magenta">247</div><div class="stat-l">Etapes</div></div>
+        <div class="stat"><div class="stat-v green">1.82</div><div class="stat-l">Loss actuelle</div></div>
+        <div class="stat"><div class="stat-v yellow">3.26</div><div class="stat-l">Loss initiale</div></div>
+        <div class="stat"><div class="stat-v blue">4 192</div><div class="stat-l">Parametres</div></div>
+      </div>
+      <div class="spark" aria-label="Evolution de la loss">
+        <div class="sbar hi" style="height:92%"></div>
+        <div class="sbar hi" style="height:88%"></div>
+        <div class="sbar hi" style="height:82%"></div>
+        <div class="sbar hi" style="height:76%"></div>
+        <div class="sbar hi" style="height:68%"></div>
+        <div class="sbar md" style="height:60%"></div>
+        <div class="sbar md" style="height:54%"></div>
+        <div class="sbar md" style="height:49%"></div>
+        <div class="sbar md" style="height:44%"></div>
+        <div class="sbar md" style="height:40%"></div>
+        <div class="sbar md" style="height:37%"></div>
+        <div class="sbar lo" style="height:34%"></div>
+        <div class="sbar lo" style="height:32%"></div>
+        <div class="sbar lo" style="height:30%"></div>
+        <div class="sbar lo" style="height:29%"></div>
+        <div class="sbar lo" style="height:27%"></div>
+        <div class="sbar lo" style="height:26%"></div>
+        <div class="sbar lo" style="height:25%"></div>
+        <div class="sbar lo" style="height:24%"></div>
+        <div class="sbar lo" style="height:23%"></div>
+      </div>
+      <div class="btns" style="margin-top: 18px;">
+        <button class="btn btn-primary">Lancer l'entrainement</button>
+        <button class="btn btn-ghost">Reinitialiser le modele</button>
+      </div>
+    </div>
+
+    <!-- Insert coin -->
+    <div class="insert-coin">— Insert coin to continue —</div>
+
+  </main>
+</div>
+
+<script>
+// Theme toggle
+document.getElementById('themeBtn').addEventListener('click', function() {
+  const html = document.documentElement;
+  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = next;
+  this.textContent = next === 'dark' ? '\u263D' : '\u2600';
+});
+
+// Tab navigation
+document.querySelectorAll('.step-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelector('.step-tab.active')?.classList.remove('active');
+    tab.classList.add('active');
+    const idx = [...tab.parentNode.children].indexOf(tab);
+    document.querySelector('.score-fill').style.width = ((idx + 1) / 9 * 100) + '%';
+  });
+});
+
+// Dataset chips
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelector('.chip.on')?.classList.remove('on');
+    c.classList.add('on');
+  });
+});
+
+// Token selection
+document.querySelectorAll('.tok:not(.bos)').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelector('.tok.sel')?.classList.remove('sel');
+    t.classList.add('sel');
+  });
+});
+</script>
+</body>
+</html>
