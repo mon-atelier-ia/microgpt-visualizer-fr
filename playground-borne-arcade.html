@@ -798,6 +798,7 @@ body {
 .rise-4 { animation-delay: 0.20s; }
 .rise-5 { animation-delay: 0.25s; }
 .rise-6 { animation-delay: 0.30s; }
+.rise-7 { animation-delay: 0.35s; }
 
 /* Token drop animation (Tetris-like) */
 @keyframes dropIn {
@@ -1004,8 +1005,17 @@ body {
       </div>
     </div>
 
+    <!-- Neural Network Diagram -->
+    <div class="card rise rise-5" style="margin-bottom:22px">
+      <div class="card-head">
+        <span class="card-label"><span class="dot" style="background:var(--green);box-shadow:0 0 8px var(--green-glow)"></span> Reseau de neurones</span>
+        <span class="card-badge">5 couches</span>
+      </div>
+      <canvas id="nnCanvas" style="width:100%;height:340px;cursor:crosshair"></canvas>
+    </div>
+
     <!-- Training stats -->
-    <div class="card rise rise-6">
+    <div class="card rise rise-7">
       <div class="card-head">
         <span class="card-label"><span class="dot" style="background:var(--magenta);box-shadow:0 0 8px var(--magenta-glow)"></span> Entrainement</span>
         <span class="card-badge">en cours</span>
@@ -1084,6 +1094,146 @@ document.querySelectorAll('.tok:not(.bos)').forEach(t => {
     t.classList.add('sel');
   });
 });
+
+// ═══ NN DIAGRAM — CRT PHOSPHOR ═══
+(function() {
+  const canvas = document.getElementById('nnCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Architecture: [16, 16, 64, 16, 27]
+  const LAYERS = [16, 16, 64, 16, 27];
+  const LABELS = ['Emb', 'Attn', 'MLP\u00d764', 'Sortie', 'Probs'];
+
+  // Realistic activations
+  function seed(s) { return function() { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  const rng = seed(42);
+  const activations = [
+    Array.from({length:16}, () => (rng() - 0.4) * 2.5),
+    Array.from({length:16}, () => (rng() - 0.3) * 2.0),
+    Array.from({length:64}, () => { const v = (rng() - 0.45) * 3; return v > 0 ? v : 0; }), // ReLU
+    Array.from({length:16}, () => (rng() - 0.35) * 1.8),
+    (() => { const raw = Array.from({length:27}, () => rng() * 2); raw[9] = 8; // 'i' dominant
+      const mx = Math.max(...raw); const exps = raw.map(v => Math.exp(v - mx));
+      const sum = exps.reduce((a,b) => a+b); return exps.map(v => v/sum); })(),
+  ];
+
+  function getCssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width, H = rect.height;
+    const PAD = { top: 12, bottom: 30, left: 40, right: 40 };
+    const drawH = H - PAD.top - PAD.bottom;
+    const drawW = W - PAD.left - PAD.right;
+
+    // Background
+    ctx.fillStyle = getCssVar('--bg');
+    ctx.fillRect(0, 0, W, H);
+
+    const green = getCssVar('--green');
+    const greenGlow = getCssVar('--green-glow');
+    const bg = getCssVar('--bg');
+    const textMuted = getCssVar('--text-muted');
+
+    // Compute neuron positions
+    const colX = LAYERS.map((_, i) => PAD.left + (i / (LAYERS.length - 1)) * drawW);
+    const maxShow = 20; // max neurons to show per layer (sample for layer 2 and 4)
+
+    function neuronsForLayer(li) {
+      const n = LAYERS[li];
+      const show = Math.min(n, maxShow);
+      const spacing = Math.min(drawH / (show + 1), 14);
+      const totalH = spacing * (show - 1);
+      const startY = PAD.top + (drawH - totalH) / 2;
+      const neurons = [];
+      for (let j = 0; j < show; j++) {
+        const origIdx = n <= maxShow ? j : Math.round(j * (n - 1) / (show - 1));
+        neurons.push({ x: colX[li], y: startY + j * spacing, val: activations[li][origIdx], origIdx });
+      }
+      return neurons;
+    }
+
+    const layerNeurons = LAYERS.map((_, i) => neuronsForLayer(i));
+
+    // Draw connections
+    for (let li = 0; li < LAYERS.length - 1; li++) {
+      const from = layerNeurons[li];
+      const to = layerNeurons[li + 1];
+      const density = from.length * to.length;
+      const densityScale = Math.min(1, 256 / density);
+
+      for (const fn of from) {
+        for (const tn of to) {
+          const alpha = (0.03 + Math.abs(fn.val) * 0.04) * densityScale;
+          ctx.strokeStyle = green;
+          ctx.globalAlpha = Math.min(alpha, 0.15);
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(fn.x, fn.y);
+          ctx.lineTo(tn.x, tn.y);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    // Draw neurons
+    const R = 3.5;
+    for (let li = 0; li < LAYERS.length; li++) {
+      for (const n of layerNeurons[li]) {
+        const active = Math.abs(n.val) > 0.01;
+        const intensity = Math.min(Math.abs(n.val), 1);
+
+        if (active && intensity > 0.3) {
+          ctx.shadowColor = greenGlow;
+          ctx.shadowBlur = 8 * intensity;
+        }
+
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, R, 0, Math.PI * 2);
+        ctx.globalAlpha = active ? 0.3 + intensity * 0.7 : 0.08;
+        ctx.fillStyle = green;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
+
+        // Stroke
+        ctx.strokeStyle = green;
+        ctx.globalAlpha = active ? 0.5 + intensity * 0.5 : 0.1;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // Labels
+    ctx.font = '14px "VT323", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = textMuted;
+    for (let li = 0; li < LAYERS.length; li++) {
+      ctx.fillText(LABELS[li], colX[li], H - 8);
+    }
+
+    // Count label for MLP
+    ctx.font = '12px "VT323", monospace';
+    ctx.fillStyle = getCssVar('--text-muted');
+    const mlpNeurons = layerNeurons[2];
+    if (LAYERS[2] > maxShow) {
+      ctx.fillText('(' + LAYERS[2] + ' neurones)', colX[2], H - 20);
+    }
+  }
+
+  const ro = new ResizeObserver(() => draw());
+  ro.observe(canvas.parentElement);
+  new MutationObserver(() => draw()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  draw();
+})();
 </script>
 </body>
 </html>

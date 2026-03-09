@@ -793,6 +793,7 @@ body {
 .rise-4 { animation-delay: 0.20s; }
 .rise-5 { animation-delay: 0.25s; }
 .rise-6 { animation-delay: 0.30s; }
+.rise-7 { animation-delay: 0.35s; }
 
 /* Token chalk-in animation */
 @keyframes chalkIn {
@@ -981,8 +982,17 @@ body {
       </div>
     </div>
 
+    <!-- Loss Chart -->
+    <div class="card tilt-r rise rise-5" style="margin-bottom:22px">
+      <div class="card-head">
+        <span class="card-label"><span class="dot" style="background:var(--chalk-yellow)"></span> Courbe d'apprentissage</span>
+        <span class="card-badge">250 etapes</span>
+      </div>
+      <canvas id="lossCanvas" style="width:100%;height:280px;cursor:crosshair"></canvas>
+    </div>
+
     <!-- Training stats -->
-    <div class="card tilt-l rise rise-6">
+    <div class="card tilt-l rise rise-7">
       <div class="card-head">
         <span class="card-label"><span class="dot" style="background:var(--chalk-yellow)"></span> Entrainement</span>
         <span class="card-badge">en cours</span>
@@ -1063,6 +1073,167 @@ document.querySelectorAll('.tok:not(.bos)').forEach(t => {
     t.classList.add('sel');
   });
 });
+
+// ═══ LOSS CHART — CHALK ON BLACKBOARD ═══
+(function() {
+  const canvas = document.getElementById('lossCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Generate realistic loss data: 250 steps
+  function seed(s) { return function() { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  const rng = seed(7);
+  const STEPS = 250;
+  const lossData = [];
+  for (let i = 0; i < STEPS; i++) {
+    const base = 1.8 + 1.5 * Math.exp(-i / 60);
+    const noise = (rng() - 0.5) * 0.3;
+    lossData.push(base + noise);
+  }
+
+  // Moving average (window=20)
+  function movingAvg(data, w) {
+    const result = [];
+    for (let i = 0; i < data.length; i++) {
+      const start = Math.max(0, i - w + 1);
+      let sum = 0;
+      for (let j = start; j <= i; j++) sum += data[j];
+      result.push(sum / (i - start + 1));
+    }
+    return result;
+  }
+  const avgData = movingAvg(lossData, 20);
+  const RANDOM_LOSS = Math.log(27); // ~3.30
+
+  function getCssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width, H = rect.height;
+    const PAD = { top: 20, right: 20, bottom: 32, left: 52 };
+    const pW = W - PAD.left - PAD.right;
+    const pH = H - PAD.top - PAD.bottom;
+
+    // Background
+    ctx.fillStyle = getCssVar('--card-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Data range
+    const minLoss = Math.min(...lossData, ...avgData) * 0.95;
+    const maxLoss = Math.max(...lossData, RANDOM_LOSS) * 1.05;
+
+    function toX(i) { return PAD.left + (i / (STEPS - 1)) * pW; }
+    function toY(v) { return PAD.top + (1 - (v - minLoss) / (maxLoss - minLoss)) * pH; }
+
+    const borderColor = getCssVar('--card-border');
+    const chalkBlue = getCssVar('--chalk-blue');
+    const chalkYellow = getCssVar('--chalk-yellow');
+    const chalkPink = getCssVar('--chalk-pink');
+    const textMuted = getCssVar('--text-muted');
+
+    // Grid lines
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    const gridSteps = 5;
+    ctx.font = '12px "Source Code Pro", monospace';
+    ctx.fillStyle = textMuted;
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= gridSteps; i++) {
+      const v = minLoss + (maxLoss - minLoss) * (i / gridSteps);
+      const y = toY(v);
+      ctx.beginPath();
+      ctx.moveTo(PAD.left, y);
+      ctx.lineTo(W - PAD.right, y);
+      ctx.stroke();
+      ctx.fillText(v.toFixed(1), PAD.left - 6, y + 4);
+    }
+    ctx.setLineDash([]);
+
+    // Random baseline
+    ctx.strokeStyle = chalkPink;
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, toY(RANDOM_LOSS));
+    ctx.lineTo(W - PAD.right, toY(RANDOM_LOSS));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Raw loss line (scratchy chalk)
+    ctx.strokeStyle = chalkBlue;
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < STEPS; i++) {
+      const x = toX(i), y = toY(lossData[i]);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Moving average (THICK chalk)
+    ctx.strokeStyle = chalkYellow;
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < STEPS; i++) {
+      const x = toX(i), y = toY(avgData[i]);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Step counter
+    ctx.font = '13px "Architects Daughter", cursive';
+    ctx.fillStyle = textMuted;
+    ctx.textAlign = 'center';
+    ctx.fillText(STEPS + ' etapes', PAD.left + pW / 2, H - 6);
+
+    // Legend (top-right)
+    ctx.font = '12px "Architects Daughter", cursive';
+    ctx.textAlign = 'right';
+    let lx = W - PAD.right;
+    const ly = PAD.top + 6;
+
+    // hasard (pink)
+    ctx.fillStyle = chalkPink;
+    ctx.globalAlpha = 0.6;
+    ctx.fillRect(lx - 42, ly - 4, 14, 2);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = textMuted;
+    ctx.fillText('hasard', lx, ly);
+
+    // moyenne (yellow)
+    ctx.fillStyle = chalkYellow;
+    ctx.fillRect(lx - 42, ly + 14, 14, 3);
+    ctx.fillStyle = textMuted;
+    ctx.fillText('moyenne', lx, ly + 18);
+
+    // brut (blue)
+    ctx.fillStyle = chalkBlue;
+    ctx.globalAlpha = 0.5;
+    ctx.fillRect(lx - 42, ly + 32, 14, 2);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = textMuted;
+    ctx.fillText('brut', lx, ly + 36);
+  }
+
+  const ro = new ResizeObserver(() => draw());
+  ro.observe(canvas.parentElement);
+  new MutationObserver(() => draw()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  draw();
+})();
 </script>
 </body>
 </html>
