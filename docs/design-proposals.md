@@ -42,6 +42,15 @@
 
 ## Proposition 1 — "Le Cahier du Savant"
 
+**Playground** : `playground-cahier-du-savant.html`
+
+**Statut** : **NON CONFORME** — 3 iterations (v1, v2, v3+) rejetees par l'utilisateur.
+
+- v1 : "visuel banal" — layout standard avec theme sepia, aucune identite visuelle distinctive
+- v2 : "loin de Da Vinci" — elements decoratifs (washi tape, stamps, pins) mais reste un web app theme
+- v3+ : SVG anatomiques enrichis (hachures croisees, gaine de myeline, filtre hand-drawn, foxing SVG) — toujours pas conforme a la promesse
+- **Diagnostic** : la direction artistique "journal de naturaliste Da Vinci" est extremement difficile a realiser en HTML/CSS/SVG inline dans un seul fichier. L'ecart entre la vision (planche anatomique de Leonard) et les capacites du medium (SVG patterns, filtres) est trop grand. Le resultat reste "un site web theme" plutot qu'un "carnet physique".
+
 **Direction** : Journal de naturaliste / illustration scientifique
 
 **Metaphore** : Tu es un naturaliste du XIXe siecle, mais au lieu de cataloguer des papillons, tu dissèques un reseau de neurones. Chaque page est une planche de ton carnet de terrain.
@@ -214,9 +223,9 @@ La philosophie brutaliste d'"exposer les materiaux" s'applique parfaitement a l'
 ## Tableau comparatif
 
 | #   | Nom                 | Tone                     | Force artistique | Memorable par…         | Fonts                                                    |
-| --- | ------------------- | ------------------------ | ---------------- | ---------------------- | -------------------------------------------------------- |
+| --- | ------------------- | ------------------------ | ---------------- | ---------------------- | -------------------------------------------------------- | ------------------------------- |
 | 0   | Digital Explorer    | Futuriste / spatial      | Forte            | Mesh gradient + glass  | Plus Jakarta Sans + Space Mono                           |
-| 1   | Le Cahier du Savant | Organique / scientifique | **Tres forte**   | L'anti-tech chaleureux | Architects Daughter + Caveat + Fira Code                 |
+| 1   | Le Cahier du Savant | Organique / scientifique | **Tres forte**   | L'anti-tech chaleureux | Architects Daughter + Caveat + Fira Code                 | **NON CONFORME** (3 iterations) |
 | 2   | Borne d'Arcade      | Retro gaming / pixel     | **Tres forte**   | Le "son mental" du CRT | Press Start 2P + VT323                                   |
 | 3   | Atelier Vivant      | Kawaii / doux / vivant   | Moyenne-forte    | L'empathie, la douceur | Fredoka + Quicksand + Fira Code                          |
 | 4   | La Machine Doree    | Art Deco / luxe          | **Tres forte**   | L'elegance inattendue  | Poiret One + DM Mono                                     |
