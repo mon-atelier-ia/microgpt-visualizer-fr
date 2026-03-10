@@ -224,9 +224,11 @@ const NNDiagram = memo(function NNDiagram({
         const maxW = maxWeights[li];
         const fwdConn = Math.min(fwdP(li), fwdP(li + 1));
         // Compensate perceived brightness for dense layers (16×64 = 4× more
-        // overlapping lines than 16×16). Scale alpha by baseline/actual density.
+        // overlapping lines than 16×16). Only during forward animation where
+        // alpha accumulation is visible; dormant/idle use uniform brightness.
         const density = fromLayer.length * toLayer.length;
-        const densityScale = Math.min(1, 256 / density);
+        const densityScale =
+          phaseRef.current === "forward" ? Math.min(1, 256 / density) : 1;
 
         for (let fi = 0; fi < fromLayer.length; fi++) {
           for (let ti = 0; ti < toLayer.length; ti++) {
@@ -237,8 +239,7 @@ const NNDiagram = memo(function NNDiagram({
             const wVal =
               wMat[ti] && wMat[ti][fi] !== undefined ? wMat[ti][fi] : 0;
             const wNorm = Math.abs(wVal) / maxW;
-            const dScale = phaseRef.current === "dormant" ? 1 : densityScale;
-            let alpha = (0.02 + wNorm * 0.08) * fwdConn * dScale;
+            let alpha = (0.02 + wNorm * 0.08) * fwdConn * densityScale;
             let lineWidth = 0.5 + wNorm * 1.5;
 
             // Hover highlight
