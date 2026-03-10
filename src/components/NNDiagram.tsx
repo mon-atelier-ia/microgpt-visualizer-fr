@@ -237,7 +237,8 @@ const NNDiagram = memo(function NNDiagram({
             const wVal =
               wMat[ti] && wMat[ti][fi] !== undefined ? wMat[ti][fi] : 0;
             const wNorm = Math.abs(wVal) / maxW;
-            let alpha = (0.02 + wNorm * 0.08) * fwdConn * densityScale;
+            const dScale = phaseRef.current === "dormant" ? 1 : densityScale;
+            let alpha = (0.02 + wNorm * 0.08) * fwdConn * dScale;
             let lineWidth = 0.5 + wNorm * 1.5;
 
             // Hover highlight
