@@ -263,9 +263,9 @@ Zero visual changes (pixel-perfect before/after on 9 pages × 2 themes). 192/192
 
 ## Divers
 
-| Change                                         | Fichier(s)              | Justification                                                                                                                                          |
-| ---------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Console easter egg P-A.G (ASCII + oklch)       | `index.html`            | ASCII art + styled console.log visible dans DevTools. Exécution immédiate, pas React                                                                   |
-| Bouton partager + QR code modal                | `App.tsx`, `styles.css` | Icône partager dans footer sidebar, `<dialog>` natif avec QR code SVG statique inline (`fill="currentColor"` → thème-réactif), backdrop click + Escape |
-| Subtitle "Explorateur visuel" (sans @karpathy) | `App.tsx`               | Allège le header sidebar — crédits complets déjà dans le footer ("microgpt.py d'Andrej Karpathy")                                                      |
-| Heatmap: suppression `useMemo` palette inutile | `Heatmap.tsx`           | `getCssVar` doit être relu à chaque render pour réagir au toggle thème. `useMemo` avec dep `matrix` était incorrect (ESLint warning)                   |
+| Change                                           | Fichier(s)                   | Justification                                                                                                                                                                               |
+| ------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Console easter egg P-A.G (ASCII + oklch)         | `index.html`                 | ASCII art + styled console.log visible dans DevTools. Exécution immédiate, pas React                                                                                                        |
+| Bouton partager + QR code modal (oklch gradient) | `App.tsx`, `ShareDialog.css` | Icône partager dans footer sidebar, `<dialog>` natif avec QR code SVG inline, `<radialGradient>` oklch (`--text` centre → `--blue` bord) theme-reactive light/dark, backdrop click + Escape |
+| Subtitle "Explorateur visuel" (sans @karpathy)   | `App.tsx`                    | Allège le header sidebar — crédits complets déjà dans le footer ("microgpt.py d'Andrej Karpathy")                                                                                           |
+| Heatmap: suppression `useMemo` palette inutile   | `Heatmap.tsx`                | `getCssVar` doit être relu à chaque render pour réagir au toggle thème. `useMemo` avec dep `matrix` était incorrect (ESLint warning)                                                        |
