@@ -223,135 +223,73 @@ const NNDiagram = memo(function NNDiagram({
         const wMat = weightMatrices[li];
         const maxW = maxWeights[li];
         const fwdConn = Math.min(fwdP(li), fwdP(li + 1));
+        // Dense layers (16×64 = 1024 lines) have 4× more overlapping lines
+        // than sparse layers (16×16 = 256). Each semi-transparent line
+        // accumulates alpha where it crosses others, making dense sections
+        // appear brighter. densityScale reduces per-line alpha proportionally
+        // to compensate — but individual MLP lines remain fainter at the
+        // edges where fewer lines overlap. This is a geometric trade-off
+        // inherent to drawing all real connections faithfully.
+        const density = fromLayer.length * toLayer.length;
+        const densityScale = Math.min(1, 256 / density);
 
-        if (phaseRef.current === "forward") {
-          // Forward animation: per-line alpha with densityScale to
-          // compensate alpha accumulation in dense layers (16×64)
-          const density = fromLayer.length * toLayer.length;
-          const densityScale = Math.min(1, 256 / density);
+        for (let fi = 0; fi < fromLayer.length; fi++) {
+          for (let ti = 0; ti < toLayer.length; ti++) {
+            const from = fromLayer[fi];
+            const to = toLayer[ti];
 
-          for (let fi = 0; fi < fromLayer.length; fi++) {
-            for (let ti = 0; ti < toLayer.length; ti++) {
-              const from = fromLayer[fi];
-              const to = toLayer[ti];
-              const wVal =
-                wMat[ti] && wMat[ti][fi] !== undefined ? wMat[ti][fi] : 0;
-              const wNorm = Math.abs(wVal) / maxW;
-              let alpha = (0.02 + wNorm * 0.08) * fwdConn * densityScale;
-              let lineWidth = 0.5 + wNorm * 1.5;
+            // Weight-based alpha
+            const wVal =
+              wMat[ti] && wMat[ti][fi] !== undefined ? wMat[ti][fi] : 0;
+            const wNorm = Math.abs(wVal) / maxW;
+            let alpha = (0.02 + wNorm * 0.08) * fwdConn * densityScale;
+            let lineWidth = 0.5 + wNorm * 1.5;
 
-              if (hover) {
-                const isFrom = hover.layer === li && hover.index === fi;
-                const isTo = hover.layer === li + 1 && hover.index === ti;
-                if (isFrom || isTo) {
-                  alpha = Math.max(alpha, 0.4 * fwdConn);
-                  lineWidth = Math.max(lineWidth, 1.2);
-                } else if (hover.layer === ATTN_COL) {
-                  const hoveredHead = Math.floor(hover.index / HEAD_DIM);
-                  if (
-                    (li === ATTN_COL &&
-                      Math.floor(fi / HEAD_DIM) === hoveredHead) ||
-                    (li + 1 === ATTN_COL &&
-                      Math.floor(ti / HEAD_DIM) === hoveredHead)
-                  ) {
-                    alpha = Math.max(alpha, 0.15 * fwdConn);
-                    lineWidth = Math.max(lineWidth, 0.8);
-                  }
+            // Hover highlight
+            if (hover) {
+              const isFrom = hover.layer === li && hover.index === fi;
+              const isTo = hover.layer === li + 1 && hover.index === ti;
+              if (isFrom || isTo) {
+                alpha = Math.max(alpha, 0.4 * fwdConn);
+                lineWidth = Math.max(lineWidth, 1.2);
+              } else if (hover.layer === ATTN_COL) {
+                const hoveredHead = Math.floor(hover.index / HEAD_DIM);
+                if (
+                  (li === ATTN_COL &&
+                    Math.floor(fi / HEAD_DIM) === hoveredHead) ||
+                  (li + 1 === ATTN_COL &&
+                    Math.floor(ti / HEAD_DIM) === hoveredHead)
+                ) {
+                  alpha = Math.max(alpha, 0.15 * fwdConn);
+                  lineWidth = Math.max(lineWidth, 0.8);
                 }
-              }
-
-              if (alpha > 0.01) {
-                const isHoverConn =
-                  hover &&
-                  ((hover.layer === li && hover.index === fi) ||
-                    (hover.layer === li + 1 && hover.index === ti));
-                if (isHoverConn) {
-                  const fromVal = activations[li]?.[fi] ?? 0;
-                  const toVal = activations[li + 1]?.[ti] ?? 0;
-                  ctx.strokeStyle = valToColor(
-                    (fromVal + toVal) / 2,
-                    alpha,
-                    greenRgb,
-                    redRgb,
-                    neutralRgb,
-                  );
-                } else {
-                  ctx.strokeStyle = `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${alpha})`;
-                }
-                ctx.lineWidth = lineWidth;
-                ctx.beginPath();
-                ctx.moveTo(from.x, from.y);
-                ctx.lineTo(to.x, to.y);
-                ctx.stroke();
               }
             }
-          }
-        } else {
-          // Dormant/idle: single batched stroke() per layer pair.
-          // Canvas paints a path atomically — overlapping subpaths within
-          // one stroke() do NOT accumulate alpha. This guarantees identical
-          // visual brightness for all sections (256 or 1024 connections).
-          const baseAlpha = 0.05 * fwdConn;
-          if (baseAlpha > 0.005) {
-            ctx.strokeStyle = `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${baseAlpha})`;
-            ctx.lineWidth = 0.7;
-            ctx.beginPath();
-            for (let fi = 0; fi < fromLayer.length; fi++) {
-              for (let ti = 0; ti < toLayer.length; ti++) {
-                ctx.moveTo(fromLayer[fi].x, fromLayer[fi].y);
-                ctx.lineTo(toLayer[ti].x, toLayer[ti].y);
+
+            if (alpha > 0.01) {
+              // Hovered connections: color by activation (green/red)
+              const isHoverConn =
+                hover &&
+                ((hover.layer === li && hover.index === fi) ||
+                  (hover.layer === li + 1 && hover.index === ti));
+              if (isHoverConn) {
+                const fromVal = activations[li]?.[fi] ?? 0;
+                const toVal = activations[li + 1]?.[ti] ?? 0;
+                ctx.strokeStyle = valToColor(
+                  (fromVal + toVal) / 2,
+                  alpha,
+                  greenRgb,
+                  redRgb,
+                  neutralRgb,
+                );
+              } else {
+                ctx.strokeStyle = `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${alpha})`;
               }
-            }
-            ctx.stroke();
-          }
-
-          // Hover highlights: drawn individually on top of the base web
-          if (hover && (hover.layer === li || hover.layer === li + 1)) {
-            for (let fi = 0; fi < fromLayer.length; fi++) {
-              for (let ti = 0; ti < toLayer.length; ti++) {
-                const from = fromLayer[fi];
-                const to = toLayer[ti];
-                const isFrom = hover.layer === li && hover.index === fi;
-                const isTo = hover.layer === li + 1 && hover.index === ti;
-                let hAlpha = 0;
-                let hWidth = 1.2;
-
-                if (isFrom || isTo) {
-                  hAlpha = 0.4 * fwdConn;
-                } else if (hover.layer === ATTN_COL) {
-                  const hoveredHead = Math.floor(hover.index / HEAD_DIM);
-                  if (
-                    (li === ATTN_COL &&
-                      Math.floor(fi / HEAD_DIM) === hoveredHead) ||
-                    (li + 1 === ATTN_COL &&
-                      Math.floor(ti / HEAD_DIM) === hoveredHead)
-                  ) {
-                    hAlpha = 0.15 * fwdConn;
-                    hWidth = 0.8;
-                  }
-                }
-
-                if (hAlpha > 0.01) {
-                  if (isFrom || isTo) {
-                    const fromVal = activations[li]?.[fi] ?? 0;
-                    const toVal = activations[li + 1]?.[ti] ?? 0;
-                    ctx.strokeStyle = valToColor(
-                      (fromVal + toVal) / 2,
-                      hAlpha,
-                      greenRgb,
-                      redRgb,
-                      neutralRgb,
-                    );
-                  } else {
-                    ctx.strokeStyle = `rgba(${textRgb[0]},${textRgb[1]},${textRgb[2]},${hAlpha})`;
-                  }
-                  ctx.lineWidth = hWidth;
-                  ctx.beginPath();
-                  ctx.moveTo(from.x, from.y);
-                  ctx.lineTo(to.x, to.y);
-                  ctx.stroke();
-                }
-              }
+              ctx.lineWidth = lineWidth;
+              ctx.beginPath();
+              ctx.moveTo(from.x, from.y);
+              ctx.lineTo(to.x, to.y);
+              ctx.stroke();
             }
           }
         }

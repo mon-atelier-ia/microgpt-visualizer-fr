@@ -164,6 +164,12 @@ export default memo(function ForwardPassPage() {
             weights={weights}
           />
         </div>
+        <p className="page-desc">
+          💡 Les connexions autour du MLP (16→64→16) apparaissent plus denses
+          que les autres sections (16→16). C'est normal : le MLP a 4× plus de
+          connexions réelles (1 024 vs 256). Chaque trait est une vraie
+          connexion pondérée — le diagramme les montre toutes fidèlement.
+        </p>
       </div>
 
       {/* 6. Détail MLP */}
