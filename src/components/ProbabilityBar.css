@@ -1,0 +1,53 @@
+/* ── Probability Bar (shared component) ── */
+.prob-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  margin-bottom: 2px;
+}
+.prob-label {
+  width: 36px;
+  text-align: center;
+  font-size: var(--font-size-md);
+  color: var(--cyan);
+  font-weight: bold;
+  flex-shrink: 0;
+}
+.prob-bar-bg {
+  flex: 1;
+  height: 18px;
+  background: var(--surface2);
+  border-radius: var(--radius-3);
+  overflow: hidden;
+}
+.prob-bar {
+  height: 100%;
+  border-radius: var(--radius-3);
+  transition: width var(--t-slow);
+}
+.prob-val {
+  width: 50px;
+  text-align: right;
+  font-size: var(--font-size-2xs);
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .prob-row {
+    height: 22px;
+    gap: var(--sp-4);
+  }
+  .prob-label {
+    width: 32px;
+    font-size: var(--font-size-sm);
+  }
+  .prob-bar-bg {
+    height: 16px;
+  }
+  .prob-val {
+    width: 45px;
+    font-size: var(--font-size-9);
+  }
+}

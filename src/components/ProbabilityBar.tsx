@@ -1,4 +1,5 @@
 import type React from "react";
+import "./ProbabilityBar.css";
 
 export interface ProbItem {
   id: number;
