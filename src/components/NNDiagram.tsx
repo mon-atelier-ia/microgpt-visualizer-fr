@@ -15,7 +15,7 @@ const HEAD_DIM = 4;
 const ATTN_COL = 1;
 const ANIM_LAYER_DELAY = 350;
 const ANIM_FADE_DURATION = 300;
-const DORMANT_ALPHA = 0.06;
+const DORMANT_ALPHA = 0.15;
 
 const COL_COLORS: string[] = [
   "--cyan", // Embedding
@@ -242,7 +242,10 @@ const NNDiagram = memo(function NNDiagram({
             const wVal =
               wMat[ti] && wMat[ti][fi] !== undefined ? wMat[ti][fi] : 0;
             const wNorm = Math.abs(wVal) / maxW;
-            let alpha = (0.02 + wNorm * 0.08) * fwdConn * densityScale;
+            // In dormant/idle, skip densityScale so all layers look uniform
+            const useDensity =
+              phaseRef.current === "forward" ? densityScale : 1;
+            let alpha = (0.02 + wNorm * 0.08) * fwdConn * useDensity;
             let lineWidth = 0.5 + wNorm * 1.5;
 
             // Hover highlight
