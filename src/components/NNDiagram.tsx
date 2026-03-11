@@ -332,7 +332,8 @@ const NNDiagram = memo(function NNDiagram({
           // Neuron circle
           ctx.beginPath();
           ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-          const fillAlpha = fP * 0.85;
+          // Small neurons (r≤3) need higher alpha to match perceived brightness
+          const fillAlpha = fP * (n.r <= 3 ? 1 : 0.85);
           if (isMlpInactive) {
             ctx.fillStyle = `rgba(${neutralRgb[0]},${neutralRgb[1]},${neutralRgb[2]},${fillAlpha * 0.3})`;
           } else if (Math.abs(val) < 0.05) {
