@@ -113,23 +113,27 @@ const ConclusionPage = memo(function ConclusionPage() {
           </li>
           <li>
             <a
-              href="https://github.com/mon-atelier-ia/tuto-llm"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              tuto-llm
-            </a>{" "}
-            — cours pédagogique associé (en français)
-          </li>
-          <li>
-            <a
-              href="https://github.com/mon-atelier-ia/microgpt-ts-fr"
+              href="https://microgpt-ts-fr.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
             >
               microgpt-ts-fr
             </a>{" "}
             — le code TypeScript de référence pour aller plus loin
+          </li>
+          <li>
+            <a
+              href="https://microgpt-lab.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              microgpt-lab
+            </a>{" "}
+            — laboratoire interactif pour expérimenter
+          </li>
+          <li>
+            <span>tuto-llm</span> — cours pédagogique associé en français
+            (prochainement)
           </li>
         </ul>
 
