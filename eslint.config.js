@@ -28,6 +28,68 @@ export default defineConfig([
       'react-hooks/preserve-manual-memoization': 'off',
       // Upstream uses `as any[]` in engine-adjacent code.
       '@typescript-eslint/no-explicit-any': 'warn',
+
+      // ── Complexity & size guards ──────────────────────────────
+      complexity: ['error', { max: 10 }],
+      'max-depth': ['error', { max: 4 }],
+      'max-lines-per-function': [
+        'error',
+        { max: 50, skipBlankLines: true, skipComments: true },
+      ],
+      'max-lines': [
+        'error',
+        { max: 300, skipBlankLines: true, skipComments: true },
+      ],
+      'max-params': ['error', { max: 3 }],
+      'max-nested-callbacks': ['error', { max: 2 }],
+    },
+  },
+
+  // ── Overrides ─────────────────────────────────────────
+
+  // Engine: read-only upstream code — all complexity rules off
+  {
+    files: ['src/engine/**'],
+    rules: {
+      complexity: 'off',
+      'max-depth': 'off',
+      'max-lines-per-function': 'off',
+      'max-lines': 'off',
+      'max-params': 'off',
+      'max-nested-callbacks': 'off',
+    },
+  },
+
+  // Datasets: data-only files — max-lines off
+  {
+    files: ['src/datasets/**'],
+    rules: {
+      'max-lines': 'off',
+    },
+  },
+
+  // Dev scripts — all complexity rules off
+  {
+    files: ['scripts/**'],
+    rules: {
+      complexity: 'off',
+      'max-depth': 'off',
+      'max-lines-per-function': 'off',
+      'max-lines': 'off',
+      'max-params': 'off',
+      'max-nested-callbacks': 'off',
+    },
+  },
+
+  // Tests: nested callbacks off (describe/it/expect), function size relaxed to 80
+  {
+    files: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'max-nested-callbacks': 'off',
+      'max-lines-per-function': [
+        'error',
+        { max: 80, skipBlankLines: true, skipComments: true },
+      ],
     },
   },
 ])
