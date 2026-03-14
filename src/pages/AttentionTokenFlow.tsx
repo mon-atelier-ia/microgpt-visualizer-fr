@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { tokenLabel, BOS } from "../engine/model";
+import TokenBox from "../components/TokenBox";
 
 interface TokenFlowProps {
   tokens: number[];
@@ -39,31 +39,16 @@ export const TokenFlowPanel = memo(function TokenFlowPanel({
 
       <div className="token-flow token-flow--animated">
         {tokens.map((t, i) => {
-          const label = tokenLabel(t);
-          const isBos = t === BOS;
           const hasTrace = i < n;
           return (
-            <span key={i} className="d-contents">
-              {i > 0 && (
-                <span
-                  className="arrow-sym"
-                  style={{ animationDelay: `${i * 80 + 60}ms` }}
-                >
-                  →
-                </span>
-              )}
-              <div
-                className={`token-box ${isBos ? "bos" : ""} ${hasTrace && i === safePos ? "token-box--selected" : ""}`}
-                style={{
-                  animationDelay: `${i * 80}ms`,
-                  cursor: hasTrace ? "pointer" : undefined,
-                }}
-                onClick={hasTrace ? () => onSelectPos(i) : undefined}
-              >
-                <span className="char">{label}</span>
-                <span className="id">id: {t}</span>
-              </div>
-            </span>
+            <TokenBox
+              key={i}
+              tokenId={t}
+              index={i}
+              className={hasTrace && i === safePos ? "token-box--selected" : ""}
+              style={{ cursor: hasTrace ? "pointer" : undefined }}
+              onClick={hasTrace ? () => onSelectPos(i) : undefined}
+            />
           );
         })}
       </div>

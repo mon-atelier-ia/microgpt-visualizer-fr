@@ -1,4 +1,5 @@
 import type { ColDef, EdgeDef, NeuronPos } from "./fullNNDiagram.types";
+import { computeLinearPositions } from "../utils/neuronPositions";
 
 const HEAD_DIM = 4;
 
@@ -183,14 +184,7 @@ export function computePositions(
       return headGroupPositions({ col, x, count, maxR, padY, usableH });
     }
 
-    const spacing = Math.min(usableH / (count + 1), maxR * 3.5);
-    const totalH = spacing * (count - 1);
-    const startY = padY + (usableH - totalH) / 2;
-    return Array.from({ length: count }, (_, ni) => ({
-      x,
-      y: startY + ni * spacing,
-      r: maxR,
-    }));
+    return computeLinearPositions({ count, x, maxR, padY, usableH });
   });
 }
 

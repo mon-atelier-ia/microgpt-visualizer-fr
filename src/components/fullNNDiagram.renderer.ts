@@ -207,43 +207,42 @@ function drawDenseBatch(dc: DrawContext, edgeIdx: number): void {
   ctx.stroke();
 }
 
-function drawDenseHoverFrom(dc: DrawContext, edgeIdx: number): void {
-  const edge = EDGES[edgeIdx];
-  const { ctx, neurons, acts, hover } = dc;
-  if (!hover || hover.col !== edge.from) return;
-  const fromLayer = neurons[edge.from];
-  const toLayer = neurons[edge.to];
-  const p = Math.min(dc.fP(COLS[edge.from].stage), dc.fP(COLS[edge.to].stage));
-  if (p <= 0.01) return;
-  for (let ti = 0; ti < toLayer.length; ti++) {
-    const val =
-      ((acts[edge.from]?.[hover.index] ?? 0) + (acts[edge.to]?.[ti] ?? 0)) / 2;
-    ctx.strokeStyle = connColor(dc, val, 0.5 * p);
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(fromLayer[hover.index].x, fromLayer[hover.index].y);
-    ctx.lineTo(toLayer[ti].x, toLayer[ti].y);
-    ctx.stroke();
-  }
+interface DenseHoverCtx {
+  edge: { from: number; to: number };
+  hovIdx: number;
+  direction: "from" | "to";
+  p: number;
 }
 
-function drawDenseHoverTo(dc: DrawContext, edgeIdx: number): void {
+function drawDenseHoverLine(dc: DrawContext, hc: DenseHoverCtx, i: number) {
+  const { ctx, neurons, acts } = dc;
+  const { edge, hovIdx, direction, p } = hc;
+  const fi = direction === "from" ? hovIdx : i;
+  const ti = direction === "from" ? i : hovIdx;
+  const val = ((acts[edge.from]?.[fi] ?? 0) + (acts[edge.to]?.[ti] ?? 0)) / 2;
+  ctx.strokeStyle = connColor(dc, val, 0.5 * p);
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(neurons[edge.from][fi].x, neurons[edge.from][fi].y);
+  ctx.lineTo(neurons[edge.to][ti].x, neurons[edge.to][ti].y);
+  ctx.stroke();
+}
+
+function drawDenseHover(
+  dc: DrawContext,
+  edgeIdx: number,
+  direction: "from" | "to",
+): void {
   const edge = EDGES[edgeIdx];
-  const { ctx, neurons, acts, hover } = dc;
-  if (!hover || hover.col !== edge.to) return;
-  const fromLayer = neurons[edge.from];
-  const toLayer = neurons[edge.to];
+  const matchCol = direction === "from" ? edge.from : edge.to;
+  if (!dc.hover || dc.hover.col !== matchCol) return;
   const p = Math.min(dc.fP(COLS[edge.from].stage), dc.fP(COLS[edge.to].stage));
   if (p <= 0.01) return;
-  for (let fi = 0; fi < fromLayer.length; fi++) {
-    const val =
-      ((acts[edge.from]?.[fi] ?? 0) + (acts[edge.to]?.[hover.index] ?? 0)) / 2;
-    ctx.strokeStyle = connColor(dc, val, 0.5 * p);
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(fromLayer[fi].x, fromLayer[fi].y);
-    ctx.lineTo(toLayer[hover.index].x, toLayer[hover.index].y);
-    ctx.stroke();
+  const iterLayer =
+    direction === "from" ? dc.neurons[edge.to] : dc.neurons[edge.from];
+  const hc: DenseHoverCtx = { edge, hovIdx: dc.hover.index, direction, p };
+  for (let i = 0; i < iterLayer.length; i++) {
+    drawDenseHoverLine(dc, hc, i);
   }
 }
 
@@ -271,8 +270,8 @@ function drawDenseBwd(dc: DrawContext, edgeIdx: number): void {
 
 function drawDenseEdge(dc: DrawContext, edgeIdx: number): void {
   drawDenseBatch(dc, edgeIdx);
-  drawDenseHoverFrom(dc, edgeIdx);
-  drawDenseHoverTo(dc, edgeIdx);
+  drawDenseHover(dc, edgeIdx, "from");
+  drawDenseHover(dc, edgeIdx, "to");
   drawDenseBwd(dc, edgeIdx);
 }
 

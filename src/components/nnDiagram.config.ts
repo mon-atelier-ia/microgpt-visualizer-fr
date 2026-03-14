@@ -1,3 +1,5 @@
+import { computeLinearPositions } from "../utils/neuronPositions";
+
 // ── NNDiagram constants, types, and pure helpers ─────────────────────
 
 export const N_HEAD = 4;
@@ -96,14 +98,7 @@ export function computePositions(
       return computeAttnColumn({ x, count, maxR, usableH, padY });
     }
 
-    const spacing = Math.min(usableH / (count + 1), maxR * 3.5);
-    const totalH = spacing * (count - 1);
-    const startY = padY + (usableH - totalH) / 2;
-    return Array.from({ length: count }, (_, ni) => ({
-      x,
-      y: startY + ni * spacing,
-      r: maxR,
-    }));
+    return computeLinearPositions({ count, x, maxR, padY, usableH });
   });
 }
 

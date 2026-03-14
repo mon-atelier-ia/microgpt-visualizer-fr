@@ -2,6 +2,7 @@ import { useState, memo } from "react";
 import { uchars, BOS, tokenize, tokenLabel, vocabSize } from "../engine/model";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
+import TokenBox from "../components/TokenBox";
 
 function CharMappingPanel() {
   return (
@@ -40,29 +41,9 @@ function TokenFlowPanel({ tokens }: { tokens: number[] }) {
   return (
     <>
       <div className="token-flow token-flow--animated">
-        {tokens.map((t, i) => {
-          const label = tokenLabel(t);
-          const isBos = t === BOS;
-          return (
-            <span key={i} className="d-contents">
-              {i > 0 && (
-                <span
-                  className="arrow-sym"
-                  style={{ animationDelay: `${i * 80 + 60}ms` }}
-                >
-                  →
-                </span>
-              )}
-              <div
-                className={`token-box ${isBos ? "bos" : ""}`}
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <span className="char">{label}</span>
-                <span className="id">id: {t}</span>
-              </div>
-            </span>
-          );
-        })}
+        {tokens.map((t, i) => (
+          <TokenBox key={i} tokenId={t} index={i} />
+        ))}
       </div>
 
       <div className="mt-16">

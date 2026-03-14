@@ -8,6 +8,52 @@ import { getWteSnapshots } from "../modelStore";
 import type { Value } from "../engine/autograd";
 import type { CharStats } from "../utils/charStats";
 
+/* ── Shared heatmap + bar chart layout ── */
+
+interface HeatmapWithBarsProps {
+  matrix: Value[][];
+  rowLabels: string[];
+  highlightRow: number | undefined;
+  onHoverRow: (r: number | null) => void;
+  barValues: number[] | null;
+  barLabel: string | null;
+  charStats?: CharStats | null;
+  emptyText?: string;
+}
+
+function HeatmapWithBars({
+  matrix,
+  rowLabels,
+  highlightRow,
+  onHoverRow,
+  barValues,
+  barLabel,
+  charStats,
+  emptyText,
+}: HeatmapWithBarsProps) {
+  return (
+    <div className="heatmap-with-bars">
+      <div>
+        <Heatmap
+          matrix={matrix}
+          rowLabels={rowLabels}
+          colCount={N_EMBD}
+          highlightRow={highlightRow}
+          onHoverRow={onHoverRow}
+        />
+      </div>
+      <div className="barchart-side">
+        <EmbeddingBarChart
+          values={barValues}
+          label={barLabel}
+          charStats={charStats ?? null}
+          emptyText={emptyText}
+        />
+      </div>
+    </div>
+  );
+}
+
 /* ── WTE Panel ── */
 
 interface WtePanelProps {
@@ -60,24 +106,15 @@ export const WtePanel = memo(function WtePanel({
         valeurs sont <b>aléatoires</b> — après l'entraînement, les lettres
         similaires auront des motifs similaires.
       </div>
-      <div className="heatmap-with-bars">
-        <div>
-          <Heatmap
-            matrix={wte}
-            rowLabels={wteLabels}
-            colCount={N_EMBD}
-            highlightRow={hoverRow ?? undefined}
-            onHoverRow={onHoverRow}
-          />
-        </div>
-        <div className="barchart-side">
-          <EmbeddingBarChart
-            values={hoveredValues}
-            label={hoveredLabel}
-            charStats={hoveredStats}
-          />
-        </div>
-      </div>
+      <HeatmapWithBars
+        matrix={wte}
+        rowLabels={wteLabels}
+        highlightRow={hoverRow ?? undefined}
+        onHoverRow={onHoverRow}
+        barValues={hoveredValues}
+        barLabel={hoveredLabel}
+        charStats={hoveredStats}
+      />
     </div>
   );
 });
@@ -121,25 +158,15 @@ export const WpePanel = memo(function WpePanel({
         ensuite <b>additionné</b> au <Term id="plongement" /> de token.{" "}
         <b>Survole une ligne</b> pour voir ses dimensions.
       </div>
-      <div className="heatmap-with-bars">
-        <div>
-          <Heatmap
-            matrix={wpe}
-            rowLabels={wpeLabels}
-            colCount={N_EMBD}
-            highlightRow={hoverRowWpe ?? undefined}
-            onHoverRow={onHoverRowWpe}
-          />
-        </div>
-        <div className="barchart-side">
-          <EmbeddingBarChart
-            values={hoveredWpeValues}
-            label={hoveredWpeLabel}
-            charStats={null}
-            emptyText="Survole une position dans le tableau"
-          />
-        </div>
-      </div>
+      <HeatmapWithBars
+        matrix={wpe}
+        rowLabels={wpeLabels}
+        highlightRow={hoverRowWpe ?? undefined}
+        onHoverRow={onHoverRowWpe}
+        barValues={hoveredWpeValues}
+        barLabel={hoveredWpeLabel}
+        emptyText="Survole une position dans le tableau"
+      />
     </div>
   );
 });
