@@ -1,19 +1,19 @@
-import { memo, useMemo } from "react";
-import { useModel } from "../modelStore";
+import { memo } from "react";
+import { useModelDerived } from "../useModelDerived";
 import { gptForward, N_LAYER } from "../engine/model";
+import type { ModelState } from "../engine/model";
 import type { Value } from "../engine/autograd";
 import PageSection from "../components/PageSection";
 import FullNNDiagram from "../components/FullNNDiagram";
 
-const FullModelPage = memo(function FullModelPage() {
-  const model = useModel();
+function computeFullTrace(model: ModelState) {
+  const keys = Array.from({ length: N_LAYER }, () => [] as Value[][]);
+  const vals = Array.from({ length: N_LAYER }, () => [] as Value[][]);
+  return gptForward(0, 0, keys, vals, model, true).trace!;
+}
 
-  const trace = useMemo(() => {
-    const keys = Array.from({ length: N_LAYER }, () => [] as Value[][]);
-    const vals = Array.from({ length: N_LAYER }, () => [] as Value[][]);
-    return gptForward(0, 0, keys, vals, model, true).trace!;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- model is mutable: identity detects reset, totalStep detects training
-  }, [model, model.totalStep]);
+const FullModelPage = memo(function FullModelPage() {
+  const trace = useModelDerived((m) => computeFullTrace(m));
 
   return (
     <PageSection id="fullmodel" title="7. Modèle complet">
