@@ -22,6 +22,16 @@ function useThemeSignal() {
   }, []);
 }
 
+function useThemePalette() {
+  useThemeSignal();
+  return {
+    neg: parseColor(getCssVar("--red")),
+    pos: parseColor(getCssVar("--green")),
+    neutral: parseColor(getCssVar("--surface2")),
+    text: getCssVar("--vector-text"),
+  };
+}
+
 interface Props {
   matrix: Value[][];
   rowLabels: string[];
@@ -30,31 +40,14 @@ interface Props {
   onHoverRow?: (row: number | null) => void;
 }
 
-export default function Heatmap({
-  matrix,
-  rowLabels,
-  colCount,
-  highlightRow,
-  onHoverRow,
-}: Props) {
+function useRovingKeyDown(rowCount: number) {
   const rowsRef = useRef<(HTMLTableRowElement | null)[]>([]);
-  useThemeSignal();
-
-  // Read theme palette for heatmap colors — re-reads on every render
-  // (getCssVar is cheap; useThemeSignal triggers re-render on theme toggle)
-  const neg = parseColor(getCssVar("--red"));
-  const pos = parseColor(getCssVar("--green"));
-  const neutral = parseColor(getCssVar("--surface2"));
-  const text = getCssVar("--vector-text");
-  const palette = { neg, pos, neutral, text };
-
-  // Roving tabindex: Arrow Up/Down/Home/End to navigate rows (W-1)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent, r: number) => {
       let next = r;
       switch (e.key) {
         case "ArrowDown":
-          next = Math.min(r + 1, matrix.length - 1);
+          next = Math.min(r + 1, rowCount - 1);
           break;
         case "ArrowUp":
           next = Math.max(r - 1, 0);
@@ -63,7 +56,7 @@ export default function Heatmap({
           next = 0;
           break;
         case "End":
-          next = matrix.length - 1;
+          next = rowCount - 1;
           break;
         default:
           return;
@@ -73,9 +66,92 @@ export default function Heatmap({
         rowsRef.current[next]?.focus();
       }
     },
-    [matrix.length],
+    [rowCount],
   );
+  return { rowsRef, handleKeyDown };
+}
 
+interface CellProps {
+  cell: Value;
+  rowLabel: string;
+  c: number;
+  palette: ReturnType<typeof useThemePalette>;
+}
+
+function HeatCell({ cell, rowLabel, c, palette }: CellProps) {
+  const v = cell.data;
+  const bg = valToColor(v / 0.3, {
+    alpha: 1,
+    green: palette.pos,
+    red: palette.neg,
+    neutral: palette.neutral,
+  });
+  return (
+    <td
+      style={{ background: bg, color: palette.text }}
+      title={`${rowLabel} dim${c}: ${v.toFixed(TOOLTIP_DECIMALS)}`}
+    >
+      {v.toFixed(DISPLAY_DECIMALS)}
+    </td>
+  );
+}
+
+interface RowProps {
+  row: Value[];
+  r: number;
+  colCount: number;
+  rowLabel: string;
+  highlightRow?: number;
+  onHoverRow?: (row: number | null) => void;
+  rowsRef: React.RefObject<(HTMLTableRowElement | null)[]>;
+  handleKeyDown: (e: React.KeyboardEvent, r: number) => void;
+  palette: ReturnType<typeof useThemePalette>;
+}
+
+function HeatRow(p: RowProps) {
+  const { rowsRef, r } = p;
+  return (
+    <tr
+      ref={(el) => {
+        rowsRef.current[r] = el;
+      }}
+      tabIndex={
+        p.onHoverRow ? (p.r === (p.highlightRow ?? 0) ? 0 : -1) : undefined
+      }
+      onKeyDown={p.onHoverRow ? (e) => p.handleKeyDown(e, p.r) : undefined}
+      onMouseEnter={() => p.onHoverRow?.(p.r)}
+      onMouseLeave={() => p.onHoverRow?.(null)}
+      onFocus={() => p.onHoverRow?.(p.r)}
+      onBlur={() => p.onHoverRow?.(null)}
+      style={
+        p.highlightRow === p.r
+          ? { outline: "2px solid var(--blue)" }
+          : undefined
+      }
+    >
+      <td className="row-label">{p.rowLabel}</td>
+      {p.row.slice(0, p.colCount).map((cell, c) => (
+        <HeatCell
+          key={c}
+          cell={cell}
+          rowLabel={p.rowLabel}
+          c={c}
+          palette={p.palette}
+        />
+      ))}
+    </tr>
+  );
+}
+
+export default function Heatmap({
+  matrix,
+  rowLabels,
+  colCount,
+  highlightRow,
+  onHoverRow,
+}: Props) {
+  const palette = useThemePalette();
+  const { rowsRef, handleKeyDown } = useRovingKeyDown(matrix.length);
   return (
     <div className="heatmap-wrap">
       <table
@@ -92,49 +168,18 @@ export default function Heatmap({
         </thead>
         <tbody>
           {matrix.map((row, r) => (
-            <tr
+            <HeatRow
               key={r}
-              ref={(el) => {
-                rowsRef.current[r] = el;
-              }}
-              tabIndex={
-                onHoverRow ? (r === (highlightRow ?? 0) ? 0 : -1) : undefined
-              }
-              onKeyDown={onHoverRow ? (e) => handleKeyDown(e, r) : undefined}
-              onMouseEnter={() => onHoverRow?.(r)}
-              onMouseLeave={() => onHoverRow?.(null)}
-              onFocus={() => onHoverRow?.(r)}
-              onBlur={() => onHoverRow?.(null)}
-              style={
-                highlightRow === r
-                  ? { outline: "2px solid var(--blue)" }
-                  : undefined
-              }
-            >
-              <td className="row-label">{rowLabels[r]}</td>
-              {row.slice(0, colCount).map((cell, c) => {
-                const v = cell.data;
-                const bg = valToColor(
-                  v / 0.3,
-                  1,
-                  palette.pos,
-                  palette.neg,
-                  palette.neutral,
-                );
-                return (
-                  <td
-                    key={c}
-                    style={{
-                      background: bg,
-                      color: palette.text,
-                    }}
-                    title={`${rowLabels[r]} dim${c}: ${v.toFixed(TOOLTIP_DECIMALS)}`}
-                  >
-                    {v.toFixed(DISPLAY_DECIMALS)}
-                  </td>
-                );
-              })}
-            </tr>
+              row={row}
+              r={r}
+              colCount={colCount}
+              rowLabel={rowLabels[r]}
+              highlightRow={highlightRow}
+              onHoverRow={onHoverRow}
+              rowsRef={rowsRef}
+              handleKeyDown={handleKeyDown}
+              palette={palette}
+            />
           ))}
         </tbody>
       </table>
@@ -156,12 +201,8 @@ export function VectorBar({
   values: number[];
   label?: string;
 }) {
-  useThemeSignal();
+  const palette = useThemePalette();
   const maxAbs = Math.max(...values.map(Math.abs), 0.01);
-  const neg = parseColor(getCssVar("--red"));
-  const pos = parseColor(getCssVar("--green"));
-  const neutral = parseColor(getCssVar("--surface2"));
-  const text = getCssVar("--vector-text");
   return (
     <div>
       {label && <div className="label-dim vector-bar-label">{label}</div>}
@@ -171,8 +212,13 @@ export function VectorBar({
             key={i}
             className="vector-cell"
             style={{
-              background: valToColor(v / (maxAbs * 0.8), 1, pos, neg, neutral),
-              color: text,
+              background: valToColor(v / (maxAbs * 0.8), {
+                alpha: 1,
+                green: palette.pos,
+                red: palette.neg,
+                neutral: palette.neutral,
+              }),
+              color: palette.text,
             }}
             title={`dim${i}: ${v.toFixed(TOOLTIP_DECIMALS)}`}
           >
