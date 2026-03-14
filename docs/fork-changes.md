@@ -261,6 +261,22 @@ Commits: `4ea6c80`, `226e502`, `8c63af0`, `441b85b`, `e13fcdc`, `c6e7c2c`, `8baa
 
 Zero visual changes (pixel-perfect before/after on 9 pages × 2 themes). 192/192 tests pass.
 
+## Phase B1 — refactoring ESLint strict + jscpd
+
+| Change                                                                                                   | Fichier(s)                                                               | Justification                                                                                                         |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| ESLint strict rules: complexity≤10, max-depth≤4, max-lines-per-function≤100, max-lines≤300, max-params≤3 | `.eslintrc.cjs`                                                          | Zéro règle de complexité avant — 157 erreurs révélées. max-lines-per-function remonté de 50 à 100 (Prettier-friendly) |
+| jscpd copy-paste detection in pre-commit                                                                 | `.jscpd.json`, `package.json`                                            | 14 clones détectés → 0. Seuil 30 tokens, ignore engine/ + playgrounds                                                 |
+| Extract page panels into `*Panels.tsx` modules                                                           | `AttentionPanels.tsx`, `ForwardPassPage.tsx`, `EmbeddingsPage.tsx`, etc. | Pages 250-400 LOC dépassaient max-lines. Extraction panneaux en sous-composants                                       |
+| `useModelDerived` hook: centralizes mutable model deps                                                   | `src/hooks/useModelDerived.ts`                                           | 6 pages avaient le même `// eslint-disable` pour `[model, model.totalStep]` deps — centralisé en 1                    |
+| `TokenBox` shared component                                                                              | `src/components/TokenBox.tsx`                                            | Dupliqué entre AttentionTokenFlow et TokenizerPage → composant partagé                                                |
+| `dialog-base.css` shared dialog styles                                                                   | `src/components/dialog-base.css`                                         | Dupliqué entre ConfirmDialog et ShareDialog → feuille partagée                                                        |
+| `test-utils/modelMock.ts` + `test-utils/fullTraceFixture.ts`                                             | `src/test-utils/`                                                        | Factories de test partagées — élimine duplication mocks entre fichiers test                                           |
+| `classifyHead` refactored (complexity≤10)                                                                | `src/utils/classifyHead.ts`                                              | Réduction complexité cyclomatique via early returns et extraction helpers                                             |
+| `Heatmap.test.tsx` refactored (max-lines compliance)                                                     | `src/components/Heatmap.test.tsx`                                        | Test file exceeded max-lines — extracted shared setup                                                                 |
+
+157→0 erreurs, 0 clones, 192→197 tests. 10 commits (ef6baa9 → 9e01320).
+
 ## Divers
 
 | Change                                           | Fichier(s)                   | Justification                                                                                                                                                                               |

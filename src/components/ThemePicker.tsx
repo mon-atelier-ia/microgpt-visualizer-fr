@@ -38,6 +38,7 @@ function ThemePickerInner({ theme, onToggle }: ThemePickerProps) {
     <div className="theme-picker">
       {THEME_OPTIONS.map((opt) => (
         <button
+          type="button"
           key={opt.value}
           className={`theme-btn ${theme === opt.value ? "active" : ""}`}
           onClick={() => theme !== opt.value && onToggle()}

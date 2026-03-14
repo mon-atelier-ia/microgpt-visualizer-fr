@@ -32,6 +32,18 @@ function TokenBoxInner({
         className={`token-box ${isBos ? "bos" : ""} ${className ?? ""}`}
         style={{ animationDelay: `${index * 80}ms`, ...style }}
         onClick={onClick}
+        role={onClick ? "button" : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        onKeyDown={
+          onClick
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onClick();
+                }
+              }
+            : undefined
+        }
       >
         <span className="char">{label}</span>
         <span className="id">id: {tokenId}</span>

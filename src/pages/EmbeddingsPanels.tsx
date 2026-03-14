@@ -21,7 +21,7 @@ interface HeatmapWithBarsProps {
   emptyText?: string;
 }
 
-function HeatmapWithBars({
+const HeatmapWithBars = memo(function HeatmapWithBars({
   matrix,
   rowLabels,
   highlightRow,
@@ -52,7 +52,7 @@ function HeatmapWithBars({
       </div>
     </div>
   );
-}
+});
 
 /* ── WTE Panel ── */
 
@@ -208,6 +208,7 @@ export const CombinePanel = memo(function CombinePanel({
       <div className="controls">
         {uchars.map((ch) => (
           <button
+            type="button"
             key={ch}
             className={`btn btn-toggle btn-toggle--char ${ch === selectedChar ? "" : "btn-secondary"}`}
             onClick={() => onSelectChar(ch)}
@@ -220,6 +221,7 @@ export const CombinePanel = memo(function CombinePanel({
       <div className="controls" style={{ marginTop: 8 }}>
         {wpeLabels.map((label, i) => (
           <button
+            type="button"
             key={label}
             className={`btn btn-toggle btn-toggle--char ${i === selectedPos ? "" : "btn-secondary"}`}
             onClick={() => onSelectPos(i)}
