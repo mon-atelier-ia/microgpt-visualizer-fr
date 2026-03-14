@@ -1,18 +1,19 @@
 export type HeadPersonality = "Ancrage" | "Précédent" | "Écho" | "Contexte";
 
-/**
- * Classify an attention head by analyzing its T×T weight matrix.
- * See docs/attention-head-behaviors.md for methodology.
- */
-export function classifyHead(matrix: number[][]): HeadPersonality {
-  const T = matrix.length;
-  if (T <= 1) return "Contexte";
+interface HeadStats {
+  avgBos: number;
+  avgSelf: number;
+  avgPrev: number;
+  avgNear: number;
+}
 
+function computeHeadStats(matrix: number[][]): HeadStats {
+  const T = matrix.length;
   let bosTotal = 0;
   let selfTotal = 0;
   let prevTotal = 0;
   let nearTotal = 0;
-  let count = 0;
+  const count = T - 1;
 
   for (let i = 1; i < T; i++) {
     bosTotal += matrix[i][0];
@@ -21,13 +22,25 @@ export function classifyHead(matrix: number[][]): HeadPersonality {
     let near = matrix[i][i - 1];
     if (i >= 2) near += matrix[i][i - 2];
     nearTotal += near;
-    count++;
   }
 
-  const avgBos = bosTotal / count;
-  const avgSelf = selfTotal / count;
-  const avgPrev = prevTotal / count;
-  const avgNear = nearTotal / count;
+  return {
+    avgBos: bosTotal / count,
+    avgSelf: selfTotal / count,
+    avgPrev: prevTotal / count,
+    avgNear: nearTotal / count,
+  };
+}
+
+/**
+ * Classify an attention head by analyzing its T×T weight matrix.
+ * See docs/attention-head-behaviors.md for methodology.
+ */
+export function classifyHead(matrix: number[][]): HeadPersonality {
+  const T = matrix.length;
+  if (T <= 1) return "Contexte";
+
+  const { avgBos, avgSelf, avgPrev, avgNear } = computeHeadStats(matrix);
 
   if (avgPrev > 0.45) return "Précédent";
   if (avgBos > 0.25 && avgSelf > 0.15) return "Ancrage";

@@ -14,6 +14,140 @@ export const HEAD_COLORS = [
   "var(--green)",
 ] as const;
 
+interface Line {
+  h: number;
+  i: number;
+  j: number;
+  w: number;
+}
+
+interface ComputeOpts {
+  matrices: number[][][];
+  isAll: boolean;
+  activeHead: number | "all";
+}
+
+function computeLines({ matrices, isAll, activeHead }: ComputeOpts): Line[] {
+  const T = matrices[0]?.length ?? 0;
+  const heads: number[] = isAll
+    ? Array.from({ length: N_HEAD }, (_, i) => i)
+    : [activeHead as number];
+  const lines: Line[] = [];
+  for (const h of heads) {
+    for (let i = 0; i < T; i++) {
+      for (let j = 0; j <= i; j++) {
+        const w = matrices[h][i][j];
+        if (w >= 0.005) lines.push({ h, i, j, w });
+      }
+    }
+  }
+  lines.sort((a, b) => a.w - b.w);
+  return lines;
+}
+
+function yCenter(i: number): number {
+  return i * (BOX_H + GAP) + BOX_H / 2;
+}
+
+/* ── Token column ── */
+
+interface TokenColumnProps {
+  header: string;
+  tokens: string[];
+  tokenIds: number[];
+  getOpacity: (i: number) => number;
+  selectedSrc?: number;
+  onInteract?: (pos: number) => void;
+  onClick?: (pos: number) => void;
+}
+
+function TokenColumn({
+  header,
+  tokens,
+  tokenIds,
+  getOpacity,
+  selectedSrc,
+  onInteract,
+  onClick,
+}: TokenColumnProps) {
+  const interactive = !!onInteract;
+  return (
+    <div className="bv-column">
+      <div className="bv-col-header">{header}</div>
+      {tokens.map((tok, i) => (
+        <div
+          key={i}
+          tabIndex={interactive ? 0 : undefined}
+          className={`token-box token-box--bv${interactive ? " bv-src" : ""}${tok === "BOS" ? " bos" : ""}${
+            interactive && i === selectedSrc ? " token-box--selected" : ""
+          }`}
+          style={{ opacity: getOpacity(i) }}
+          onMouseEnter={interactive ? () => onInteract(i) : undefined}
+          onFocus={interactive ? () => onInteract(i) : undefined}
+          onClick={onClick ? () => onClick(i) : undefined}
+        >
+          <span className="char">{tok}</span>
+          <span className="id">id: {tokenIds[i]}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Head selector + legend ── */
+
+interface HeadSelectorProps {
+  activeHead: number | "all";
+  onActiveHeadChange: (head: number | "all") => void;
+  headLabels: string[];
+}
+
+function HeadSelector({
+  activeHead,
+  onActiveHeadChange,
+  headLabels,
+}: HeadSelectorProps) {
+  const isAll = activeHead === "all";
+  return (
+    <>
+      <div className="controls mt-8">
+        <span className="label-dim">Vue :</span>
+        <button
+          type="button"
+          className={`btn btn-toggle ${isAll ? "" : "btn-secondary"}`}
+          onClick={() => onActiveHeadChange("all")}
+        >
+          Toutes
+        </button>
+        {Array.from({ length: N_HEAD }, (_, h) => (
+          <button
+            key={h}
+            type="button"
+            className={`btn btn-toggle ${activeHead === h ? "" : "btn-secondary"}`}
+            onClick={() => onActiveHeadChange(h)}
+          >
+            <span className="bv-dot" style={{ background: HEAD_COLORS[h] }} />{" "}
+            {h}
+          </button>
+        ))}
+      </div>
+      <div className="bv-legend">
+        {Array.from({ length: N_HEAD }, (_, h) => (
+          <span key={h} className="bv-legend-item">
+            <span
+              className="bv-legend-swatch"
+              style={{ background: HEAD_COLORS[h] }}
+            />
+            T{h} : {headLabels[h]}
+          </span>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/* ── Main component ── */
+
 interface Props {
   matrices: number[][][];
   tokens: string[];
@@ -45,24 +179,7 @@ export default function BertVizView({
   const isAll = activeHead === "all";
   const isDim = hoverSrc !== null;
 
-  function yCenter(i: number): number {
-    return i * (BOX_H + GAP) + BOX_H / 2;
-  }
-
-  const heads: number[] = isAll
-    ? Array.from({ length: N_HEAD }, (_, i) => i)
-    : [activeHead as number];
-  const lines: { h: number; i: number; j: number; w: number }[] = [];
-  for (const h of heads) {
-    for (let i = 0; i < T; i++) {
-      for (let j = 0; j <= i; j++) {
-        const w = matrices[h][i][j];
-        if (w < 0.005) continue;
-        lines.push({ h, i, j, w });
-      }
-    }
-  }
-  lines.sort((a, b) => a.w - b.w);
+  const lines = computeLines({ matrices, isAll, activeHead });
 
   const litDst = new Set<number>();
   if (isDim) {
@@ -74,65 +191,28 @@ export default function BertVizView({
   const cx1 = SVG_W * 0.32;
   const cx2 = SVG_W * 0.68;
 
+  const srcOpacity = (i: number) => (isDim && hoverSrc !== i ? 0.25 : 1);
+  const dstOpacity = (i: number) =>
+    isDim && !litDst.has(i) && hoverSrc !== i ? 0.25 : 1;
+
   return (
     <>
-      {/* Sélecteur de tête */}
-      <div className="controls mt-8">
-        <span className="label-dim">Vue :</span>
-        <button
-          type="button"
-          className={`btn btn-toggle ${isAll ? "" : "btn-secondary"}`}
-          onClick={() => onActiveHeadChange("all")}
-        >
-          Toutes
-        </button>
-        {Array.from({ length: N_HEAD }, (_, h) => (
-          <button
-            key={h}
-            type="button"
-            className={`btn btn-toggle ${activeHead === h ? "" : "btn-secondary"}`}
-            onClick={() => onActiveHeadChange(h)}
-          >
-            <span className="bv-dot" style={{ background: HEAD_COLORS[h] }} />{" "}
-            {h}
-          </button>
-        ))}
-      </div>
+      <HeadSelector
+        activeHead={activeHead}
+        onActiveHeadChange={onActiveHeadChange}
+        headLabels={headLabels}
+      />
 
-      {/* Légende personnalités */}
-      <div className="bv-legend">
-        {Array.from({ length: N_HEAD }, (_, h) => (
-          <span key={h} className="bv-legend-item">
-            <span
-              className="bv-legend-swatch"
-              style={{ background: HEAD_COLORS[h] }}
-            />
-            T{h} : {headLabels[h]}
-          </span>
-        ))}
-      </div>
-
-      {/* BertViz : source ← SVG → destination */}
       <div className="bv-container" onMouseLeave={() => onHoverSrc(null)}>
-        <div className="bv-column">
-          <div className="bv-col-header">Qui regarde ?</div>
-          {tokens.map((tok, i) => (
-            <div
-              key={i}
-              tabIndex={0}
-              className={`token-box token-box--bv bv-src${tok === "BOS" ? " bos" : ""}${
-                i === selectedSrc ? " token-box--selected" : ""
-              }`}
-              style={{ opacity: isDim && hoverSrc !== i ? 0.25 : 1 }}
-              onMouseEnter={() => onHoverSrc(i)}
-              onFocus={() => onHoverSrc(i)}
-              onClick={() => onClickSrc(i)}
-            >
-              <span className="char">{tok}</span>
-              <span className="id">id: {tokenIds[i]}</span>
-            </div>
-          ))}
-        </div>
+        <TokenColumn
+          header="Qui regarde ?"
+          tokens={tokens}
+          tokenIds={tokenIds}
+          getOpacity={srcOpacity}
+          selectedSrc={selectedSrc}
+          onInteract={onHoverSrc}
+          onClick={onClickSrc}
+        />
 
         <svg
           width={SVG_W}
@@ -167,21 +247,12 @@ export default function BertVizView({
           })}
         </svg>
 
-        <div className="bv-column">
-          <div className="bv-col-header">Vu avant ?</div>
-          {tokens.map((tok, j) => (
-            <div
-              key={j}
-              className={`token-box token-box--bv${tok === "BOS" ? " bos" : ""}`}
-              style={{
-                opacity: isDim && !litDst.has(j) && hoverSrc !== j ? 0.25 : 1,
-              }}
-            >
-              <span className="char">{tok}</span>
-              <span className="id">id: {tokenIds[j]}</span>
-            </div>
-          ))}
-        </div>
+        <TokenColumn
+          header="Vu avant ?"
+          tokens={tokens}
+          tokenIds={tokenIds}
+          getOpacity={dstOpacity}
+        />
       </div>
     </>
   );

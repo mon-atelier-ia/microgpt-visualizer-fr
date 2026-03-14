@@ -16,6 +16,21 @@ function makeMatrix(rows: number, cols: number): Value[][] {
 const MATRIX = makeMatrix(4, 2);
 const LABELS = ["a", "b", "c", "d"];
 
+/** Render Heatmap with onHoverRow and return rows + spy. */
+function renderWithHover() {
+  const onHover = vi.fn();
+  const { container } = render(
+    <Heatmap
+      matrix={MATRIX}
+      rowLabels={LABELS}
+      colCount={2}
+      onHoverRow={onHover}
+    />,
+  );
+  const rows = container.querySelectorAll("tbody tr");
+  return { onHover, container, rows };
+}
+
 describe("Heatmap — accessibilité clavier (W-1)", () => {
   it("a un aria-label descriptif sur le <table>", () => {
     render(<Heatmap matrix={MATRIX} rowLabels={LABELS} colCount={2} />);
@@ -25,16 +40,7 @@ describe("Heatmap — accessibilité clavier (W-1)", () => {
   });
 
   it("une seule ligne a tabIndex=0 quand onHoverRow est passé (roving tabindex)", () => {
-    const onHover = vi.fn();
-    const { container } = render(
-      <Heatmap
-        matrix={MATRIX}
-        rowLabels={LABELS}
-        colCount={2}
-        onHoverRow={onHover}
-      />,
-    );
-    const rows = container.querySelectorAll("tbody tr");
+    const { rows } = renderWithHover();
     const tabIndices = Array.from(rows).map((r) => r.getAttribute("tabindex"));
     expect(tabIndices.filter((t) => t === "0")).toHaveLength(1);
     expect(tabIndices.filter((t) => t === "-1")).toHaveLength(3);
@@ -51,79 +57,34 @@ describe("Heatmap — accessibilité clavier (W-1)", () => {
   });
 
   it("onFocus déclenche onHoverRow avec l'index de la ligne", () => {
-    const onHover = vi.fn();
-    const { container } = render(
-      <Heatmap
-        matrix={MATRIX}
-        rowLabels={LABELS}
-        colCount={2}
-        onHoverRow={onHover}
-      />,
-    );
-    const rows = container.querySelectorAll("tbody tr");
+    const { onHover, rows } = renderWithHover();
     fireEvent.focus(rows[2]);
     expect(onHover).toHaveBeenCalledWith(2);
   });
 
   it("onBlur déclenche onHoverRow(null)", () => {
-    const onHover = vi.fn();
-    const { container } = render(
-      <Heatmap
-        matrix={MATRIX}
-        rowLabels={LABELS}
-        colCount={2}
-        onHoverRow={onHover}
-      />,
-    );
-    const rows = container.querySelectorAll("tbody tr");
+    const { onHover, rows } = renderWithHover();
     fireEvent.focus(rows[0]);
     fireEvent.blur(rows[0]);
     expect(onHover).toHaveBeenLastCalledWith(null);
   });
 
   it("ArrowDown déplace le focus à la ligne suivante", () => {
-    const onHover = vi.fn();
-    const { container } = render(
-      <Heatmap
-        matrix={MATRIX}
-        rowLabels={LABELS}
-        colCount={2}
-        onHoverRow={onHover}
-      />,
-    );
-    const rows = container.querySelectorAll("tbody tr");
+    const { rows } = renderWithHover();
     (rows[0] as HTMLElement).focus();
     fireEvent.keyDown(rows[0], { key: "ArrowDown" });
     expect(document.activeElement).toBe(rows[1]);
   });
 
   it("ArrowUp déplace le focus à la ligne précédente", () => {
-    const onHover = vi.fn();
-    const { container } = render(
-      <Heatmap
-        matrix={MATRIX}
-        rowLabels={LABELS}
-        colCount={2}
-        onHoverRow={onHover}
-      />,
-    );
-    const rows = container.querySelectorAll("tbody tr");
+    const { rows } = renderWithHover();
     (rows[2] as HTMLElement).focus();
     fireEvent.keyDown(rows[2], { key: "ArrowUp" });
     expect(document.activeElement).toBe(rows[1]);
   });
 
   it("Home → première ligne, End → dernière ligne", () => {
-    const onHover = vi.fn();
-    const { container } = render(
-      <Heatmap
-        matrix={MATRIX}
-        rowLabels={LABELS}
-        colCount={2}
-        onHoverRow={onHover}
-      />,
-    );
-    const rows = container.querySelectorAll("tbody tr");
+    const { rows } = renderWithHover();
     (rows[2] as HTMLElement).focus();
     fireEvent.keyDown(rows[2], { key: "Home" });
     expect(document.activeElement).toBe(rows[0]);
@@ -132,47 +93,21 @@ describe("Heatmap — accessibilité clavier (W-1)", () => {
   });
 
   it("ArrowUp sur la première ligne = pas de mouvement", () => {
-    const onHover = vi.fn();
-    const { container } = render(
-      <Heatmap
-        matrix={MATRIX}
-        rowLabels={LABELS}
-        colCount={2}
-        onHoverRow={onHover}
-      />,
-    );
-    const rows = container.querySelectorAll("tbody tr");
+    const { rows } = renderWithHover();
     (rows[0] as HTMLElement).focus();
     fireEvent.keyDown(rows[0], { key: "ArrowUp" });
     expect(document.activeElement).toBe(rows[0]);
   });
 
   it("ArrowDown sur la dernière ligne = pas de mouvement", () => {
-    const onHover = vi.fn();
-    const { container } = render(
-      <Heatmap
-        matrix={MATRIX}
-        rowLabels={LABELS}
-        colCount={2}
-        onHoverRow={onHover}
-      />,
-    );
-    const rows = container.querySelectorAll("tbody tr");
+    const { rows } = renderWithHover();
     (rows[3] as HTMLElement).focus();
     fireEvent.keyDown(rows[3], { key: "ArrowDown" });
     expect(document.activeElement).toBe(rows[3]);
   });
 
   it("hint clavier affiché quand onHoverRow est passé (MIN-8)", () => {
-    const onHover = vi.fn();
-    render(
-      <Heatmap
-        matrix={MATRIX}
-        rowLabels={LABELS}
-        colCount={2}
-        onHoverRow={onHover}
-      />,
-    );
+    renderWithHover();
     const hint = screen.getByText(/naviguer/);
     expect(hint).toBeTruthy();
     expect(hint.classList.contains("heatmap-kbd-hint")).toBe(true);

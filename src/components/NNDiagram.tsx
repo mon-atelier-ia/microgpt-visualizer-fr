@@ -231,23 +231,17 @@ function useNNDiagramDraw(props: NNDiagramProps) {
     animStartRef,
   };
   const data = prepareModelData(props);
-  const {
-    combined,
-    afterAttn,
-    mlpHidden,
-    mlpActiveMask,
-    afterMlp,
-    probs,
-    weights,
-  } = props;
-  const draw = useCallback(
-    (timestamp?: number) => {
-      if (drawFrame(refs, data, timestamp))
-        animRef.current = requestAnimationFrame(draw);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- derived arrays
-    [combined, afterAttn, mlpHidden, mlpActiveMask, afterMlp, probs, weights],
-  );
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const refsRef = useRef(refs);
+  refsRef.current = refs;
+  const drawRef = useRef<(timestamp?: number) => void>(() => {});
+
+  const draw = useCallback((timestamp?: number) => {
+    if (drawFrame(refsRef.current, dataRef.current, timestamp))
+      animRef.current = requestAnimationFrame(drawRef.current);
+  }, []);
+  drawRef.current = draw;
 
   const { startAnimation } = useCanvasObservers({
     canvasRef,
