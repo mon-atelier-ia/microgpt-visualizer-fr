@@ -6,6 +6,8 @@ vi.mock("../modelStore", () => ({
   useModel: () => ({ totalStep: 0 }),
 }));
 
+import { EMPTY_TRACE_PROPS } from "../test-utils/fullTraceFixture";
+
 vi.mock("../engine/model", () => ({
   N_LAYER: 1,
   gptForward: () => ({
@@ -13,22 +15,7 @@ vi.mock("../engine/model", () => ({
     trace: {
       tokenId: 0,
       posId: 0,
-      tokEmb: new Array(16).fill(0),
-      posEmb: new Array(16).fill(0),
-      combined: new Array(16).fill(0),
-      afterNorm: new Array(16).fill(0),
-      preAttnNorm: new Array(16).fill(0),
-      q: new Array(16).fill(0),
-      k: new Array(16).fill(0),
-      v: new Array(16).fill(0),
-      attnWeights: Array.from({ length: 4 }, () => [1.0]),
-      afterAttn: new Array(16).fill(0),
-      preMlpNorm: new Array(16).fill(0),
-      mlpHidden: new Array(64).fill(0),
-      mlpActiveMask: new Array(64).fill(false),
-      afterMlp: new Array(16).fill(0),
-      logits: new Array(27).fill(0),
-      probs: new Array(27).fill(1 / 27),
+      ...EMPTY_TRACE_PROPS,
     },
   }),
 }));

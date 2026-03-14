@@ -2,6 +2,7 @@
 import { describe, expect, it, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import ForwardPassPage from "./ForwardPassPage";
+import { createModelMock } from "../test-utils/modelMock";
 
 function makeWeightMatrix(rows: number, cols: number) {
   return Array.from({ length: rows }, () =>
@@ -10,23 +11,17 @@ function makeWeightMatrix(rows: number, cols: number) {
 }
 
 vi.mock("../modelStore", () => ({
-  useModel: () => ({
-    stateDict: {
-      wte: [],
-      wpe: [],
-      "layer0.attn_wo": makeWeightMatrix(16, 16),
-      "layer0.mlp_fc1": makeWeightMatrix(64, 16),
-      "layer0.mlp_fc2": makeWeightMatrix(16, 64),
-      lm_head: makeWeightMatrix(27, 16),
-    },
-    params: [],
-    adamM: new Float64Array(0),
-    adamV: new Float64Array(0),
-    totalStep: 0,
-    lossHistory: [],
-    docs: ["test"],
-    rng: () => 0.5,
-  }),
+  useModel: () =>
+    createModelMock({
+      stateDict: {
+        wte: [],
+        wpe: [],
+        "layer0.attn_wo": makeWeightMatrix(16, 16),
+        "layer0.mlp_fc1": makeWeightMatrix(64, 16),
+        "layer0.mlp_fc2": makeWeightMatrix(16, 64),
+        lm_head: makeWeightMatrix(27, 16),
+      },
+    }),
 }));
 
 vi.mock("../engine/model", async (importOriginal) => {

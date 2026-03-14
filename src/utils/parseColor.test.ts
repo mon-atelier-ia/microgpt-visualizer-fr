@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { parseColor } from "./parseColor";
 
+function expectValidRgb(rgb: number[]) {
+  for (const ch of rgb) {
+    expect(ch).toBeGreaterThanOrEqual(0);
+    expect(ch).toBeLessThanOrEqual(255);
+  }
+}
+
 describe("parseColor", () => {
   it("parse hex 6 caractères", () => {
     expect(parseColor("#67e8f9")).toEqual([103, 232, 249]);
@@ -35,13 +42,7 @@ describe("parseColor", () => {
   });
 
   it("parse oklch() avec espaces variés", () => {
-    const [r, g, b] = parseColor("oklch(0.5 0.2 30)");
-    expect(r).toBeGreaterThanOrEqual(0);
-    expect(r).toBeLessThanOrEqual(255);
-    expect(g).toBeGreaterThanOrEqual(0);
-    expect(g).toBeLessThanOrEqual(255);
-    expect(b).toBeGreaterThanOrEqual(0);
-    expect(b).toBeLessThanOrEqual(255);
+    expectValidRgb(parseColor("oklch(0.5 0.2 30)"));
   });
 
   it("parse oklch() achromatic (C=0)", () => {
@@ -64,12 +65,6 @@ describe("parseColor", () => {
   });
 
   it("parse oklch() clamp out-of-gamut", () => {
-    const [r, g, b] = parseColor("oklch(0.9 0.4 150)");
-    expect(r).toBeGreaterThanOrEqual(0);
-    expect(r).toBeLessThanOrEqual(255);
-    expect(g).toBeGreaterThanOrEqual(0);
-    expect(g).toBeLessThanOrEqual(255);
-    expect(b).toBeGreaterThanOrEqual(0);
-    expect(b).toBeLessThanOrEqual(255);
+    expectValidRgb(parseColor("oklch(0.9 0.4 150)"));
   });
 });

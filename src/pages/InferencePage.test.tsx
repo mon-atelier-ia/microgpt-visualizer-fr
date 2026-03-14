@@ -3,17 +3,10 @@ import { describe, expect, it, afterEach, vi } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import InferencePage from "./InferencePage";
 
+import { createModelMock } from "../test-utils/modelMock";
+
 vi.mock("../modelStore", () => ({
-  useModel: () => ({
-    stateDict: { wte: [], wpe: [] },
-    params: [],
-    adamM: new Float64Array(0),
-    adamV: new Float64Array(0),
-    totalStep: 0,
-    lossHistory: [],
-    docs: ["test"],
-    rng: () => 0.5,
-  }),
+  useModel: () => createModelMock(),
 }));
 
 vi.mock("../engine/model", async (importOriginal) => {

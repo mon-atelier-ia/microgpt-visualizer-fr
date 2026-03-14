@@ -2,17 +2,10 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
+import { createModelMock } from "../test-utils/modelMock";
+
 vi.mock("../modelStore", () => ({
-  useModel: () => ({
-    stateDict: { wte: [], wpe: [] },
-    params: [],
-    adamM: new Float64Array(0),
-    adamV: new Float64Array(0),
-    totalStep: 0,
-    lossHistory: [],
-    docs: ["test"],
-    rng: () => 0.5,
-  }),
+  useModel: () => createModelMock(),
   notifyModelUpdate: vi.fn(),
   resetModel: vi.fn(),
   pushWteSnapshot: vi.fn(),
