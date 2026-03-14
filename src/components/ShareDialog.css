@@ -27,20 +27,10 @@
   width: 12px;
   height: 12px;
 }
+@import "./dialog-base.css";
+
 .share-dialog {
   max-width: 280px;
-  width: calc(100% - 32px);
-  margin: auto;
-  padding: 0;
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-12);
-  background: var(--surface);
-  color: var(--text);
-  font-family: inherit;
-}
-.share-dialog::backdrop {
-  background: var(--overlay);
-  backdrop-filter: blur(var(--blur-md));
 }
 .share-dialog__content {
   display: flex;

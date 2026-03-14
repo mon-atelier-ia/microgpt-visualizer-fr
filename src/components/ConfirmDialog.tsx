@@ -12,7 +12,11 @@ function ConfirmDialogInner({
   onCancel,
 }: ConfirmDialogProps) {
   return (
-    <dialog ref={dialogRef} className="confirm-dialog" onCancel={onCancel}>
+    <dialog
+      ref={dialogRef}
+      className="dialog-base confirm-dialog"
+      onCancel={onCancel}
+    >
       <div className="confirm-dialog__content">
         <p className="confirm-dialog__title">Changer de jeu de données ?</p>
         <p className="confirm-dialog__message">

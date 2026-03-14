@@ -1,0 +1,15 @@
+/* ───── Shared dialog base styles ───── */
+.dialog-base {
+  width: calc(100% - 32px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-12);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+}
+.dialog-base::backdrop {
+  background: var(--overlay);
+  backdrop-filter: blur(var(--blur-md));
+}

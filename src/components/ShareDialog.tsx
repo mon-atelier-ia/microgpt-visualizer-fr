@@ -10,7 +10,7 @@ function ShareDialogInner({ dialogRef }: ShareDialogProps) {
   return (
     <dialog
       ref={dialogRef}
-      className="share-dialog"
+      className="dialog-base share-dialog"
       onClick={(e) => {
         if (e.target === e.currentTarget) close();
       }}

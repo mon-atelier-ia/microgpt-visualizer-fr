@@ -1,18 +1,8 @@
 /* ───── Confirm dialog ───── */
+@import "./dialog-base.css";
+
 .confirm-dialog {
   max-width: 400px;
-  width: calc(100% - 32px);
-  margin: auto;
-  padding: 0;
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-12);
-  background: var(--surface);
-  color: var(--text);
-  font-family: inherit;
-}
-.confirm-dialog::backdrop {
-  background: var(--overlay);
-  backdrop-filter: blur(var(--blur-md));
 }
 .confirm-dialog__content {
   padding: var(--sp-24);
