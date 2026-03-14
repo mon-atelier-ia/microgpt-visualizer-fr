@@ -61,10 +61,18 @@ export default function App() {
     <TermProvider>
       <div className={`app ${mobileMenuOpen ? "menu-open" : ""}`}>
         <MobileMenuBtn onClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
-        {/* prettier-ignore */}
-        <Sidebar page={page} visited={visited} datasetId={datasetId} theme={theme}
-          mobileOpen={mobileMenuOpen} shareRef={shareRef} onPageChange={handlePageChange}
-          onDatasetChange={handleDatasetChange} onToggleTheme={toggle} />
+
+        <Sidebar
+          page={page}
+          visited={visited}
+          datasetId={datasetId}
+          theme={theme}
+          mobileOpen={mobileMenuOpen}
+          shareRef={shareRef}
+          onPageChange={handlePageChange}
+          onDatasetChange={handleDatasetChange}
+          onToggleTheme={toggle}
+        />
         {mobileMenuOpen && (
           <div
             className="mobile-overlay"

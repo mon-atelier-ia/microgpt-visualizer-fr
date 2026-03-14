@@ -3,10 +3,11 @@ import { topSimilarPairs } from "../utils/pca";
 import { parseColor } from "../utils/parseColor";
 import { getCssVar } from "../utils/getCssVar";
 import {
-  VOWELS,
   PAD,
   CONSTELLATION_K,
   sameType,
+  dotRgb,
+  type RGB,
 } from "./pcaScatterPlot.config";
 
 // Re-export draw functions so consumers keep a single import source
@@ -20,8 +21,6 @@ export {
 } from "./pcaScatterPlot.draw";
 
 // ── Types ──────────────────────────────────────────────────────────
-
-type RGB = [number, number, number];
 
 export interface PCADrawContext {
   ctx: CanvasRenderingContext2D;
@@ -82,15 +81,6 @@ export function projectBounds(
   const toSx = (px: number) => PAD + ((px - minX) / rx) * (w - 2 * PAD);
   const toSy = (py: number) => PAD + ((maxY - py) / ry) * (h - 2 * PAD);
   return { toSx, toSy };
-}
-
-function dotRgb(
-  ch: string,
-  c: { cyanRgb: RGB; orangeRgb: RGB; purpleRgb: RGB },
-): RGB {
-  if (ch === "BOS") return c.purpleRgb;
-  if (VOWELS.has(ch)) return c.cyanRgb;
-  return c.orangeRgb;
 }
 
 export function readColors(): PCAColors {
@@ -225,7 +215,7 @@ interface ConstellationStyleOpts {
 }
 
 function constellationStyle(o: ConstellationStyleOpts) {
-  const { a, b, hover, hi, strength, labels, colors } = o;
+  const { a, b, hover, hi, strength, labels, colors, totalStep } = o;
   const isHoverLine = hover >= 0 && (a === hover || b === hover);
   const isHighlightLine = hi >= 0 && (a === hi || b === hi);
 
@@ -244,7 +234,7 @@ function constellationStyle(o: ConstellationStyleOpts) {
     };
   }
   const rgb = blendedLineRgb(a, b, { labels, colors });
-  if (o.totalStep > 0) {
+  if (totalStep > 0) {
     return { rgb, alpha: 0.15 + strength * 0.45, lineW: 0.8 + strength * 2.0 };
   }
   return { rgb, alpha: 0.08 + strength * 0.18, lineW: 0.5 + strength * 0.8 };

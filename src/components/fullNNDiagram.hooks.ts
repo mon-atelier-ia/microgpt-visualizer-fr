@@ -88,14 +88,37 @@ export function useFullNNDraw(props: FullNNDiagramProps) {
   const [showBackward, setShowBackward] = useState(false);
   const acts = useMemo(() => buildActivations(props), [props]);
   const grads = useMemo(() => buildGradients(acts), [acts]);
-  // prettier-ignore
-  const fr: FrameRefs = { canvasRef, neuronsRef, phaseRef, animStartRef, showBackwardRef, hoverRef };
-  // prettier-ignore
-  const draw = useFullNNDrawCallback({ frameRefs: fr, animRef, data: { acts, grads } });
-  // prettier-ignore
-  const { startAnimation } = useCanvasObservers({ canvasRef, animRef, phaseRef, animStartRef, draw });
-  // prettier-ignore
-  const handlers = useNNHover({ canvasRef, neuronsRef, hoverRef, phaseRef, draw });
+
+  const fr: FrameRefs = {
+    canvasRef,
+    neuronsRef,
+    phaseRef,
+    animStartRef,
+    showBackwardRef,
+    hoverRef,
+  };
+
+  const draw = useFullNNDrawCallback({
+    frameRefs: fr,
+    animRef,
+    data: { acts, grads },
+  });
+
+  const { startAnimation } = useCanvasObservers({
+    canvasRef,
+    animRef,
+    phaseRef,
+    animStartRef,
+    draw,
+  });
+
+  const handlers = useNNHover({
+    canvasRef,
+    neuronsRef,
+    hoverRef,
+    phaseRef,
+    draw,
+  });
   const toggle = useCallback(
     () =>
       setShowBackward((p) => {
@@ -104,6 +127,12 @@ export function useFullNNDraw(props: FullNNDiagramProps) {
       }),
     [],
   );
-  // prettier-ignore
-  return { canvasRef, startAnimation, ...handlers, handleToggleBackward: toggle, showBackward };
+
+  return {
+    canvasRef,
+    startAnimation,
+    ...handlers,
+    handleToggleBackward: toggle,
+    showBackward,
+  };
 }

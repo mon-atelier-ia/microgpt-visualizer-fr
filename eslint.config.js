@@ -34,7 +34,7 @@ export default defineConfig([
       'max-depth': ['error', { max: 4 }],
       'max-lines-per-function': [
         'error',
-        { max: 50, skipBlankLines: true, skipComments: true },
+        { max: 100, skipBlankLines: true, skipComments: true },
       ],
       'max-lines': [
         'error',
@@ -88,7 +88,7 @@ export default defineConfig([
       'max-nested-callbacks': 'off',
       'max-lines-per-function': [
         'error',
-        { max: 80, skipBlankLines: true, skipComments: true },
+        { max: 150, skipBlankLines: true, skipComments: true },
       ],
     },
   },

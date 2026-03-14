@@ -1,4 +1,5 @@
 import { useRef, useCallback, memo } from "react";
+import { setupCanvas } from "../utils/canvasSetup";
 import { useCanvasObservers } from "../hooks/useCanvasObservers";
 import {
   findClosestNeuron,
@@ -39,30 +40,6 @@ function computeMaxWeights(matrices: number[][][]): number[] {
 }
 
 // ── Canvas setup ─────────────────────────────────────────────────────
-
-interface CanvasSetup {
-  w: number;
-  h: number;
-  elapsed: number;
-}
-
-function setupCanvas(
-  canvas: HTMLCanvasElement,
-  ctx: CanvasRenderingContext2D,
-  timestamp?: number,
-): CanvasSetup | null {
-  const dpr = window.devicePixelRatio || 1;
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
-  if (w === 0 || h === 0) return null;
-
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  const now = timestamp || performance.now();
-  return { w, h, elapsed: now };
-}
 
 // ── Phase helpers ────────────────────────────────────────────────────
 
@@ -131,13 +108,12 @@ function drawFrame(
 ): boolean {
   const canvas = refs.canvasRef.current;
   if (!canvas) return false;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return false;
-
-  const setup = setupCanvas(canvas, ctx, timestamp);
+  const setup = setupCanvas(canvas);
   if (!setup) return false;
 
-  const { w, h, elapsed } = setup;
+  const { ctx, w, h } = setup;
+  const now = timestamp || performance.now();
+  const elapsed = now - refs.animStartRef.current;
   const colors = readThemeColors();
   checkPhaseTransition(refs.phaseRef, elapsed, data.layers.length);
   const fwdP = makeFwdP(refs.phaseRef, elapsed);
@@ -245,8 +221,15 @@ function useNNDiagramDraw(props: NNDiagramProps) {
   const hoverRef = useRef<HoverInfo | null>(null);
   const phaseRef = useRef<string>("dormant");
   const animStartRef = useRef(0);
-  // prettier-ignore
-  const refs: NNRefs = { canvasRef, neuronsRef, animRef, hoverRef, phaseRef, animStartRef };
+
+  const refs: NNRefs = {
+    canvasRef,
+    neuronsRef,
+    animRef,
+    hoverRef,
+    phaseRef,
+    animStartRef,
+  };
   const data = prepareModelData(props);
   const {
     combined,
@@ -265,9 +248,15 @@ function useNNDiagramDraw(props: NNDiagramProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- derived arrays
     [combined, afterAttn, mlpHidden, mlpActiveMask, afterMlp, probs, weights],
   );
-  // prettier-ignore
-  const { startAnimation } = useCanvasObservers({ canvasRef, animRef, phaseRef, animStartRef, draw });
-  // prettier-ignore
+
+  const { startAnimation } = useCanvasObservers({
+    canvasRef,
+    animRef,
+    phaseRef,
+    animStartRef,
+    draw,
+  });
+
   const hover = useNNHover({ canvasRef, neuronsRef, hoverRef, phaseRef, draw });
   return { canvasRef, startAnimation, ...hover };
 }

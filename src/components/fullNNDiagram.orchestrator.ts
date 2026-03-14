@@ -33,22 +33,8 @@ import {
 
 export { computePositions };
 
-// ── Canvas setup ─────────────────────────────────────
-
-export function setupCanvas(
-  canvas: HTMLCanvasElement,
-): { ctx: CanvasRenderingContext2D; w: number; h: number } | null {
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-  const dpr = window.devicePixelRatio || 1;
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
-  if (w === 0 || h === 0) return null;
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { ctx, w, h };
-}
+import { setupCanvas } from "../utils/canvasSetup";
+export { setupCanvas };
 
 // ── Data builders ────────────────────────────────────
 

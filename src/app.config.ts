@@ -5,7 +5,6 @@ export interface PageDef {
   num: number;
   label: string;
   sep: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pages have heterogeneous props
   component: React.LazyExoticComponent<React.ComponentType<any>>;
 }
 

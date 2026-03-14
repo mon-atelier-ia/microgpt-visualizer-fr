@@ -1,11 +1,14 @@
 // ── PCA Scatter Plot — dot, tooltip, legend, step-label draw functions ──
 import { tokenLabel } from "../engine/model";
-import { VOWELS, DOT_RADIUS, BOS_RADIUS, PAD } from "./pcaScatterPlot.config";
+import {
+  VOWELS,
+  DOT_RADIUS,
+  BOS_RADIUS,
+  PAD,
+  dotRgb,
+  type RGB,
+} from "./pcaScatterPlot.config";
 import { projectBounds, type PCADrawContext } from "./pcaScatterPlot.renderer";
-
-// ── Types ──────────────────────────────────────────────────────────
-
-type RGB = [number, number, number];
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -13,15 +16,6 @@ export function buildLabels(n: number): string[] {
   const labels: string[] = [];
   for (let i = 0; i < n; i++) labels.push(tokenLabel(i));
   return labels;
-}
-
-function dotRgb(
-  ch: string,
-  c: { cyanRgb: RGB; orangeRgb: RGB; purpleRgb: RGB },
-): RGB {
-  if (ch === "BOS") return c.purpleRgb;
-  if (VOWELS.has(ch)) return c.cyanRgb;
-  return c.orangeRgb;
 }
 
 // ── Ghost trail ────────────────────────────────────────────────────

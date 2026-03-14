@@ -18,3 +18,14 @@ export function sameType(a: string, b: string): boolean {
   if (a === "BOS" || b === "BOS") return a === b;
   return VOWELS.has(a) === VOWELS.has(b);
 }
+
+export type RGB = [number, number, number];
+
+export function dotRgb(
+  ch: string,
+  c: { cyanRgb: RGB; orangeRgb: RGB; purpleRgb: RGB },
+): RGB {
+  if (ch === "BOS") return c.purpleRgb;
+  if (VOWELS.has(ch)) return c.cyanRgb;
+  return c.orangeRgb;
+}
