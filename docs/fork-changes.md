@@ -275,7 +275,9 @@ Zero visual changes (pixel-perfect before/after on 9 pages × 2 themes). 192/192
 | `classifyHead` refactored (complexity≤10)                                                                | `src/utils/classifyHead.ts`                                              | Réduction complexité cyclomatique via early returns et extraction helpers                                             |
 | `Heatmap.test.tsx` refactored (max-lines compliance)                                                     | `src/components/Heatmap.test.tsx`                                        | Test file exceeded max-lines — extracted shared setup                                                                 |
 
-157→0 erreurs, 0 clones, 192→197 tests. 10 commits (ef6baa9 → 9e01320).
+Fix: LossChartPanel memo on mutable array — `lossCount` prop busts memo during training.
+
+157→0 erreurs, 0 clones, 192→197 tests. 12 commits (ef6baa9 → 94f0740).
 
 ## Divers
 
