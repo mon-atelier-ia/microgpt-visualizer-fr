@@ -58,6 +58,118 @@ const ROWS = [
   },
 ];
 
+function ComparisonTable() {
+  return (
+    <div className="panel">
+      <div className="panel-title">Notre microGPT vs les vrais LLM</div>
+      <table className="conclusion-table">
+        <thead>
+          <tr>
+            <th>Concept</th>
+            <th>Notre microGPT</th>
+            <th>Les vrais LLM</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ROWS.map((r) => (
+            <tr key={r.concept}>
+              <td className="conclusion-concept">{r.concept}</td>
+              <td>{r.micro}</td>
+              <td>{r.real}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="conclusion-analogies">
+        {ROWS.map((r) => (
+          <p key={r.concept} className="conclusion-analogy">
+            <strong>{r.concept}</strong> — <em>{r.analogy}</em>
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GoFurtherPanel() {
+  return (
+    <div className="panel">
+      <div className="panel-title">Aller plus loin</div>
+      <ul className="conclusion-links">
+        <li>
+          <a
+            href="https://karpathy.github.io/2026/02/12/microgpt/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Guide officiel MicroGPT
+          </a>{" "}
+          — le tutoriel complet d'Andrej Karpathy (en anglais, pour les plus
+          motivés)
+        </li>
+        <li>
+          <a
+            href="https://microgpt-ts-fr.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            microgpt-ts-fr
+          </a>{" "}
+          — le code TypeScript de référence pour aller plus loin
+        </li>
+        <li>
+          <a
+            href="https://microgpt-lab.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            microgpt-lab
+          </a>{" "}
+          — laboratoire interactif pour expérimenter
+        </li>
+        <li>
+          <span>tuto-llm</span> — cours pédagogique associé en français
+          (prochainement)
+        </li>
+      </ul>
+
+      <p className="page-desc" style={{ marginTop: "var(--sp-12)" }}>
+        Envie de voir l'interface autrement&nbsp;? Essaie ces démos
+        alternatives&nbsp;:
+      </p>
+      <div className="playground-links">
+        <a
+          href="/playground-digital-explorer.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="playground-card"
+        >
+          <span className="playground-card__icon">🚀</span>
+          <span className="playground-card__label">Digital Explorer</span>
+        </a>
+        <a
+          href="/playground-borne-arcade.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="playground-card"
+        >
+          <span className="playground-card__icon">🕹️</span>
+          <span className="playground-card__label">Borne d'Arcade</span>
+        </a>
+        <a
+          href="/playground-tableau-noir.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="playground-card"
+        >
+          <span className="playground-card__icon">🖍️</span>
+          <span className="playground-card__label">Tableau Noir</span>
+        </a>
+      </div>
+    </div>
+  );
+}
+
 const ConclusionPage = memo(function ConclusionPage() {
   return (
     <PageSection id="conclusion" title="8. Conclusion">
@@ -68,109 +180,8 @@ const ConclusionPage = memo(function ConclusionPage() {
         ingénieurs ajoutent par-dessus.
       </p>
 
-      <div className="panel">
-        <div className="panel-title">Notre microGPT vs les vrais LLM</div>
-        <table className="conclusion-table">
-          <thead>
-            <tr>
-              <th>Concept</th>
-              <th>Notre microGPT</th>
-              <th>Les vrais LLM</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ROWS.map((r) => (
-              <tr key={r.concept}>
-                <td className="conclusion-concept">{r.concept}</td>
-                <td>{r.micro}</td>
-                <td>{r.real}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="conclusion-analogies">
-          {ROWS.map((r) => (
-            <p key={r.concept} className="conclusion-analogy">
-              <strong>{r.concept}</strong> — <em>{r.analogy}</em>
-            </p>
-          ))}
-        </div>
-      </div>
-
-      <div className="panel">
-        <div className="panel-title">Aller plus loin</div>
-        <ul className="conclusion-links">
-          <li>
-            <a
-              href="https://karpathy.github.io/2026/02/12/microgpt/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Guide officiel MicroGPT
-            </a>{" "}
-            — le tutoriel complet d'Andrej Karpathy (en anglais, pour les plus
-            motivés)
-          </li>
-          <li>
-            <a
-              href="https://microgpt-ts-fr.vercel.app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              microgpt-ts-fr
-            </a>{" "}
-            — le code TypeScript de référence pour aller plus loin
-          </li>
-          <li>
-            <a
-              href="https://microgpt-lab.vercel.app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              microgpt-lab
-            </a>{" "}
-            — laboratoire interactif pour expérimenter
-          </li>
-          <li>
-            <span>tuto-llm</span> — cours pédagogique associé en français
-            (prochainement)
-          </li>
-        </ul>
-
-        <p className="page-desc" style={{ marginTop: "var(--sp-12)" }}>
-          Envie de voir l'interface autrement&nbsp;? Essaie ces démos
-          alternatives&nbsp;:
-        </p>
-        <div className="playground-links">
-          <a
-            href="/playground-digital-explorer.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="playground-card"
-          >
-            <span className="playground-card__icon">🚀</span>
-            <span className="playground-card__label">Digital Explorer</span>
-          </a>
-          <a
-            href="/playground-borne-arcade.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="playground-card"
-          >
-            <span className="playground-card__icon">🕹️</span>
-            <span className="playground-card__label">Borne d'Arcade</span>
-          </a>
-          <a
-            href="/playground-tableau-noir.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="playground-card"
-          >
-            <span className="playground-card__icon">🖍️</span>
-            <span className="playground-card__label">Tableau Noir</span>
-          </a>
-        </div>
-      </div>
+      <ComparisonTable />
+      <GoFurtherPanel />
     </PageSection>
   );
 });

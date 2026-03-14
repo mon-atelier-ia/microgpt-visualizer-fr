@@ -3,6 +3,100 @@ import { uchars, BOS, tokenize, tokenLabel, vocabSize } from "../engine/model";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
 
+function CharMappingPanel() {
+  return (
+    <div className="panel">
+      <div className="panel-title">Correspondance caractère → ID</div>
+      <div className="explain">
+        Chaque caractère unique du dataset reçoit un{" "}
+        <b>
+          <Term id="identifiant" />
+        </b>{" "}
+        numérique. Il y a <b>{uchars.length}</b> caractères (a-z) plus un{" "}
+        <Term id="token" /> spécial{" "}
+        <b>
+          <Term id="bos" />
+        </b>{" "}
+        (id={BOS}). Taille totale du <Term id="vocabulaire" /> :{" "}
+        <b>{vocabSize}</b>.
+      </div>
+      <div className="char-mapping-scroll">
+        {uchars.map((ch, i) => (
+          <div key={ch} className="token-box cursor-default">
+            <span className="char">{ch}</span>
+            <span className="id">{i}</span>
+          </div>
+        ))}
+        <div className="token-box bos cursor-default">
+          <span className="char">BOS</span>
+          <span className="id">{BOS}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TokenFlowPanel({ tokens }: { tokens: number[] }) {
+  return (
+    <>
+      <div className="token-flow token-flow--animated">
+        {tokens.map((t, i) => {
+          const label = tokenLabel(t);
+          const isBos = t === BOS;
+          return (
+            <span key={i} className="d-contents">
+              {i > 0 && (
+                <span
+                  className="arrow-sym"
+                  style={{ animationDelay: `${i * 80 + 60}ms` }}
+                >
+                  →
+                </span>
+              )}
+              <div
+                className={`token-box ${isBos ? "bos" : ""}`}
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                <span className="char">{label}</span>
+                <span className="id">id: {t}</span>
+              </div>
+            </span>
+          );
+        })}
+      </div>
+
+      <div className="mt-16">
+        <div className="panel-title">Ce que le modèle doit apprendre :</div>
+        <div className="explain">
+          À chaque position, le modèle voit le <b>token actuel</b> et doit
+          prédire le{" "}
+          <b>
+            <Term id="token" /> suivant
+          </b>
+          . C'est ce qu'on appelle la{" "}
+          <b>
+            prédiction du <Term id="token" /> suivant
+          </b>{" "}
+          — le cœur du fonctionnement de GPT.
+        </div>
+        <div className="controls mt-8-mb-0">
+          {tokens.slice(0, -1).map((t, i) => {
+            const from = tokenLabel(t);
+            const to = tokenLabel(tokens[i + 1]);
+            return (
+              <div key={i} className="token-pair">
+                <span className="text-cyan">{from}</span>
+                <span className="text-dim arrow-spacer">→</span>
+                <span className="text-green">{to}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
+
 // R-1: seul TokenizerPage est memo'd (zéro prop).
 // Les 4 autres reçoivent modelRef.current (même référence) →
 // memo empêcherait les re-renders après training. Requiert fix A-1.
@@ -25,37 +119,8 @@ const TokenizerPage = memo(function TokenizerPage() {
         limites de chaque nom.
       </p>
 
-      {/* Correspondance caractère → ID */}
-      <div className="panel">
-        <div className="panel-title">Correspondance caractère → ID</div>
-        <div className="explain">
-          Chaque caractère unique du dataset reçoit un{" "}
-          <b>
-            <Term id="identifiant" />
-          </b>{" "}
-          numérique. Il y a <b>{uchars.length}</b> caractères (a-z) plus un{" "}
-          <Term id="token" /> spécial{" "}
-          <b>
-            <Term id="bos" />
-          </b>{" "}
-          (id={BOS}). Taille totale du <Term id="vocabulaire" /> :{" "}
-          <b>{vocabSize}</b>.
-        </div>
-        <div className="char-mapping-scroll">
-          {uchars.map((ch, i) => (
-            <div key={ch} className="token-box cursor-default">
-              <span className="char">{ch}</span>
-              <span className="id">{i}</span>
-            </div>
-          ))}
-          <div className="token-box bos cursor-default">
-            <span className="char">BOS</span>
-            <span className="id">{BOS}</span>
-          </div>
-        </div>
-      </div>
+      <CharMappingPanel />
 
-      {/* Tokeniseur interactif */}
       <div className="panel">
         <div className="panel-title">Essaie : tape un nom</div>
         <div className="explain">
@@ -76,70 +141,9 @@ const TokenizerPage = memo(function TokenizerPage() {
           maxLength={16}
         />
 
-        {clean && (
-          <>
-            <div className="token-flow token-flow--animated">
-              {tokens.map((t, i) => {
-                const label = tokenLabel(t);
-                const isBos = t === BOS;
-                return (
-                  <span key={i} className="d-contents">
-                    {i > 0 && (
-                      <span
-                        className="arrow-sym"
-                        style={{ animationDelay: `${i * 80 + 60}ms` }}
-                      >
-                        →
-                      </span>
-                    )}
-                    <div
-                      className={`token-box ${isBos ? "bos" : ""}`}
-                      style={{ animationDelay: `${i * 80}ms` }}
-                    >
-                      <span className="char">{label}</span>
-                      <span className="id">id: {t}</span>
-                    </div>
-                  </span>
-                );
-              })}
-            </div>
-
-            {/* Ce que le modèle doit apprendre */}
-            <div className="mt-16">
-              <div className="panel-title">
-                Ce que le modèle doit apprendre :
-              </div>
-              <div className="explain">
-                À chaque position, le modèle voit le <b>token actuel</b> et doit
-                prédire le{" "}
-                <b>
-                  <Term id="token" /> suivant
-                </b>
-                . C'est ce qu'on appelle la{" "}
-                <b>
-                  prédiction du <Term id="token" /> suivant
-                </b>{" "}
-                — le cœur du fonctionnement de GPT.
-              </div>
-              <div className="controls mt-8-mb-0">
-                {tokens.slice(0, -1).map((t, i) => {
-                  const from = tokenLabel(t);
-                  const to = tokenLabel(tokens[i + 1]);
-                  return (
-                    <div key={i} className="token-pair">
-                      <span className="text-cyan">{from}</span>
-                      <span className="text-dim arrow-spacer">→</span>
-                      <span className="text-green">{to}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </>
-        )}
+        {clean && <TokenFlowPanel tokens={tokens} />}
       </div>
 
-      {/* Détails du vocabulaire */}
       <div className="panel">
         <div className="panel-title">
           Comment fonctionne la tokenisation dans les vrais GPT
