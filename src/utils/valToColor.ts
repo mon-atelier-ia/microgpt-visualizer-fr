@@ -1,22 +1,24 @@
 import { oklchToRgb, rgbToOklch } from "./oklch";
 
+export interface ValToColorOpts {
+  alpha: number;
+  green: number[];
+  red: number[];
+  neutral: number[];
+}
+
 /**
  * Map a value in [-1, 1] to an RGBA color string.
- * Negative → redRgb, positive → greenRgb, near-zero → neutralRgb.
+ * Negative → red, positive → green, near-zero → neutral.
  * Interpolates in oklch space for perceptual uniformity.
  */
-export function valToColor(
-  v: number,
-  alpha: number,
-  greenRgb: number[],
-  redRgb: number[],
-  neutralRgb: number[],
-): string {
+export function valToColor(v: number, opts: ValToColorOpts): string {
+  const { alpha, green, red, neutral } = opts;
   const t = Math.max(-1, Math.min(1, v));
-  const base = t < 0 ? redRgb : greenRgb;
+  const base = t < 0 ? red : green;
   const a = Math.abs(t);
 
-  const neutralLch = rgbToOklch(neutralRgb[0], neutralRgb[1], neutralRgb[2]);
+  const neutralLch = rgbToOklch(neutral[0], neutral[1], neutral[2]);
   const baseLch = rgbToOklch(base[0], base[1], base[2]);
 
   const L = neutralLch[0] * (1 - a) + baseLch[0] * a;

@@ -1,17 +1,23 @@
 import { useState, useEffect, useCallback } from "react";
 import type { RefObject } from "react";
 
+export interface CanvasObserverOpts {
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+  animRef: RefObject<number>;
+  phaseRef: RefObject<string>;
+  animStartRef: RefObject<number>;
+  draw: (timestamp?: number) => void;
+}
+
 /**
  * Shared Canvas lifecycle: IO reveal, RO resize, MO theme, re-animate on data, startAnimation.
  * Used by NNDiagram and FullNNDiagram.
  */
-export function useCanvasObservers(
-  canvasRef: RefObject<HTMLCanvasElement | null>,
-  animRef: RefObject<number>,
-  phaseRef: RefObject<string>,
-  animStartRef: RefObject<number>,
-  draw: (timestamp?: number) => void,
-): { hasRevealed: boolean; startAnimation: () => void } {
+export function useCanvasObservers(opts: CanvasObserverOpts): {
+  hasRevealed: boolean;
+  startAnimation: () => void;
+} {
+  const { canvasRef, animRef, phaseRef, animStartRef, draw } = opts;
   const [hasRevealed, setHasRevealed] = useState(false);
 
   const startAnimation = useCallback(() => {
@@ -29,14 +35,46 @@ export function useCanvasObservers(
     }
   }, [animRef, phaseRef, animStartRef, draw]);
 
-  // IntersectionObserver — first reveal
+  useIOReveal({
+    canvasRef,
+    phaseRef,
+    hasRevealed,
+    setHasRevealed,
+    startAnimation,
+    draw,
+  });
+  useReAnimate(hasRevealed, startAnimation, animRef);
+  useResizeRedraw(canvasRef, phaseRef, draw);
+  useThemeRedraw(phaseRef, draw);
+
+  return { hasRevealed, startAnimation };
+}
+
+// ── Sub-hooks (each ≤15 lines) ──────────────────────
+
+interface IORevealOpts {
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+  phaseRef: RefObject<string>;
+  hasRevealed: boolean;
+  setHasRevealed: (v: boolean) => void;
+  startAnimation: () => void;
+  draw: (timestamp?: number) => void;
+}
+
+function useIOReveal(opts: IORevealOpts) {
+  const {
+    canvasRef,
+    phaseRef,
+    hasRevealed,
+    setHasRevealed,
+    startAnimation,
+    draw,
+  } = opts;
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || hasRevealed) return;
     if (typeof IntersectionObserver === "undefined") {
-      // jsdom fallback: draw static immediately
       phaseRef.current = "idle";
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- jsdom-only fallback path, no cascading risk
       setHasRevealed(true);
       draw();
       return;
@@ -53,16 +91,27 @@ export function useCanvasObservers(
     );
     io.observe(canvas);
     return () => io.disconnect();
-  }, [canvasRef, phaseRef, hasRevealed, startAnimation, draw]);
+  }, [canvasRef, phaseRef, hasRevealed, setHasRevealed, startAnimation, draw]);
+}
 
-  // Re-animate on data change (after first reveal)
+function useReAnimate(
+  hasRevealed: boolean,
+  startAnimation: () => void,
+  animRef: RefObject<number>,
+) {
   useEffect(() => {
     if (!hasRevealed) return;
     startAnimation();
-    return () => cancelAnimationFrame(animRef.current);
+    const ref = animRef;
+    return () => cancelAnimationFrame(ref.current);
   }, [hasRevealed, startAnimation, animRef]);
+}
 
-  // ResizeObserver
+function useResizeRedraw(
+  canvasRef: RefObject<HTMLCanvasElement | null>,
+  phaseRef: RefObject<string>,
+  draw: (timestamp?: number) => void,
+) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -73,8 +122,12 @@ export function useCanvasObservers(
     ro.observe(canvas.parentElement!);
     return () => ro.disconnect();
   }, [canvasRef, phaseRef, draw]);
+}
 
-  // MutationObserver — theme change
+function useThemeRedraw(
+  phaseRef: RefObject<string>,
+  draw: (timestamp?: number) => void,
+) {
   useEffect(() => {
     if (typeof MutationObserver === "undefined") return;
     const observer = new MutationObserver(() => {
@@ -86,6 +139,4 @@ export function useCanvasObservers(
     });
     return () => observer.disconnect();
   }, [phaseRef, draw]);
-
-  return { hasRevealed, startAnimation };
 }
