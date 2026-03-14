@@ -93,7 +93,10 @@ export default memo(function TrainingPage() {
         onReset={resetModel}
       />
 
-      <LossChartPanel lossHistory={model.lossHistory} />
+      <LossChartPanel
+        lossHistory={model.lossHistory}
+        lossCount={model.lossHistory.length}
+      />
 
       {lastResult && <StepDetail result={lastResult} />}
 

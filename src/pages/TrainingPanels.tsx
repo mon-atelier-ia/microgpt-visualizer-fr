@@ -87,6 +87,8 @@ export const TrainingControls = memo(function TrainingControls({
 
 interface LossChartPanelProps {
   lossHistory: number[];
+  /** Pass lossHistory.length to bust memo when the array is mutated in place */
+  lossCount: number;
 }
 
 export const LossChartPanel = memo(function LossChartPanel({
