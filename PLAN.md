@@ -792,6 +792,26 @@ Refactoring structurel complet du CSS (7 tâches + 3 bugfixes post-review) :
 
 ---
 
+## Remaining findings (post Phase B1 audit, 2026-03-15)
+
+### Bugs / dette technique
+
+| #   | Item                                                                                                                        | Gravité           | Effort |
+| --- | --------------------------------------------------------------------------------------------------------------------------- | ----------------- | ------ |
+| 1   | `any` dans `app.config.ts:8` — `React.ComponentType<any>` → `React.ComponentType<object>`                                   | Warning ESLint    | 1 min  |
+| 2   | `eslint-disable` dans `TermProvider.tsx:26` — `react-refresh/only-export-components` contournable en restructurant l'export | Convention violée | 5 min  |
+| 3   | Pas de test pour `AttentionPage` — seule page sans `.test.tsx` (9 pages, 8 testées)                                         | Gap couverture    | 30 min |
+| 4   | Vite build chunk > 500KB — `index.js` = 633KB (react-dom + engine). Splittable avec `manualChunks`                          | Perf prod         | 15 min |
+
+### Nice-to-have
+
+| #   | Item                                                                                                                                                   | Valeur    | Effort |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- | ------ |
+| 5   | `prefers-reduced-motion` : 3 occurrences CSS seulement. Canvas animations (NNDiagram, FullNNDiagram, PCA replay) ne vérifient pas `matchMedia` côté JS | A11y WCAG | 30 min |
+| 6   | `useModelDerived` eslint-disable : dernier disable logique. Éliminable si le store retourne un objet immutable (breaking change engine)                | Pureté    | Gros   |
+
+---
+
 ## References
 
 - [enescang/microgpt-visualizer](https://github.com/enescang/microgpt-visualizer) — upstream

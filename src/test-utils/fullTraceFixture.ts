@@ -19,3 +19,15 @@ export const EMPTY_TRACE_PROPS = {
   logits: new Array(27).fill(0),
   probs: new Array(27).fill(1 / 27),
 } as const;
+
+/** Mock gptForward that returns EMPTY_TRACE_PROPS as trace */
+export function mockGptForward() {
+  return {
+    logits: Array.from({ length: 27 }, () => ({ data: 0 })),
+    trace: {
+      tokenId: 0,
+      posId: 0,
+      ...EMPTY_TRACE_PROPS,
+    },
+  };
+}

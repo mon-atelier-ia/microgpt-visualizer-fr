@@ -5,7 +5,7 @@ export interface PageDef {
   num: number;
   label: string;
   sep: boolean;
-  component: React.LazyExoticComponent<React.ComponentType<any>>;
+  component: React.LazyExoticComponent<React.ComponentType<any>>; // heterogeneous page props
 }
 
 export const PAGES: PageDef[] = [

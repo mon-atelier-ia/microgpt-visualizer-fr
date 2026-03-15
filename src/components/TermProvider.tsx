@@ -5,8 +5,6 @@
  * Les composants <Term /> appellent `openModal(id)` via le contexte.
  */
 import {
-  createContext,
-  useContext,
   useRef,
   useState,
   useEffect,
@@ -14,19 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { GLOSSARY } from "../data/glossary";
-
-interface TermModalContext {
-  openModal: (id: string) => void;
-}
-
-const TermModalCtx = createContext<TermModalContext>({
-  openModal: () => {},
-});
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function useTermModal() {
-  return useContext(TermModalCtx);
-}
+import { TermModalCtx } from "./useTermModal";
 
 export default function TermProvider({ children }: { children: ReactNode }) {
   const [activeId, setActiveId] = useState<string | null>(null);
