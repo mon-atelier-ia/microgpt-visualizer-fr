@@ -808,7 +808,23 @@ Refactoring structurel complet du CSS (7 tâches + 3 bugfixes post-review) :
 | #   | Item                                                                                                                                                                                   | Valeur | Effort |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
 | 5   | ~~`prefers-reduced-motion`~~ FAUX POSITIF : CSS global (styles.css:1065), JS Canvas via `useCanvasObservers` (line 24-31) et `pcaScatterPlot.animation.ts` (line 89). Couvert partout. | ✅ OK  | —      |
-| 6   | `useModelDerived` eslint-disable : dernier disable logique. Éliminable si le store retourne un objet immutable (breaking change engine)                                                | Pureté | Gros   |
+| 6   | `useModelDerived` eslint-disable : dernier disable logique — voir analyse ci-dessous                                                                                                   | Pureté | Gros   |
+
+### Analyse dette #6 : `useModelDerived` eslint-disable
+
+**Cause racine** : `src/engine/` est traité comme read-only (upstream Rust → TypeScript, fidélité au modèle ML source de vérité). L'engine mute le model en place (`trainStep` fait `model.totalStep++`, `param.data += -lr * param.grad`, `model.lossHistory.push(loss)`) — la référence objet ne change jamais pendant le training.
+
+**Conséquence React** : `useMemo(() => fn(model), [model])` ne recalcule jamais car `model === model`. On ajoute `model.totalStep` comme signal de version dans les deps, mais ESLint le refuse car il n'est pas utilisé directement dans le callback.
+
+**État actuel** : 1 seul `eslint-disable` centralisé dans `useModelDerived.ts` (remplace 6 dispersés dans les pages). Hook testé (5 tests). Pattern documenté.
+
+**Pour éliminer** — 2 voies, aucune satisfaisante aujourd'hui :
+
+1. **Engine immutable** : `trainStep()` retournerait un nouvel objet à chaque appel. Problème : ~5 000 mutations/seconde (5 steps × 4 192 params par rAF tick) → deep clone destructeur pour les perfs. L'autograd (`Value.backward()`) repose sur la mutabilité des `.grad` pour propager les gradients. Et ça divergerait de l'upstream.
+
+2. **Adapter layer** : le store ferait un snapshot immutable à la fréquence UI (1×/frame) plutôt qu'à chaque mutation. Faisable mais over-engineering pour un projet pédagogique — le hook actuel fait exactement ça avec moins de code.
+
+**Verdict** : dette acceptée. Le `eslint-disable` est justifié, centralisé, testé, et documenté. Le coût de l'éliminer dépasse le bénéfice.
 
 ---
 
