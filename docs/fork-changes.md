@@ -277,7 +277,7 @@ Zero visual changes (pixel-perfect before/after on 9 pages × 2 themes). 192/192
 
 Fix: LossChartPanel memo on mutable array — `lossCount` prop busts memo during training.
 
-157→0 erreurs, 0 clones, 192→197 tests. 12 commits (ef6baa9 → 94f0740).
+157→0 erreurs, 0 clones, 192→202 tests. 12 commits (ef6baa9 → 94f0740).
 
 ## Divers
 
