@@ -805,10 +805,10 @@ Refactoring structurel complet du CSS (7 tâches + 3 bugfixes post-review) :
 
 ### Nice-to-have
 
-| #   | Item                                                                                                                                                   | Valeur    | Effort |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- | ------ |
-| 5   | `prefers-reduced-motion` : 3 occurrences CSS seulement. Canvas animations (NNDiagram, FullNNDiagram, PCA replay) ne vérifient pas `matchMedia` côté JS | A11y WCAG | 30 min |
-| 6   | `useModelDerived` eslint-disable : dernier disable logique. Éliminable si le store retourne un objet immutable (breaking change engine)                | Pureté    | Gros   |
+| #   | Item                                                                                                                                                                                   | Valeur | Effort |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
+| 5   | ~~`prefers-reduced-motion`~~ FAUX POSITIF : CSS global (styles.css:1065), JS Canvas via `useCanvasObservers` (line 24-31) et `pcaScatterPlot.animation.ts` (line 89). Couvert partout. | ✅ OK  | —      |
+| 6   | `useModelDerived` eslint-disable : dernier disable logique. Éliminable si le store retourne un objet immutable (breaking change engine)                                                | Pureté | Gros   |
 
 ---
 
