@@ -796,12 +796,12 @@ Refactoring structurel complet du CSS (7 tâches + 3 bugfixes post-review) :
 
 ### Bugs / dette technique
 
-| #   | Item                                                                                                                        | Gravité           | Effort |
-| --- | --------------------------------------------------------------------------------------------------------------------------- | ----------------- | ------ |
-| 1   | `any` dans `app.config.ts:8` — `React.ComponentType<any>` → `React.ComponentType<object>`                                   | Warning ESLint    | 1 min  |
-| 2   | `eslint-disable` dans `TermProvider.tsx:26` — `react-refresh/only-export-components` contournable en restructurant l'export | Convention violée | 5 min  |
-| 3   | Pas de test pour `AttentionPage` — seule page sans `.test.tsx` (9 pages, 8 testées)                                         | Gap couverture    | 30 min |
-| 4   | Vite build chunk > 500KB — `index.js` = 633KB (react-dom + engine). Splittable avec `manualChunks`                          | Perf prod         | 15 min |
+| #   | Item                                                                                                                            | Gravité    | Effort |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
+| 1   | ~~`any` dans `app.config.ts:8`~~ — `React.ComponentType<any>` accepté (props hétérogènes, pas de type TS propre). Warning seul. | ✅ Accepté | —      |
+| 2   | ~~`eslint-disable` dans `TermProvider.tsx:26`~~ — `useTermModal` extrait dans fichier séparé (commit `4240042`)                 | ✅ FAIT    | —      |
+| 3   | ~~Pas de test pour `AttentionPage`~~ — 5 tests ajoutés (commit `4240042`)                                                       | ✅ FAIT    | —      |
+| 4   | ~~Vite build chunk > 500KB~~ — `manualChunks` sépare react-dom (633KB → 455KB, commit `4240042`)                                | ✅ FAIT    | —      |
 
 ### Nice-to-have
 
