@@ -13,13 +13,18 @@
       addEventListener("DOMContentLoaded", () => {
         const s = getComputedStyle(document.documentElement);
         const a = s.getPropertyValue("--green").trim() || "oklch(0.698 0.094 130.4)";
+        const b = s.getPropertyValue("--blue").trim() || a;
         console.log(
           "%c\n  ██████╗         █████╗    ██████╗\n  ██╔══██╗       ██╔══██╗   ██╔════╝\n  ██████╔╝       ███████║   ██║  ███╗\n  ██╔═══╝ █████╗ ██╔══██║   ██║   ██║\n  ██║     ╚════╝ ██║  ██║ ▄ ╚██████╔╝\n  ╚═╝            ╚═╝  ╚═╝ ▀  ╚═════╝\n",
-          "color:" + a + ";font-family:monospace;",
+          "background:linear-gradient(135deg," + a + "," + b + ");" +
+          "-webkit-background-clip:text;" +
+          "-webkit-text-fill-color:transparent;" +
+          "color:" + a + ";" +
+          "font-family:monospace;font-size:14px;line-height:1.4;",
         );
         console.log(
           "%c microGPT visualizer-fr — par P-A.G ",
-          "background:" + a + ";color:oklch(0.15 0 0);padding:6px 12px;border-radius:4px;font-weight:bold;font-family:monospace;",
+          "background:" + a + ";color:oklch(0.95 0 0);padding:6px 12px;border-radius:4px;font-weight:bold;font-family:monospace;",
         );
         console.log(
           "%c Curieux ? Le code est open-source \u2192 github.com/mon-atelier-ia ",
