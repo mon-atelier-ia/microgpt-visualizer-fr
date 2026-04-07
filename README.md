@@ -63,7 +63,7 @@ L'application est accessible sur `http://localhost:5173`
 | `pnpm build`   | Build de production                                |
 | `pnpm preview` | Aperçu local du build de production                |
 | `pnpm lint`    | ESLint                                             |
-| `pnpm test`    | Vitest (192 tests)                                 |
+| `pnpm test`    | Vitest (202 tests)                                 |
 
 ## Structure du projet
 
