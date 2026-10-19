@@ -57,6 +57,9 @@ importers:
       jsdom:
         specifier: ^30.1.3
         version: 30.1.3
+      lightningcss:
+        specifier: ^1.33.0
+        version: 1.33.0
       lint-staged:
         specifier: ^17.6.0
         version: 17.6.0

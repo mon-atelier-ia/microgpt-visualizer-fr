@@ -67,4 +67,34 @@ describe("parseColor", () => {
   it("parse oklch() clamp out-of-gamut", () => {
     expectValidRgb(parseColor("oklch(0.9 0.4 150)"));
   });
+
+  // CSS Color 4 syntax, as emitted by minifiers (Lightning CSS in Vite 8)
+  describe("oklch() full CSS syntax", () => {
+    const ref = parseColor("oklch(0.502 0.128 22.9)");
+
+    it("lightness as a percentage", () => {
+      expect(parseColor("oklch(50.2% 0.128 22.9)")).toEqual(ref);
+    });
+
+    it("numbers without leading zero", () => {
+      expect(parseColor("oklch(.502 .128 22.9)")).toEqual(ref);
+    });
+
+    it("Lightning CSS output: percentage + no leading zero", () => {
+      expect(parseColor("oklch(50.2% .128 22.9)")).toEqual(ref);
+    });
+
+    it("chroma as a percentage (100% = 0.4)", () => {
+      expect(parseColor("oklch(0.502 32% 22.9)")).toEqual(ref);
+    });
+
+    it("hue with deg unit", () => {
+      expect(parseColor("oklch(0.502 0.128 22.9deg)")).toEqual(ref);
+    });
+
+    it("ignores an alpha channel", () => {
+      expect(parseColor("oklch(0.502 0.128 22.9 / 0.5)")).toEqual(ref);
+      expect(parseColor("oklch(50.2% .128 22.9/50%)")).toEqual(ref);
+    });
+  });
 });
