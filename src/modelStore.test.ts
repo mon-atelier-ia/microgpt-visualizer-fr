@@ -4,6 +4,7 @@ import {
   resetModel,
   notifyModelUpdate,
   useModel,
+  useModelSnapshot,
   getModelTotalStep,
   pushWteSnapshot,
   getWteSnapshots,
@@ -103,5 +104,58 @@ describe("wteSnapshots", () => {
     expect(getWteSnapshots().length).toBeGreaterThan(0);
     act(() => resetModel());
     expect(getWteSnapshots()).toHaveLength(0);
+  });
+});
+
+describe("useModelSnapshot", () => {
+  beforeEach(() => {
+    act(() => resetModel());
+  });
+
+  it("exposes the same model as useModel", () => {
+    const { result } = renderHook(() => ({
+      snap: useModelSnapshot(),
+      model: useModel(),
+    }));
+    expect(result.current.snap.model).toBe(result.current.model);
+  });
+
+  it("keeps a stable identity across renders without store change", () => {
+    const { result, rerender } = renderHook(() => useModelSnapshot());
+    const first = result.current;
+    rerender();
+    expect(result.current).toBe(first);
+  });
+
+  it("changes identity on in-place mutation + notify (model ref unchanged)", () => {
+    const { result } = renderHook(() => useModelSnapshot());
+    const before = result.current;
+    act(() => {
+      before.model.totalStep = 42;
+      notifyModelUpdate();
+    });
+    expect(result.current).not.toBe(before);
+    expect(result.current.model).toBe(before.model);
+    expect(result.current.model.totalStep).toBe(42);
+  });
+
+  it("changes identity and model on reset", () => {
+    const { result } = renderHook(() => useModelSnapshot());
+    const before = result.current;
+    act(() => resetModel());
+    expect(result.current).not.toBe(before);
+    expect(result.current.model).not.toBe(before.model);
+    expect(result.current.model.totalStep).toBe(0);
+  });
+
+  it("exposes wte snapshots with a new array identity after push", () => {
+    const { result } = renderHook(() => useModelSnapshot());
+    const before = result.current.wteSnapshots;
+    act(() => {
+      pushWteSnapshot(result.current.model);
+      notifyModelUpdate();
+    });
+    expect(result.current.wteSnapshots).not.toBe(before);
+    expect(result.current.wteSnapshots).toHaveLength(1);
   });
 });

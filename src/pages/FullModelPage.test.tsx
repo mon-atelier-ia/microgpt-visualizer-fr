@@ -2,9 +2,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 
-vi.mock("../modelStore", () => ({
-  useModel: () => ({ totalStep: 0 }),
-}));
+vi.mock("../modelStore", async () =>
+  (await import("../test-utils/modelMock")).createModelStoreMock({
+    totalStep: 0,
+  }),
+);
 
 import { EMPTY_TRACE_PROPS } from "../test-utils/fullTraceFixture";
 

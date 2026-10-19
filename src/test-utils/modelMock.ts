@@ -15,3 +15,17 @@ export function createModelMock(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+/**
+ * Shared mock factory for the whole `modelStore` module (read hooks only).
+ * Usage: `vi.mock("../modelStore", async () => (await import("../test-utils/modelMock")).createModelStoreMock());`
+ * The snapshot is created once so its identity is stable across renders, like the real store.
+ */
+export function createModelStoreMock(model: object = createModelMock()) {
+  const snapshot = { model, wteSnapshots: [] };
+  return {
+    useModel: () => model,
+    useModelSnapshot: () => snapshot,
+    getWteSnapshots: () => [],
+  };
+}

@@ -34,7 +34,7 @@ import "./PCAScatterPlot.css";
 interface PCAScatterPlotProps {
   wteData: number[][];
   totalStep: number;
-  snapshots: WteSnapshot[];
+  snapshots: readonly WteSnapshot[];
   highlightLetter?: number | null;
   onHoverLetter?: (index: number | null) => void;
 }
@@ -243,7 +243,7 @@ export default function PCAScatterPlot(props: PCAScatterPlotProps) {
 function renderCanvas(opts: {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   handlers: ReturnType<typeof useHoverHandlers>;
-  snapshots: WteSnapshot[];
+  snapshots: readonly WteSnapshot[];
   startAnimation: () => void;
 }) {
   const { canvasRef, handlers, snapshots, startAnimation } = opts;

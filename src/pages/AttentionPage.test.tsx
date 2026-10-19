@@ -1,17 +1,18 @@
 // @vitest-environment jsdom
 import { describe, expect, it, afterEach, vi } from "vitest";
+import { withOverrides } from "../test-utils/partialMock";
 import { render, screen, cleanup } from "@testing-library/react";
-import { createModelMock } from "../test-utils/modelMock";
 import { mockGptForward } from "../test-utils/fullTraceFixture";
 
-vi.mock("../modelStore", () => ({
-  useModel: () => createModelMock(),
-}));
+vi.mock("../modelStore", async () =>
+  (await import("../test-utils/modelMock")).createModelStoreMock(),
+);
 
-vi.mock("../engine/model", async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>;
-  return { ...actual, gptForward: mockGptForward };
-});
+vi.mock("../engine/model", (importOriginal) =>
+  withOverrides(importOriginal, {
+    gptForward: mockGptForward,
+  }),
+);
 
 import AttentionPage from "./AttentionPage";
 

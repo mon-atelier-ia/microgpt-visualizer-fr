@@ -7,7 +7,7 @@ import type { PCADrawOpts } from "./pcaScatterPlot.renderer";
 import type { AnimState } from "./PCAScatterPlot";
 
 interface TickContext {
-  snapshots: WteSnapshot[];
+  snapshots: readonly WteSnapshot[];
   animRef: React.MutableRefObject<AnimState | null>;
   drawRef: React.RefObject<(o?: PCADrawOpts) => void>;
 }
@@ -48,7 +48,7 @@ function animTick(ctx: TickContext, now: number): void {
 }
 
 function interpolateEmb(
-  snapshots: WteSnapshot[],
+  snapshots: readonly WteSnapshot[],
   anim: AnimState,
   ease: number,
 ): number[][] {
@@ -69,7 +69,7 @@ function updateGhostTrail(anim: AnimState, proj: number[][]): void {
 
 function updateStepLabel(
   anim: AnimState,
-  snapshots: WteSnapshot[],
+  snapshots: readonly WteSnapshot[],
   ease: number,
 ): void {
   const fromStep = snapshots[anim.fromIdx].step;
@@ -78,7 +78,7 @@ function updateStepLabel(
 }
 
 export function useStartAnimation(
-  snapshots: WteSnapshot[],
+  snapshots: readonly WteSnapshot[],
   animRef: React.MutableRefObject<AnimState | null>,
   drawRef: React.RefObject<(o?: PCADrawOpts) => void>,
 ) {

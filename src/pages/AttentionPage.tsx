@@ -9,8 +9,7 @@ import {
 } from "../engine/model";
 import type { ForwardTrace } from "../engine/model";
 import type { Value } from "../engine/autograd";
-import { useModel } from "../modelStore";
-import { useModelDerived } from "../useModelDerived";
+import { useModelSnapshot } from "../modelStore";
 import type { ModelState } from "../engine/model";
 import PageSection from "../components/PageSection";
 import Term from "../components/Term";
@@ -52,7 +51,8 @@ function buildAllHeadMatrices(traces: ForwardTrace[]) {
 }
 
 export default memo(function AttentionPage() {
-  const model = useModel();
+  const snap = useModelSnapshot();
+  const { model } = snap;
   const [input, setInput] = useState("emma");
   const [selectedPos, setSelectedPos] = useState(0);
   const [selectedHead, setSelectedHead] = useState(0);
@@ -67,9 +67,9 @@ export default memo(function AttentionPage() {
   const tokenLabels = tokens.map((id) => tokenLabel(id));
   const n = Math.min(BLOCK_SIZE, tokens.length - 1);
 
-  const traces = useModelDerived(
-    (m) => computeTraces(tokens, n, m),
-    [tokens, n],
+  const traces = useMemo(
+    () => computeTraces(tokens, n, snap.model),
+    [snap, tokens, n],
   );
 
   const matrix = useMemo(

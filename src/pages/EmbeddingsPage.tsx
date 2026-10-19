@@ -2,8 +2,7 @@ import { useState, useMemo, memo } from "react";
 import { uchars, N_EMBD, BLOCK_SIZE, charToId } from "../engine/model";
 import Term from "../components/Term";
 import PageSection from "../components/PageSection";
-import { useModel, getWteSnapshots } from "../modelStore";
-import { useModelDerived } from "../useModelDerived";
+import { useModelSnapshot } from "../modelStore";
 import { computeCharStats } from "../utils/charStats";
 import type { Value } from "../engine/autograd";
 import { WtePanel, WpePanel, CombinePanel, PCAPanel } from "./EmbeddingsPanels";
@@ -13,7 +12,8 @@ function extractData(matrix: Value[][]) {
 }
 
 export default memo(function EmbeddingsPage() {
-  const model = useModel();
+  const snap = useModelSnapshot();
+  const { model, wteSnapshots } = snap;
   const [hoverRow, setHoverRow] = useState<number | null>(null);
   const [hoverRowWpe, setHoverRowWpe] = useState<number | null>(null);
   const [selectedChar, setSelectedChar] = useState("e");
@@ -31,9 +31,7 @@ export default memo(function EmbeddingsPage() {
 
   const charStats = useMemo(() => computeCharStats(model.docs), [model.docs]);
 
-  const wteData = useModelDerived((m) => extractData(m.stateDict.wte));
-
-  const wteSnapshots = useModelDerived(() => getWteSnapshots());
+  const wteData = useMemo(() => extractData(snap.model.stateDict.wte), [snap]);
 
   const hoveredValues =
     hoverRow !== null ? wte[hoverRow].map((v) => v.data) : null;

@@ -1,18 +1,15 @@
 // @vitest-environment jsdom
 import { describe, expect, it, afterEach, vi } from "vitest";
+import { withOverrides } from "../test-utils/partialMock";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import InferencePage from "./InferencePage";
 
-import { createModelMock } from "../test-utils/modelMock";
+vi.mock("../modelStore", async () =>
+  (await import("../test-utils/modelMock")).createModelStoreMock(),
+);
 
-vi.mock("../modelStore", () => ({
-  useModel: () => createModelMock(),
-}));
-
-vi.mock("../engine/model", async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>;
-  return {
-    ...actual,
+vi.mock("../engine/model", (importOriginal) =>
+  withOverrides(importOriginal, {
     generateName: () => ({
       name: "test",
       steps: [
@@ -25,8 +22,8 @@ vi.mock("../engine/model", async (importOriginal) => {
         },
       ],
     }),
-  };
-});
+  }),
+);
 
 afterEach(() => cleanup());
 

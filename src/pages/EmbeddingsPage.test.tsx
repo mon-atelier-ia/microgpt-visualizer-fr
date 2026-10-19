@@ -2,8 +2,8 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { render, cleanup, fireEvent } from "@testing-library/react";
 
-vi.mock("../modelStore", () => ({
-  useModel: () => ({
+vi.mock("../modelStore", async () =>
+  (await import("../test-utils/modelMock")).createModelStoreMock({
     stateDict: {
       wte: Array.from({ length: 27 }, () =>
         Array.from({ length: 16 }, () => ({ data: Math.random() })),
@@ -15,8 +15,7 @@ vi.mock("../modelStore", () => ({
     totalStep: 0,
     docs: ["alice", "bob"],
   }),
-  getWteSnapshots: () => [],
-}));
+);
 
 import EmbeddingsPage from "./EmbeddingsPage";
 

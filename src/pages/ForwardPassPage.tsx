@@ -16,7 +16,7 @@ import FlowDiagram from "../components/FlowDiagram";
 import VectorsPanel from "../components/VectorsPanel";
 import NNDiagram from "../components/NNDiagram";
 import MLPActivationPanel from "../components/MLPActivationPanel";
-import { useModelDerived } from "../useModelDerived";
+import { useModelSnapshot } from "../modelStore";
 
 function CharPosSelector({
   char,
@@ -163,15 +163,16 @@ export default memo(function ForwardPassPage() {
   const [pos, setPos] = useState(0);
 
   const tokenId = charToId[char] ?? 0;
-  const trace = useModelDerived(
-    (m) => computeForwardTrace(tokenId, pos, m),
-    [tokenId, pos],
+  const snap = useModelSnapshot();
+  const trace = useMemo(
+    () => computeForwardTrace(tokenId, pos, snap.model),
+    [snap, tokenId, pos],
   );
 
   const top5 = useMemo(() => computeTop(trace.probs, 10), [trace]);
   const maxProb = Math.max(...top5.map((t) => t.prob), 0.01);
 
-  const weights = useModelDerived((m) => extractWeights(m.stateDict));
+  const weights = useMemo(() => extractWeights(snap.model.stateDict), [snap]);
 
   return (
     <PageSection id="forward" title="3. Propagation">

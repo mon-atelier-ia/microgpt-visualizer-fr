@@ -4,7 +4,7 @@ import Heatmap, { VectorBar } from "../components/Heatmap";
 import EmbeddingBarChart from "../components/EmbeddingBarChart";
 import Term from "../components/Term";
 import PCAScatterPlot from "../components/PCAScatterPlot";
-import { getWteSnapshots } from "../modelStore";
+import type { WteSnapshot } from "../modelStore";
 import type { Value } from "../engine/autograd";
 import type { CharStats } from "../utils/charStats";
 
@@ -255,7 +255,7 @@ export const CombinePanel = memo(function CombinePanel({
 interface PCAPanelProps {
   wteData: number[][];
   totalStep: number;
-  snapshots: ReturnType<typeof getWteSnapshots>;
+  snapshots: readonly WteSnapshot[];
   highlightLetter: number | null;
   onHoverLetter: (i: number | null) => void;
 }

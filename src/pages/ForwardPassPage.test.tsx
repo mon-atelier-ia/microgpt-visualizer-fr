@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, afterEach, vi } from "vitest";
+import { withOverrides } from "../test-utils/partialMock";
 import { render, screen, cleanup } from "@testing-library/react";
-import { createModelMock } from "../test-utils/modelMock";
 import { mockGptForward } from "../test-utils/fullTraceFixture";
 
 function makeWeightMatrix(rows: number, cols: number) {
@@ -10,8 +10,10 @@ function makeWeightMatrix(rows: number, cols: number) {
   );
 }
 
-vi.mock("../modelStore", () => ({
-  useModel: () =>
+vi.mock("../modelStore", async () => {
+  const { createModelStoreMock, createModelMock } =
+    await import("../test-utils/modelMock");
+  return createModelStoreMock(
     createModelMock({
       stateDict: {
         wte: [],
@@ -22,12 +24,14 @@ vi.mock("../modelStore", () => ({
         lm_head: makeWeightMatrix(27, 16),
       },
     }),
-}));
-
-vi.mock("../engine/model", async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>;
-  return { ...actual, gptForward: mockGptForward };
+  );
 });
+
+vi.mock("../engine/model", (importOriginal) =>
+  withOverrides(importOriginal, {
+    gptForward: mockGptForward,
+  }),
+);
 
 import ForwardPassPage from "./ForwardPassPage";
 

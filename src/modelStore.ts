@@ -7,7 +7,6 @@ type Listener = () => void;
 const listeners = new Set<Listener>();
 let currentDatasetId = DEFAULT_DATASET_ID;
 let model: ModelState = createModel(getDataset(currentDatasetId).words);
-let version = 0;
 
 // ── wte Snapshots (visualization concern, not engine) ──
 export interface WteSnapshot {
@@ -23,7 +22,8 @@ export function pushWteSnapshot(state: ModelState) {
   const snap: number[][] = state.stateDict.wte.map((row) =>
     row.map((v) => v.data),
   );
-  wteSnapshots.push({ step: state.totalStep, wte: snap });
+  // Immutable append: the array identity changes, so React snapshots see it
+  wteSnapshots = [...wteSnapshots, { step: state.totalStep, wte: snap }];
 }
 
 /**
@@ -35,8 +35,21 @@ export function getWteSnapshots(): WteSnapshot[] {
   return [...wteSnapshots];
 }
 
+/**
+ * Immutable view of the store, re-created on every emit.
+ * The engine mutates `model` in place (upstream constraint), so its reference
+ * never changes during training. The snapshot's identity does: derived values
+ * can use `useMemo(..., [snapshot])` with honest dependencies.
+ */
+export interface ModelSnapshot {
+  readonly model: ModelState;
+  readonly wteSnapshots: readonly WteSnapshot[];
+}
+
+let snapshot: ModelSnapshot = { model, wteSnapshots };
+
 function emit() {
-  version++;
+  snapshot = { model, wteSnapshots };
   for (const fn of listeners) fn();
 }
 
@@ -47,8 +60,8 @@ function subscribe(listener: Listener) {
   };
 }
 
-function getSnapshot() {
-  return version;
+function getSnapshot(): ModelSnapshot {
+  return snapshot;
 }
 
 /** Reset model, optionally with a new dataset. */
@@ -69,8 +82,12 @@ export function getModelTotalStep(): number {
   return model.totalStep;
 }
 
+/** Hook: subscribe to the store. Identity changes on every training step or reset. */
+export function useModelSnapshot(): ModelSnapshot {
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
 /** Hook: subscribe to the model store. Re-renders when the model changes. */
 export function useModel(): ModelState {
-  useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  return model;
+  return useModelSnapshot().model;
 }

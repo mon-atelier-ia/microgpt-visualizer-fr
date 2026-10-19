@@ -93,7 +93,7 @@ export function useRedrawOnReveal(opts: {
 export function useResetOnSnapshotChange(opts: {
   animRef: React.MutableRefObject<AnimState | null>;
   drawRef: React.RefObject<(o?: PCADrawOpts) => void>;
-  snapshots: WteSnapshot[];
+  snapshots: readonly WteSnapshot[];
 }) {
   const { animRef, drawRef, snapshots } = opts;
   useEffect(() => {

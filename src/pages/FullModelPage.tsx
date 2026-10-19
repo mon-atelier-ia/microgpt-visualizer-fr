@@ -1,5 +1,5 @@
-import { memo } from "react";
-import { useModelDerived } from "../useModelDerived";
+import { memo, useMemo } from "react";
+import { useModelSnapshot } from "../modelStore";
 import { gptForward, N_LAYER } from "../engine/model";
 import type { ModelState } from "../engine/model";
 import type { Value } from "../engine/autograd";
@@ -13,7 +13,8 @@ function computeFullTrace(model: ModelState) {
 }
 
 const FullModelPage = memo(function FullModelPage() {
-  const trace = useModelDerived((m) => computeFullTrace(m));
+  const snap = useModelSnapshot();
+  const trace = useMemo(() => computeFullTrace(snap.model), [snap]);
 
   return (
     <PageSection id="fullmodel" title="7. Modèle complet">

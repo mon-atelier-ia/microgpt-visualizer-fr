@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, afterEach } from "vitest";
+import { withOverrides } from "../test-utils/partialMock";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 
 import { createModelMock } from "../test-utils/modelMock";
@@ -14,10 +15,8 @@ vi.mock("../modelStore", () => ({
 }));
 
 // Mock trainStep pour éviter d'exécuter le vrai modèle
-vi.mock("../engine/model", async (importOriginal) => {
-  const actual: Record<string, unknown> = await importOriginal();
-  return {
-    ...actual,
+vi.mock("../engine/model", (importOriginal) =>
+  withOverrides(importOriginal, {
     trainStep: vi.fn(() => ({
       loss: 1.5,
       lr: 0.01,
@@ -25,8 +24,8 @@ vi.mock("../engine/model", async (importOriginal) => {
       tokens: [26, 0, 26],
       perPositionLoss: [1.5, 1.0],
     })),
-  };
-});
+  }),
+);
 
 // Mock LossChart car canvas.getContext('2d') retourne null dans jsdom
 vi.mock("../components/LossChart", () => ({
