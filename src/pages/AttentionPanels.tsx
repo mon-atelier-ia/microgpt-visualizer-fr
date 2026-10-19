@@ -4,7 +4,7 @@ import { N_HEAD, HEAD_DIM } from "../engine/model";
 import Term from "../components/Term";
 import { VectorBar } from "../components/Heatmap";
 import AttnMatrix from "../components/AttnMatrix";
-import { HEAD_COLORS } from "../components/BertVizView";
+import { HEAD_COLORS } from "../utils/headColors";
 import { classifyHead } from "../utils/classifyHead";
 import { headExplanation } from "../utils/headExplanation";
 

@@ -1,18 +1,12 @@
 import { N_HEAD } from "../engine/model";
 import { classifyHead } from "../utils/classifyHead";
+import { HEAD_COLORS } from "../utils/headColors";
 import "./BertVizView.css";
 
 const BOX_H = 44;
 const GAP = 6;
 const SVG_W = 180;
 const HEADER_H = 22;
-
-export const HEAD_COLORS = [
-  "var(--blue)",
-  "var(--purple)",
-  "var(--cyan)",
-  "var(--green)",
-] as const;
 
 interface Line {
   h: number;

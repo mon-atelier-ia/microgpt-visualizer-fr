@@ -122,6 +122,11 @@ export const GeneratedNames = memo(function GeneratedNames({
 
 /* ── Generation trace (step-by-step + probabilities) ─ */
 
+/** "a:20%, e:15%" — candidate list shown in the generation trace. */
+function formatCandidates(top5: InferenceStep["top5"]) {
+  return top5.map((t) => `${t.char}:${(t.prob * 100).toFixed(0)}%`).join(", ");
+}
+
 function computeTop12(step: InferenceStep | undefined) {
   if (!step) return [];
   return step.probs
@@ -175,13 +180,7 @@ export const GenerationTrace = memo(function GenerationTrace({
             {trace.steps.map((s, i) => (
               <div key={s.pos} style={{ opacity: i === activeStep ? 1 : 0.5 }}>
                 <span className="text-dim">pos {s.pos} : </span>
-                <span className="candidates">
-                  [
-                  {s.top5
-                    .map((t) => `${t.char}:${(t.prob * 100).toFixed(0)}%`)
-                    .join(", ")}
-                  ]
-                </span>
+                <span className="candidates">[{formatCandidates(s.top5)}]</span>
                 <span className="text-dim"> → </span>
                 <span className="picked">'{s.chosenChar}'</span>
                 {s.chosenChar === "BOS" && (

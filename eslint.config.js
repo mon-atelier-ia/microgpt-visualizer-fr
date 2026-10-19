@@ -20,13 +20,14 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      // Upstream uses modelRef.current in render (intentional: mutable model
-      // state shared across pages, re-render triggered by forceUpdate counter).
+      // DEBT: canvas components keep a "latest value" ref written during
+      // render (xxxRef.current = value) for rAF/observer callbacks.
+      // Enabling this rule reports 10 such writes (2026-10-19); fix = move
+      // the writes into useLayoutEffect, then delete this override.
       'react-hooks/refs': 'off',
-      // Upstream useMemo deps don't match React Compiler inference.
-      // Not fixing: upstream code, no behavior change needed.
-      'react-hooks/preserve-manual-memoization': 'off',
-      // Upstream uses `as any[]` in engine-adjacent code.
+      // A missing dependency is a bug, not a style issue: fail the gate.
+      'react-hooks/exhaustive-deps': 'error',
+      // Only remaining any: app.config.ts PageDef.component (heterogeneous page props).
       '@typescript-eslint/no-explicit-any': 'warn',
 
       // ── Complexity & size guards ──────────────────────────────

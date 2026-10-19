@@ -40,28 +40,28 @@ interface Props {
   onHoverRow?: (row: number | null) => void;
 }
 
+/** Target row for a roving-focus key, or null if the key is not handled. */
+function nextRowIndex(key: string, r: number, rowCount: number): number | null {
+  switch (key) {
+    case "ArrowDown":
+      return Math.min(r + 1, rowCount - 1);
+    case "ArrowUp":
+      return Math.max(r - 1, 0);
+    case "Home":
+      return 0;
+    case "End":
+      return rowCount - 1;
+    default:
+      return null;
+  }
+}
+
 function useRovingKeyDown(rowCount: number) {
   const rowsRef = useRef<(HTMLTableRowElement | null)[]>([]);
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent, r: number) => {
-      let next = r;
-      switch (e.key) {
-        case "ArrowDown":
-          next = Math.min(r + 1, rowCount - 1);
-          break;
-        case "ArrowUp":
-          next = Math.max(r - 1, 0);
-          break;
-        case "Home":
-          next = 0;
-          break;
-        case "End":
-          next = rowCount - 1;
-          break;
-        default:
-          return;
-      }
-      if (next !== r) {
+      const next = nextRowIndex(e.key, r, rowCount);
+      if (next !== null && next !== r) {
         e.preventDefault();
         rowsRef.current[next]?.focus();
       }
