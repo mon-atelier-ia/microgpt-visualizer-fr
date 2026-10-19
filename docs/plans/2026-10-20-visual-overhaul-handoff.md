@@ -72,6 +72,17 @@ messages: short, one plain-language point at a time, recommendation first.
    On Anatomy: "ce n'est pas ce que j'ai demandé. tu as importé un skill, j'avais demandé de
    l'adapter." Downloading the upstream kit is NOT the deliverable: the skill has to be adapted to
    this project (meaning still to be confirmed with the user, see the session memo's open question).
+   **2026-10-20, fourth round — proposals made with the user-level `anatomy` skill** (one-to-one
+   mapping checked against `src/engine/model.ts`; numbers from the engine, seed 42):
+   (A) Propagation — summing mixer: 16 centre-zero input faders = `x` (rmsnorm output), 16 centre-detent
+   gain pots = one row of `attn_wq`, summing bus meter = `q[0]` (`linear`, model.ts:99-101; measured
+   Σ w·x = 0.08215 = trace `q[0]` for "emma", pos 1). (B) Inférence — a wheel with 27 sectors whose arcs
+   are `probs` (sum 1.000000), pointer stopped at the PRNG number `r`, chosen sector = first `cum > r`
+   (model.ts:333-343); untrained T=0.5: b/j/f 0.072 each, after 1 000 steps: a 0.420. (C) Entraînement —
+   a loss dial gauge reading −log p of the right next letter (model.ts:282; step 1 on "tinsley":
+   3.2169 vs ln 27 = 3.2958; mean of last 50 after 1 000 steps: 2.2429) and the 16 thumbwheels of one
+   `wte` row turned by the Adam update (model.ts:291-299; step 1: each used weight moves exactly ±0.01,
+   unused letters' rows do not move — "a" row unchanged on "tinsley").
 2. Remaining territory: visual identity (palette, typography), UX (tablet nav, transitions), stack
    (benchmark tree-shaken bundle before choosing; pin latest stables).
 3. Then: written design → builder-check subagent → user approval → writing-plans.
