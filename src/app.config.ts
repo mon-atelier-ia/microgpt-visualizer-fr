@@ -1,12 +1,33 @@
-import { lazy } from "react";
+import { lazy, type ComponentType, type LazyExoticComponent } from "react";
 
-export interface PageDef {
-  id: string;
+interface PageMeta {
   num: number;
   label: string;
   sep: boolean;
-  component: React.LazyExoticComponent<React.ComponentType<any>>; // heterogeneous page props
 }
+
+/** Home is the only page with props: it starts the tour. */
+interface HomePageDef extends PageMeta {
+  id: "home";
+  component: LazyExoticComponent<ComponentType<{ onStart: () => void }>>;
+}
+
+type ContentPageId =
+  | "tokenizer"
+  | "embeddings"
+  | "forward"
+  | "attention"
+  | "training"
+  | "inference"
+  | "fullmodel"
+  | "conclusion";
+
+interface ContentPageDef extends PageMeta {
+  id: ContentPageId;
+  component: LazyExoticComponent<ComponentType>;
+}
+
+export type PageDef = HomePageDef | ContentPageDef;
 
 export const PAGES: PageDef[] = [
   {

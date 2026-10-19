@@ -27,8 +27,6 @@ export default defineConfig([
       "react-hooks/refs": "off",
       // A missing dependency is a bug, not a style issue: fail the gate.
       "react-hooks/exhaustive-deps": "error",
-      // Only remaining any: app.config.ts PageDef.component (heterogeneous page props).
-      "@typescript-eslint/no-explicit-any": "warn",
 
       // ── Complexity & size guards ──────────────────────────────
       complexity: ["error", { max: 10 }],

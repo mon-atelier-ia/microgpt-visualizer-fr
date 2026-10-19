@@ -796,12 +796,12 @@ Refactoring structurel complet du CSS (7 tâches + 3 bugfixes post-review) :
 
 ### Bugs / dette technique
 
-| #   | Item                                                                                                                            | Gravité    | Effort |
-| --- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
-| 1   | ~~`any` dans `app.config.ts:8`~~ — `React.ComponentType<any>` accepté (props hétérogènes, pas de type TS propre). Warning seul. | ✅ Accepté | —      |
-| 2   | ~~`eslint-disable` dans `TermProvider.tsx:26`~~ — `useTermModal` extrait dans fichier séparé (commit `4240042`)                 | ✅ FAIT    | —      |
-| 3   | ~~Pas de test pour `AttentionPage`~~ — 5 tests ajoutés (commit `4240042`)                                                       | ✅ FAIT    | —      |
-| 4   | ~~Vite build chunk > 500KB~~ — `manualChunks` sépare react-dom (633KB → 455KB, commit `4240042`)                                | ✅ FAIT    | —      |
+| #   | Item                                                                                                                                                                      | Gravité | Effort |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ |
+| 1   | ~~`any` dans `app.config.ts:8`~~ — remplacé par une union discriminée `HomePageDef \| ContentPageDef` (ids littéraux) ; `no-explicit-any` repassé en `error` (2026-10-19) | ✅ FAIT | —      |
+| 2   | ~~`eslint-disable` dans `TermProvider.tsx:26`~~ — `useTermModal` extrait dans fichier séparé (commit `4240042`)                                                           | ✅ FAIT | —      |
+| 3   | ~~Pas de test pour `AttentionPage`~~ — 5 tests ajoutés (commit `4240042`)                                                                                                 | ✅ FAIT | —      |
+| 4   | ~~Vite build chunk > 500KB~~ — `manualChunks` sépare react-dom (633KB → 455KB, commit `4240042`)                                                                          | ✅ FAIT | —      |
 
 ### Nice-to-have
 

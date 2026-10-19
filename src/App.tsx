@@ -16,8 +16,12 @@ import "./components/ShareDialog.css";
 function renderPage(pageId: string, onStart: () => void) {
   const def = PAGES.find((p) => p.id === pageId);
   if (!def) return null;
+  if (def.id === "home") {
+    const Home = def.component;
+    return <Home onStart={onStart} />;
+  }
   const Page = def.component;
-  return pageId === "home" ? <Page onStart={onStart} /> : <Page />;
+  return <Page />;
 }
 
 function PageContent({ page, onStart }: { page: string; onStart: () => void }) {

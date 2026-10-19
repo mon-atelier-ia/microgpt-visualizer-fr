@@ -123,7 +123,7 @@ Ce projet aide à comprendre les modèles transformer en :
 - Audit ISO (25010, 40500, 9241-110) : **4,5/5** — voir [`docs/audit-iso.md`](docs/audit-iso.md)
 - Audit frontend détaillé : voir [`docs/audit-frontend.md`](docs/audit-frontend.md)
 - Architecture réseau documentée : voir [`docs/architecture-nn.md`](docs/architecture-nn.md)
-- ESLint 0 erreur (1 warning `any` accepté, `app.config.ts`), jscpd 0 clone (seuil 0 %), Prettier en pre-commit, TypeScript strict
+- ESLint 0 erreur 0 warning, jscpd 0 clone (seuil 0 %), Prettier en pre-commit, TypeScript strict
 
 ## Contribuer
 
