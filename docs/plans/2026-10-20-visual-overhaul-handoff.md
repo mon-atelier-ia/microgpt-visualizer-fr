@@ -35,6 +35,12 @@ every number from the real model, 4× close-up check). **Drop its metaphor step*
 explanation", line 86: drawers, locks): the depicted object is the real machine — memory, float64 bits,
 `Value` objects, multiply-add sequence, CPU schematic.
 
+**Reversed 2026-10-20 (third session), user's words: "non, garde !"** — Anatomy's metaphor step is
+KEPT: the figure is an invented, recognisable physical machine whose working is the step (Anatomy
+§ "The one idea that matters"). Labels still use the real terms; numbers still come from the real
+model. Kit fetched to `C:/Dev/_vendor/hermes-agent/optional-skills/creative/anatomy` (MIT, sparse clone
+of NousResearch/hermes-agent at `9cb34e9`); workspace `.superpowers/anatomy/` (gitignored).
+
 ## Known content-audit items
 
 - `tokenize` maps unknown chars to 0 = 'a' silently (`src/engine/model.ts:29`, `charToId[c] ?? 0`).
@@ -59,6 +65,13 @@ messages: short, one plain-language point at a time, recommendation first.
    un copier-coller de l'existant". The mockup MUST be an Anatomy figure: a drawn, isometric,
    physical computer part (chip / RAM / CPU, 40–80+ parts, Anatomy craft rules) whose working is the
    step, every number from the real model. Tiles of numbers are the existing app, whatever their level.
+   **2026-10-20, third session — REJECTED (all three, written proposals, nothing drawn):**
+   (1) typesetter's case with 27 numbered compartments and a composing stick; (2) teleprinter tape
+   punch, each id as 5 holes in binary; (3) 27-drawer file whose drawers hold 16 sliders at the real
+   `wte` values. User: "les trois sont refusés. c'est slop et mensonger. mauvaise vulgarisation."
+   On Anatomy: "ce n'est pas ce que j'ai demandé. tu as importé un skill, j'avais demandé de
+   l'adapter." Downloading the upstream kit is NOT the deliverable: the skill has to be adapted to
+   this project (meaning still to be confirmed with the user, see the session memo's open question).
 2. Remaining territory: visual identity (palette, typography), UX (tablet nav, transitions), stack
    (benchmark tree-shaken bundle before choosing; pin latest stables).
 3. Then: written design → builder-check subagent → user approval → writing-plans.
