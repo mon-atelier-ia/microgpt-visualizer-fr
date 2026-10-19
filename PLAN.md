@@ -141,7 +141,7 @@ src/
 ├── App.share.test.tsx             #  40 lignes — 3 tests (share button, dialog open, QR canvas a11y)
 ├── main.tsx                       #   5 lignes — point d'entrée React
 ├── modelStore.ts                  #  76 lignes — useSyncExternalStore + useModel() hook + wteSnapshots (A-1)
-├── modelStore.test.ts             # 107 lignes — 8 tests (useModel shape, reset, dataset switch, notify, unsubscribe, getModelTotalStep, wteSnapshot deep-copy, reset clears)
+├── modelStore.test.ts             # 161 lignes — 13 tests (useModel shape, reset, dataset switch, notify, unsubscribe, getModelTotalStep, wteSnapshot deep-copy, reset clears, useModelSnapshot ×5)
 ├── styles.css                     # ~1 030 lignes — foundations: tokens, reset, layout, utilities, responsive (Phase A1: 2 150→1 030)
 ├── data/
 │   ├── glossary.ts                # 314 lignes — 30 définitions (Tier 1 + Tier 2)
@@ -805,10 +805,13 @@ Refactoring structurel complet du CSS (7 tâches + 3 bugfixes post-review) :
 
 ### Nice-to-have
 
-| #   | Item                                                                                                                                                                                   | Valeur  | Effort |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ |
-| 5   | ~~`prefers-reduced-motion`~~ FAUX POSITIF : CSS global (styles.css:1065), JS Canvas via `useCanvasObservers` (line 24-31) et `pcaScatterPlot.animation.ts` (line 89). Couvert partout. | ✅ OK   | —      |
-| 6   | ~~`useModelDerived` eslint-disable~~ — remplacé par `useModelSnapshot()` + `useMemo` aux deps honnêtes (2026-10-19). Voir analyse ci-dessous                                           | ✅ FAIT | —      |
+| #   | Item                                                                                                                                                                                                                                                                                        | Valeur    | Effort |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ------ |
+| 5   | ~~`prefers-reduced-motion`~~ FAUX POSITIF : CSS global (styles.css:1065), JS Canvas via `useCanvasObservers` (line 24-31) et `pcaScatterPlot.animation.ts` (line 89). Couvert partout.                                                                                                      | ✅ OK     | —      |
+| 6   | ~~`useModelDerived` eslint-disable~~ — remplacé par `useModelSnapshot()` + `useMemo` aux deps honnêtes (2026-10-19). Voir analyse ci-dessous                                                                                                                                                | ✅ FAIT   | —      |
+| 7   | `react-hooks/refs` désactivé : 10 écritures `xxxRef.current = valeur` pendant le rendu (LossChart, NNDiagram, PCAScatterPlot, fullNNDiagram.hooks). Correctif : les déplacer dans `useLayoutEffect` puis retirer l'override. Mesure : activer la règle dans `eslint.config.js` → 10 erreurs | Pureté    | Moyen  |
+| 8   | Débordement horizontal à 1038 px de large : Tokenisation +323 px, Propagation +271, Modèle complet +166, Plongements +34. **Préexistant** (identique en prod). Mesure : `document.documentElement.scrollWidth - clientWidth` sur chaque page                                                | UX        | Moyen  |
+| 9   | Dérive Prettier sur 4 fichiers jamais passés par lint-staged (`main.tsx`, `datasets/index.ts`, `Term.test.tsx`, `engine/autograd.ts` — upstream). Prettier hors `npm run check`. Mesure : `npx prettier --check src`                                                                        | Cohérence | Petit  |
 
 ### Analyse dette #6 : `useModelDerived` eslint-disable
 
