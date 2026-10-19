@@ -47,7 +47,9 @@ export const DATASETS: Dataset[] = [
     id: "names-en",
     label: "Prénoms EN (8000)",
     description: "8000 prénoms anglais (Karpathy/makemore)",
-    words: NAMES_RAW.split(",").map((s) => s.trim()).filter(Boolean),
+    words: NAMES_RAW.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
   },
 ];
 

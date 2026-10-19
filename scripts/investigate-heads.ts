@@ -109,11 +109,7 @@ function extractAttn(
 
 // ── Head classifier (the util we're building) ──
 type HeadPersonality =
-  | "Ancrage"
-  | "Précédent"
-  | "Écho"
-  | "Contexte"
-  | "Inconnu";
+  "Ancrage" | "Précédent" | "Écho" | "Contexte" | "Inconnu";
 
 function classifyHead(matrix: number[][]): {
   personality: HeadPersonality;

@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, act, cleanup } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  act,
+  cleanup,
+} from "@testing-library/react";
 import Term from "./Term";
 import TermProvider from "./TermProvider";
 import { GLOSSARY } from "../data/glossary";
@@ -59,7 +65,9 @@ describe("Term — tooltip au focus/hover", () => {
     fireEvent.focus(term);
     expect(screen.getByRole("tooltip")).toBeTruthy();
     fireEvent.blur(term);
-    act(() => { vi.advanceTimersByTime(200); });
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(screen.queryByRole("tooltip")).toBeNull();
     vi.useRealTimers();
   });

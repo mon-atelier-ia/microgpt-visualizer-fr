@@ -1,0 +1,10 @@
+# Upstream engine: read-only, kept byte-close to microgpt.py port
+src/engine/
+# Generated
+pnpm-lock.yaml
+dist/
+coverage/
+# Standalone playground prototypes (not part of the app build)
+playground*.html
+public/playground*.html
+upstream-ref/

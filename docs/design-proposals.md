@@ -230,14 +230,14 @@ La philosophie brutaliste d'"exposer les materiaux" s'applique parfaitement a l'
 
 ## Tableau comparatif
 
-| #   | Nom                 | Tone                     | Force artistique | Memorable par…         | Fonts                                                    |
+| # | Nom | Tone | Force artistique | Memorable par… | Fonts |
 | --- | ------------------- | ------------------------ | ---------------- | ---------------------- | -------------------------------------------------------- | ------------------------------- |
-| 0   | Digital Explorer    | Futuriste / spatial      | Forte            | Mesh gradient + glass  | Plus Jakarta Sans + Space Mono                           |
-| 1   | Le Cahier du Savant | Organique / scientifique | **Tres forte**   | L'anti-tech chaleureux | Architects Daughter + Caveat + Fira Code                 | **NON CONFORME** (3 iterations) |
-| 2   | Borne d'Arcade      | Retro gaming / pixel     | **Tres forte**   | Le "son mental" du CRT | Press Start 2P + VT323                                   |
-| 3   | Atelier Vivant      | Kawaii / doux / vivant   | Moyenne-forte    | L'empathie, la douceur | Fredoka + Quicksand + Fira Code                          |
-| 4   | La Machine Doree    | Art Deco / luxe          | **Tres forte**   | L'elegance inattendue  | Poiret One + DM Mono                                     |
-| 5   | Tableau Noir        | Neo-brutaliste / craie   | **Tres forte**   | L'authenticite brute   | Permanent Marker + Architects Daughter + Source Code Pro |
+| 0 | Digital Explorer | Futuriste / spatial | Forte | Mesh gradient + glass | Plus Jakarta Sans + Space Mono |
+| 1 | Le Cahier du Savant | Organique / scientifique | **Tres forte** | L'anti-tech chaleureux | Architects Daughter + Caveat + Fira Code | **NON CONFORME** (3 iterations) |
+| 2 | Borne d'Arcade | Retro gaming / pixel | **Tres forte** | Le "son mental" du CRT | Press Start 2P + VT323 |
+| 3 | Atelier Vivant | Kawaii / doux / vivant | Moyenne-forte | L'empathie, la douceur | Fredoka + Quicksand + Fira Code |
+| 4 | La Machine Doree | Art Deco / luxe | **Tres forte** | L'elegance inattendue | Poiret One + DM Mono |
+| 5 | Tableau Noir | Neo-brutaliste / craie | **Tres forte** | L'authenticite brute | Permanent Marker + Architects Daughter + Source Code Pro |
 
 ---
 

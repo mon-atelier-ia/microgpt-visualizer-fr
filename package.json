@@ -27,8 +27,9 @@
     "lint:fix": "eslint --fix .",
     "test": "vitest run",
     "check:duplication": "jscpd src/",
-    "check": "eslint . && tsc -b && vitest run && jscpd src/ && vite build",
-    "prepare": "husky"
+    "check": "prettier --check . && eslint . && tsc -b && vitest run && jscpd src/ && vite build",
+    "prepare": "husky",
+    "format:check": "prettier --check ."
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -36,6 +37,9 @@
       "eslint --fix"
     ],
     "*.{css,json,md}": [
+      "prettier --write"
+    ],
+    "*.{js,html}": [
       "prettier --write"
     ]
   },
