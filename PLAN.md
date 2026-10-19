@@ -805,10 +805,10 @@ Refactoring structurel complet du CSS (7 tâches + 3 bugfixes post-review) :
 
 ### Nice-to-have
 
-| #   | Item                                                                                                                                                                                   | Valeur | Effort |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
-| 5   | ~~`prefers-reduced-motion`~~ FAUX POSITIF : CSS global (styles.css:1065), JS Canvas via `useCanvasObservers` (line 24-31) et `pcaScatterPlot.animation.ts` (line 89). Couvert partout. | ✅ OK  | —      |
-| 6   | `useModelDerived` eslint-disable : dernier disable logique — voir analyse ci-dessous                                                                                                   | Pureté | Gros   |
+| #   | Item                                                                                                                                                                                   | Valeur  | Effort |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ |
+| 5   | ~~`prefers-reduced-motion`~~ FAUX POSITIF : CSS global (styles.css:1065), JS Canvas via `useCanvasObservers` (line 24-31) et `pcaScatterPlot.animation.ts` (line 89). Couvert partout. | ✅ OK   | —      |
+| 6   | ~~`useModelDerived` eslint-disable~~ — remplacé par `useModelSnapshot()` + `useMemo` aux deps honnêtes (2026-10-19). Voir analyse ci-dessous                                           | ✅ FAIT | —      |
 
 ### Analyse dette #6 : `useModelDerived` eslint-disable
 
@@ -816,7 +816,7 @@ Refactoring structurel complet du CSS (7 tâches + 3 bugfixes post-review) :
 
 **Conséquence React** : `useMemo(() => fn(model), [model])` ne recalcule jamais car `model === model`. On ajoute `model.totalStep` comme signal de version dans les deps, mais ESLint le refuse car il n'est pas utilisé directement dans le callback.
 
-**État actuel** : 1 seul `eslint-disable` centralisé dans `useModelDerived.ts` (remplace 6 dispersés dans les pages). Hook testé (5 tests). Pattern documenté.
+**État au 2026-03-15** : 1 seul `eslint-disable` centralisé dans `useModelDerived.ts` (remplace 6 dispersés dans les pages). Hook testé (5 tests). Pattern documenté.
 
 **Pour éliminer** — 2 voies, aucune satisfaisante aujourd'hui :
 
@@ -824,7 +824,11 @@ Refactoring structurel complet du CSS (7 tâches + 3 bugfixes post-review) :
 
 2. **Adapter layer** : le store ferait un snapshot immutable à la fréquence UI (1×/frame) plutôt qu'à chaque mutation. Faisable mais over-engineering pour un projet pédagogique — le hook actuel fait exactement ça avec moins de code.
 
-**Verdict** : dette acceptée. Le `eslint-disable` est justifié, centralisé, testé, et documenté. Le coût de l'éliminer dépasse le bénéfice.
+**Verdict (2026-03-15)** : dette acceptée. Le `eslint-disable` est justifié, centralisé, testé, et documenté. Le coût de l'éliminer dépasse le bénéfice.
+
+**Résolution (2026-10-19)** : `eslint-plugin-react-hooks` 7.1 rejette désormais `[model, model.totalStep, ...deps]` en **erreur** (« dependency list must be an array literal »), que l'ancien `eslint-disable` ne couvrait pas. La voie 2 a été retenue en version minimale : le store recrée un objet `ModelSnapshot { model, wteSnapshots }` (2 références, aucune copie profonde) à chaque `emit()`. Les pages font `useMemo(() => f(snap.model), [snap, ...])` — deps honnêtes, zéro `eslint-disable`. `wteSnapshots` passe en ajout immuable pour que son identité change aussi. `useModelDerived` supprimé ; ses 5 tests portés sur `useModelSnapshot` (`modelStore.test.ts`).
+
+Vérification rejouable : `npx eslint .` → 0 erreur ; `grep -rn "eslint-disable" src` → aucun résultat ; `npx vitest run` → 202 tests passés.
 
 ---
 
