@@ -69,3 +69,18 @@ as the npm build (`index-BLWJI6ZI.js`, `react-dom-cYpI-0fo.js`).
 Guards: `package-lock.json` / `yarn.lock` in `.gitignore`; pre-commit runs
 `pnpm install --frozen-lockfile --offline`. Calibrated: a range changed in `package.json` without the lock
 → exit 1; clean tree → exit 0.
+
+## Regression found after the upgrade (PLAN #12)
+
+The Vite 8 step (`835641b`) broke colors **in the production build only**: Lightning CSS (Vite 8's CSS
+minifier, esbuild before) rewrites `oklch(0.502 0.128 22.9)` as `oklch(50.2% .128 22.9)`, and
+`parseColor` did not accept percentages, so the heatmap and all canvases used wrong colors. It was not
+caught at that step because the browser checks compared _whether_ canvas pixels changed, not _which_
+colors were drawn, and unit tests never see minified CSS. Found while visually checking PLAN #8; never
+deployed.
+
+Fix `ab1f133`: CSS Color 4 `oklch()` parser (W3C css-color-4 §9.4: L 100% = 1.0, C 100% = 0.4) and
+`src/utils/cssMinify.test.ts`, which minifies `styles.css` with Lightning CSS and Vite 8's default
+targets (`chrome111, edge111, firefox114, safari16.4, ios16.4`, read from
+`vite/dist/node/chunks/node.js`). Calibrated: 36/41 fail on the old parser, 41/41 pass.
+Verified against production: 432 heatmap cells and 4 canvases × 2 themes pixel-identical.
