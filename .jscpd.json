@@ -1,14 +1,12 @@
 {
-  "threshold": 5,
+  "threshold": 0,
   "reporters": ["console"],
   "ignore": [
-    "node_modules",
-    "dist",
-    "upstream-ref",
-    "coverage",
-    "*.test.ts",
-    "*.test.tsx",
-    "src/engine/**"
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/upstream-ref/**",
+    "**/coverage/**",
+    "**/src/engine/**"
   ],
   "absolute": true,
   "gitignore": true
