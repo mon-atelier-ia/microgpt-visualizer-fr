@@ -53,6 +53,12 @@ messages: short, one plain-language point at a time, recommendation first.
 
 1. Show a visual mockup of ONE step drawn at machine level (suggest Tokenisation: name → char codes →
    token ids → float64 bits of the embedding row in memory) for the user to react to.
+   **2026-10-20, second session — REJECTED:** an HTML page of cards, bit grids and number tiles
+   (`.superpowers/brainstorm/10280-1792449541/content/tokenisation-machine-v2.html`, gitignored).
+   User: "ce n'est absolument pas le skill Anatomy ni une visualisation d'une chip, d'un ordi… c'est
+   un copier-coller de l'existant". The mockup MUST be an Anatomy figure: a drawn, isometric,
+   physical computer part (chip / RAM / CPU, 40–80+ parts, Anatomy craft rules) whose working is the
+   step, every number from the real model. Tiles of numbers are the existing app, whatever their level.
 2. Remaining territory: visual identity (palette, typography), UX (tablet nav, transitions), stack
    (benchmark tree-shaken bundle before choosing; pin latest stables).
 3. Then: written design → builder-check subagent → user approval → writing-plans.
