@@ -39,6 +39,10 @@ explanation", line 86: drawers, locks): the depicted object is the real machine 
 
 - `tokenize` maps unknown chars to 0 = 'a' silently (`src/engine/model.ts:29`, `charToId[c] ?? 0`).
 - Prototype claim "letters used alike get close embeddings" — not measured on this model.
+- Accented letters are dropped, not mapped: pages run `.toLowerCase().replace(/[^a-z]/g, "")` before
+  `tokenize` (`src/pages/TokenizerPage.tsx:88-89`, `src/pages/AttentionPage.tsx:63-64`), so "Léa" →
+  "la" → `[26, 11, 0, 26]`. The vocabulary is exactly a–z + BOS (measured: `uchars` = 26 letters,
+  `vocabSize` = 27). Breaks the "your name travels through every step" thread for many French names.
 
 ## Communication feedback (2026-10-20)
 
