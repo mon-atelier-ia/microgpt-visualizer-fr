@@ -13,11 +13,16 @@ export default defineConfig({
     host: "0.0.0.0",
   },
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes("node_modules/react-dom")) return "react-dom";
-          if (id.includes("node_modules/react")) return "react";
+        // Vite 8: codeSplitting groups replace the deprecated manualChunks.
+        // "react" first: a group pulls its dependencies in, and the group with
+        // the smaller index claims a module first (rolldown CodeSplittingGroup).
+        codeSplitting: {
+          groups: [
+            { name: "react", test: /node_modules[\\/]react[\\/]/ },
+            { name: "react-dom", test: /node_modules[\\/]react-dom[\\/]/ },
+          ],
         },
       },
     },
