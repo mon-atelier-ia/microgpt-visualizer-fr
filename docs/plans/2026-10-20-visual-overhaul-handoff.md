@@ -69,5 +69,5 @@ Brainstorm mockups (gitignored): `.superpowers/brainstorm/5700-1792436088/conten
 ```bash
 git log --oneline -1 -- docs/plans/2026-10-20-visual-overhaul-handoff.md   # expected: docs(plans) handoff commit
 git status --short | wc -l                                                  # expected: 0
-grep -c "data: number" src/engine/autograd.ts                               # expected: 1 (float64 fact)
+grep -c "data: number" src/engine/autograd.ts                               # expected: 2 (field line 7 + constructor line 14)
 ```
