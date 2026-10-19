@@ -20,11 +20,6 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      // DEBT: canvas components keep a "latest value" ref written during
-      // render (xxxRef.current = value) for rAF/observer callbacks.
-      // Enabling this rule reports 10 such writes (2026-10-19); fix = move
-      // the writes into useLayoutEffect, then delete this override.
-      "react-hooks/refs": "off",
       // A missing dependency is a bug, not a style issue: fail the gate.
       "react-hooks/exhaustive-deps": "error",
 

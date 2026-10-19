@@ -1,4 +1,5 @@
-import { useRef, useCallback, memo } from "react";
+import { useRef, useCallback, useMemo, memo } from "react";
+import { useLatestRef } from "../hooks/useLatestRef";
 import { setupCanvas } from "../utils/canvasSetup";
 import { useCanvasObservers } from "../hooks/useCanvasObservers";
 import {
@@ -222,26 +223,27 @@ function useNNDiagramDraw(props: NNDiagramProps) {
   const phaseRef = useRef<string>("dormant");
   const animStartRef = useRef(0);
 
-  const refs: NNRefs = {
-    canvasRef,
-    neuronsRef,
-    animRef,
-    hoverRef,
-    phaseRef,
-    animStartRef,
-  };
-  const data = prepareModelData(props);
-  const dataRef = useRef(data);
-  dataRef.current = data;
-  const refsRef = useRef(refs);
-  refsRef.current = refs;
-  const drawRef = useRef<(timestamp?: number) => void>(() => {});
+  // Only stable refs inside: build the bundle once
+  const refs = useMemo<NNRefs>(
+    () => ({
+      canvasRef,
+      neuronsRef,
+      animRef,
+      hoverRef,
+      phaseRef,
+      animStartRef,
+    }),
+    [],
+  );
+  const dataRef = useLatestRef(prepareModelData(props));
 
-  const draw = useCallback((timestamp?: number) => {
-    if (drawFrame(refsRef.current, dataRef.current, timestamp))
-      animRef.current = requestAnimationFrame(drawRef.current);
-  }, []);
-  drawRef.current = draw;
+  const draw = useCallback(
+    function frame(timestamp?: number) {
+      if (drawFrame(refs, dataRef.current, timestamp))
+        animRef.current = requestAnimationFrame(frame);
+    },
+    [refs, dataRef],
+  );
 
   const { startAnimation } = useCanvasObservers({
     canvasRef,

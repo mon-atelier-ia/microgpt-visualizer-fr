@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { getCssVar } from "../utils/getCssVar";
 import { parseColor } from "../utils/parseColor";
+import { useLatestRef } from "../hooks/useLatestRef";
 
 interface Props {
   lossHistory: number[];
@@ -128,8 +129,7 @@ function drawLabels(
 
 export default function LossChart({ lossHistory }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const dataRef = useRef(lossHistory);
-  dataRef.current = lossHistory;
+  const dataRef = useLatestRef(lossHistory);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -162,7 +162,7 @@ export default function LossChart({ lossHistory }: Props) {
     drawMovingAvg(ctx, data, layout);
     drawBaseline(ctx, layout);
     drawLabels(ctx, data, layout);
-  }, []);
+  }, [dataRef]);
 
   useEffect(() => {
     draw();

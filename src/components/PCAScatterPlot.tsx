@@ -1,6 +1,7 @@
 import { useRef, useCallback, useMemo, useState } from "react";
 import { pca2d } from "../utils/pca";
 import { setupCanvas } from "../utils/canvasSetup";
+import { useLatestRef } from "../hooks/useLatestRef";
 import type { WteSnapshot } from "../modelStore";
 import { HOVER_THRESHOLD } from "./pcaScatterPlot.config";
 import {
@@ -196,15 +197,12 @@ export default function PCAScatterPlot(props: PCAScatterPlotProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hoverRef = useRef(-1);
   const animRef = useRef<AnimState | null>(null);
-  const onHoverRef = useRef(onHoverLetter);
-  onHoverRef.current = onHoverLetter;
-  const highlightRef = useRef(highlightLetter ?? -1);
-  highlightRef.current = highlightLetter ?? -1;
+  const onHoverRef = useLatestRef(onHoverLetter);
+  const highlightRef = useLatestRef(highlightLetter ?? -1);
   const [hasRevealed, setHasRevealed] = useState(false);
 
   const idleProjected = useMemo(() => pca2d(wteData), [wteData]);
-  const projRef = useRef(idleProjected);
-  projRef.current = idleProjected;
+  const projRef = useLatestRef(idleProjected);
 
   const makeDraw = useDrawCallback({
     canvasRef,
@@ -216,8 +214,7 @@ export default function PCAScatterPlot(props: PCAScatterPlotProps) {
     () => makeDraw(wteData, totalStep),
     [makeDraw, wteData, totalStep],
   );
-  const drawRef = useRef(draw);
-  drawRef.current = draw;
+  const drawRef = useLatestRef(draw);
 
   const startAnimation = useStartAnimation(snapshots, animRef, drawRef);
   const handlers = useHoverHandlers({
@@ -235,18 +232,25 @@ export default function PCAScatterPlot(props: PCAScatterPlotProps) {
   useResetOnSnapshotChange({ animRef, drawRef, snapshots });
   useCleanupAnimation(animRef);
 
-  return renderCanvas({ canvasRef, handlers, snapshots, startAnimation });
+  return (
+    <PCACanvas
+      canvasRef={canvasRef}
+      handlers={handlers}
+      snapshots={snapshots}
+      startAnimation={startAnimation}
+    />
+  );
 }
 
-// ── Render helper ──────────────────────────────────────────────────
+// ── Canvas element ─────────────────────────────────────────────────
 
-function renderCanvas(opts: {
+function PCACanvas(props: {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   handlers: ReturnType<typeof useHoverHandlers>;
   snapshots: readonly WteSnapshot[];
   startAnimation: () => void;
 }) {
-  const { canvasRef, handlers, snapshots, startAnimation } = opts;
+  const { canvasRef, handlers, snapshots, startAnimation } = props;
   const { handleMouseMove, handleMouseLeave } = handlers;
   return (
     <>

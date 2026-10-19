@@ -62,17 +62,16 @@ interface DrawCallbackOpts {
 
 function useFullNNDrawCallback(opts: DrawCallbackOpts) {
   const { frameRefs, animRef, data } = opts;
-  const drawRef = useRef<(t?: number) => void>(() => {});
-  const draw = useCallback(
-    (ts?: number) => {
+  // A new draw (new data) restarts the animation via useCanvasObservers,
+  // which cancels this loop first: the frame can schedule itself.
+  return useCallback(
+    function frame(ts?: number) {
       if (drawFrame(frameRefs, data, ts)) {
-        animRef.current = requestAnimationFrame((t) => drawRef.current(t));
+        animRef.current = requestAnimationFrame(frame);
       }
     },
     [frameRefs, animRef, data],
   );
-  drawRef.current = draw;
-  return draw;
 }
 
 // ── Main hook ────────────────────────────────────────
