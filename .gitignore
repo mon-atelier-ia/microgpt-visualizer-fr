@@ -44,3 +44,7 @@ upstream-ref/
 
 .vercel
 .playwright-mcp/
+
+# pnpm project (Vercel installs from pnpm-lock.yaml): no other lockfiles
+package-lock.json
+yarn.lock

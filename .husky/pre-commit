@@ -1,3 +1,4 @@
+pnpm install --frozen-lockfile --offline --silent
 pnpm exec lint-staged
 pnpm tsc -b
 pnpm vitest run

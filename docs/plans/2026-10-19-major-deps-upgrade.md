@@ -42,8 +42,8 @@ Baseline (after minor updates): 202 tests, 0 lint errors, 0 clones, build OK,
 react-dom 57.63 → 65.69 kB (+8.06, from React 19.3). Raw index size drops 455.60 → 382.63 kB with Vite 8,
 but gzip does not follow — no real gain to claim.
 
-Replay: `npm run check` → exit 0, `202 passed`, `Found 0 clones.`; `npm audit` → `found 0 vulnerabilities`;
-`npm outdated` → only `@types/node` (26, kept on 24 on purpose) and `typescript` (7, blocked).
+Replay: `pnpm run check` → exit 0, `202 passed`, `Found 0 clones.`; `pnpm audit` → `No known vulnerabilities found`;
+`pnpm outdated` → only `@types/node` (26, kept on 24 on purpose) and `typescript` (7, blocked).
 
 ## Findings logged as debt (not fixed in this pass)
 
@@ -53,3 +53,19 @@ Replay: `npm run check` → exit 0, `202 passed`, `Found 0 clones.`; `npm audit`
 - Prettier drift in 4 files never staged since creation, incl. upstream `src/engine/autograd.ts` (PLAN #9);
   Prettier is not part of `npm run check`.
 - `@typescript-eslint/no-explicit-any` warning in `app.config.ts:8` (PLAN #1, accepted).
+
+## Package manager correction (PLAN #10)
+
+The upgrades above were first installed with **npm** (`package-lock.json`), but this is a **pnpm**
+project: Vercel installs from `pnpm-lock.yaml` (build log of `dpl_B2eBY98ggDRHafqvB3cpRZGq1QM8`:
+"Detected `pnpm-lock.yaml` 9 … Using pnpm@10.x", then `vite v7.3.1`), and the husky hook calls `pnpm`.
+Consequence found: the April `npm audit fix` (`1f12928`) never reached production, and pushing the npm-only
+upgrades would have failed Vercel's frozen-lockfile install.
+
+Fix: `package-lock.json` removed, `pnpm-lock.yaml` regenerated from scratch (keeping the old file kept
+17 vulnerable transitive versions). Result: `pnpm audit` → no known vulnerabilities, same chunk hashes
+as the npm build (`index-BLWJI6ZI.js`, `react-dom-cYpI-0fo.js`).
+
+Guards: `package-lock.json` / `yarn.lock` in `.gitignore`; pre-commit runs
+`pnpm install --frozen-lockfile --offline`. Calibrated: a range changed in `package.json` without the lock
+→ exit 1; clean tree → exit 0.
