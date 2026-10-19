@@ -88,20 +88,22 @@ export function useFullNNDraw(props: FullNNDiagramProps) {
   const acts = useMemo(() => buildActivations(props), [props]);
   const grads = useMemo(() => buildGradients(acts), [acts]);
 
-  const fr: FrameRefs = {
-    canvasRef,
-    neuronsRef,
-    phaseRef,
-    animStartRef,
-    showBackwardRef,
-    hoverRef,
-  };
+  // Stable bundles: draw changes only with the data, so a new draw
+  // (= new trace after training) is what re-animates the diagram.
+  const fr = useMemo<FrameRefs>(
+    () => ({
+      canvasRef,
+      neuronsRef,
+      phaseRef,
+      animStartRef,
+      showBackwardRef,
+      hoverRef,
+    }),
+    [],
+  );
+  const data = useMemo(() => ({ acts, grads }), [acts, grads]);
 
-  const draw = useFullNNDrawCallback({
-    frameRefs: fr,
-    animRef,
-    data: { acts, grads },
-  });
+  const draw = useFullNNDrawCallback({ frameRefs: fr, animRef, data });
 
   const { startAnimation } = useCanvasObservers({
     canvasRef,
@@ -118,14 +120,12 @@ export function useFullNNDraw(props: FullNNDiagramProps) {
     phaseRef,
     draw,
   });
-  const toggle = useCallback(
-    () =>
-      setShowBackward((p) => {
-        showBackwardRef.current = !p;
-        return !p;
-      }),
-    [],
-  );
+  // The backward phase plays after the forward one: replay to show it
+  const toggle = useCallback(() => {
+    showBackwardRef.current = !showBackwardRef.current;
+    setShowBackward(showBackwardRef.current);
+    startAnimation();
+  }, [startAnimation]);
 
   return {
     canvasRef,
