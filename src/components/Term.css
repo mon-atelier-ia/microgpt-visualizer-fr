@@ -1,3 +1,5 @@
+@import "./dialog-base.css";
+
 /* ───── Term : tooltip + modal ───── */
 
 .term {
@@ -92,19 +94,9 @@
 }
 
 /* Modal (native <dialog>) */
+/* Base box + backdrop come from .dialog-base */
 .term-modal {
   max-width: 560px;
-  width: calc(100% - 32px);
-  padding: 0;
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-12);
-  background: var(--surface);
-  color: var(--text);
-  font-family: inherit;
-}
-.term-modal::backdrop {
-  background: var(--overlay);
-  backdrop-filter: blur(var(--blur-md));
 }
 
 .term-modal-content {

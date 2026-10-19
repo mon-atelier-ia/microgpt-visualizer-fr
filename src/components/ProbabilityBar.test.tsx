@@ -11,6 +11,11 @@ const items: ProbItem[] = [
   { id: 26, char: "BOS", prob: 0.1 },
 ];
 
+function renderBars() {
+  const { container } = render(<ProbabilityBar items={items} maxProb={0.6} />);
+  return container.querySelectorAll<HTMLElement>(".prob-bar");
+}
+
 describe("ProbabilityBar", () => {
   it("renders one row per item", () => {
     const { container } = render(
@@ -36,21 +41,15 @@ describe("ProbabilityBar", () => {
   });
 
   it("sets bar width proportional to maxProb", () => {
-    const { container } = render(
-      <ProbabilityBar items={items} maxProb={0.6} />,
-    );
-    const bars = container.querySelectorAll(".prob-bar");
-    expect((bars[0] as HTMLElement).style.width).toBe("100%");
-    expect((bars[1] as HTMLElement).style.width).toBe("50%");
+    const bars = renderBars();
+    expect(bars[0].style.width).toBe("100%");
+    expect(bars[1].style.width).toBe("50%");
   });
 
   it("applies default BOS color (red) and blue for others", () => {
-    const { container } = render(
-      <ProbabilityBar items={items} maxProb={0.6} />,
-    );
-    const bars = container.querySelectorAll(".prob-bar");
-    expect((bars[0] as HTMLElement).style.background).toBe("var(--blue)");
-    expect((bars[2] as HTMLElement).style.background).toBe("var(--red)");
+    const bars = renderBars();
+    expect(bars[0].style.background).toBe("var(--blue)");
+    expect(bars[2].style.background).toBe("var(--red)");
   });
 
   it("applies custom labelStyle callback", () => {
@@ -70,9 +69,9 @@ describe("ProbabilityBar", () => {
     const { container } = render(
       <ProbabilityBar items={items} maxProb={0.6} barColor={() => "purple"} />,
     );
-    const bars = container.querySelectorAll(".prob-bar");
-    expect((bars[0] as HTMLElement).style.background).toBe("purple");
-    expect((bars[2] as HTMLElement).style.background).toBe("purple");
+    const bars = container.querySelectorAll<HTMLElement>(".prob-bar");
+    expect(bars[0].style.background).toBe("purple");
+    expect(bars[2].style.background).toBe("purple");
   });
 
   it("handles empty items without crashing", () => {

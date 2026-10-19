@@ -29,6 +29,7 @@
   --red: oklch(0.619 0.11 25.7);
   --orange: oklch(0.677 0.095 56.6);
   --yellow: oklch(0.72 0.095 94.3);
+  /* Theme-invariant: declared once, var() resolves against the active theme on <html> */
   --vector-text: oklch(0.285 0.009 88.8);
   --heat-cell-bg: var(--blue);
   --neuron-active-bg: var(--green);
@@ -133,12 +134,6 @@
   --red: oklch(0.502 0.128 22.9);
   --orange: oklch(0.567 0.101 63.1);
   --yellow: oklch(0.579 0.097 97.3);
-  --vector-text: oklch(0.285 0.009 88.8);
-  --heat-cell-bg: var(--blue);
-  --neuron-active-bg: var(--green);
-  --loss-bg: var(--red);
-  --dot-shadow: oklch(0 0 0);
-  --vignette-glow: oklch(1 0 0);
   --blue-hover: oklch(0.518 0.098 68.5);
   --border-hover-bg: oklch(0.715 0.018 84.6);
   --red-hover: oklch(0.452 0.128 22.9);

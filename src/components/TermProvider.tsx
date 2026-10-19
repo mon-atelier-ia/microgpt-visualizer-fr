@@ -41,7 +41,7 @@ export default function TermProvider({ children }: { children: ReactNode }) {
       {children}
       <dialog
         ref={dialogRef}
-        className="term-modal"
+        className="dialog-base term-modal"
         onClick={(e) => {
           if (e.target === dialogRef.current) closeModal();
         }}
