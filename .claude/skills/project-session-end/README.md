@@ -4,13 +4,13 @@ Projected 2026-10-20 from `C:/Dev/skills-templates/project-session-end/` (revisi
 
 ## Step 0 audit — project
 
-| Check                                                              | Result                                                                                                       |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| Project `CLAUDE.md`                                                | absent → created with this projection (Role + Standing procedure)                                            |
-| `feedback_session_end_template.md` / fatigue / per-task memo files | absent                                                                                                       |
-| Overlapping feedback (`grep -lE "session.{0,5}(end                 | resume)                                                                                                      | fatigue | memo.{0,5}refresh | post.{0,5}task"`) | only `feedback_compaction_ends_session.md` (2026-10-20) → `coexist`, cited by the skill |
-| Existing handoff habit                                             | dated plans in `docs/plans/` (e.g. `2026-10-20-visual-overhaul-handoff.md`) → `coexist`: memos point to them |
-| Profile                                                            | **mature-no-discipline**                                                                                     |
+| Check                                                                                      | Result                                                                                                       |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Project `CLAUDE.md`                                                                        | absent → created with this projection (Role + Standing procedure)                                            |
+| `feedback_session_end_template.md` / fatigue / per-task memo files                         | absent                                                                                                       |
+| Overlapping feedback (`grep -lE` on session-end, resume, fatigue, memo refresh, post-task) | only `feedback_compaction_ends_session.md` (2026-10-20) → `coexist`, cited by the skill                      |
+| Existing handoff habit                                                                     | dated plans in `docs/plans/` (e.g. `2026-10-20-visual-overhaul-handoff.md`) → `coexist`: memos point to them |
+| Profile                                                                                    | **mature-no-discipline**                                                                                     |
 
 Files created: skill + this README, `CLAUDE.md`, memory `feedback_session_end_template.md`,
 `feedback_post_task_procedure_and_fatigue.md`. Not created: `feedback_per_task_memory_updates.md`
