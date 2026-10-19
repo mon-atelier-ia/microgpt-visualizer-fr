@@ -57,13 +57,17 @@ L'application est accessible sur `http://localhost:5173`
 
 ## Scripts disponibles
 
-| Commande       | Description                                        |
-| -------------- | -------------------------------------------------- |
-| `pnpm dev`     | Serveur de développement avec rechargement à chaud |
-| `pnpm build`   | Build de production                                |
-| `pnpm preview` | Aperçu local du build de production                |
-| `pnpm lint`    | ESLint                                             |
-| `pnpm test`    | Vitest (252 tests)                                 |
+| Commande       | Description                                                                     |
+| -------------- | ------------------------------------------------------------------------------- |
+| `pnpm dev`     | Serveur de développement avec rechargement à chaud                              |
+| `pnpm build`   | Build de production                                                             |
+| `pnpm preview` | Aperçu local du build de production                                             |
+| `pnpm lint`    | ESLint                                                                          |
+| `pnpm test`    | Vitest (252 tests)                                                              |
+| `pnpm e2e`     | Playwright sur le build : débordement (9 pages × 3 largeurs) + couleurs vs prod |
+| `pnpm check`   | Gate complet : Prettier, ESLint, tsc, Vitest, jscpd, build, e2e                 |
+
+Première fois sur une machine : `pnpm exec playwright install chromium`.
 
 ## Structure du projet
 
