@@ -107,7 +107,7 @@ Self-contained criteria applicable to retained sections (doctrine checklist). Re
 
 ```bash
 cd C:/Dev/microgpt-visualizer-fr; MEMORY_DIR=C:/Users/pierr/.claude/projects/C--Dev-microgpt-visualizer-fr/memory
-grep -o '`[^` ]*\(/\|\.md\|\.ts\|\.tsx\|\.json\|\.html\)[^` ]*`' <memo> | tr -d '`' | sort -u |
+grep -o '`[^` ]*\(/\|\.md\|\.ts\|\.tsx\|\.json\|\.html\)[^` ]*`' <memo> | tr -d '`' | sed 's/:[0-9]*$//' | sort -u |
   while read p; do [ -e "$p" ] || [ -e "$MEMORY_DIR/$p" ] || echo "MISSING $p"; done
 # expected: no output
 ```
