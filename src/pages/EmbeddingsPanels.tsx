@@ -33,7 +33,7 @@ const HeatmapWithBars = memo(function HeatmapWithBars({
 }: HeatmapWithBarsProps) {
   return (
     <div className="heatmap-with-bars">
-      <div>
+      <div className="heatmap-side">
         <Heatmap
           matrix={matrix}
           rowLabels={rowLabels}

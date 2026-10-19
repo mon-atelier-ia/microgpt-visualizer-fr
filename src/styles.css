@@ -305,6 +305,9 @@ body {
 .main {
   margin-left: 230px;
   flex: 1;
+  /* Flex items default to min-width: auto: a wide child (flow, canvas,
+     token row) would widen the page instead of scrolling in its panel */
+  min-width: 0;
   padding: var(--sp-24) var(--sp-32);
   max-width: 1400px;
 }

@@ -6,8 +6,17 @@
 /* ── Heatmap + bar chart side-by-side ── */
 .heatmap-with-bars {
   display: flex;
+  flex-wrap: wrap; /* chart drops below the table when both do not fit */
   gap: 20px;
   align-items: flex-start;
+}
+/* Basis = the table's own width. min-width: 0 (row) and max-width: 100%
+   (column, ≤900px) let it scroll in .heatmap-wrap when the screen is
+   narrower than the table */
+.heatmap-side {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
 }
 .barchart-side {
   flex: 1 1 280px;
