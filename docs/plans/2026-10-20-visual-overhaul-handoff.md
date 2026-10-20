@@ -41,6 +41,10 @@ KEPT: the figure is an invented, recognisable physical machine whose working is 
 model. Kit fetched to `C:/Dev/_vendor/hermes-agent/optional-skills/creative/anatomy` (MIT, sparse clone
 of NousResearch/hermes-agent at `9cb34e9`); workspace `.superpowers/anatomy/` (gitignored).
 
+**Update 2026-10-20 (same session, later):** the kit is now a user-level Claude Code skill at
+`C:/Users/pierr/.claude/skills/anatomy/` (Anthropic format, see its `UPSTREAM.md`). The vendored clone
+`C:/Dev/_vendor/` and `.superpowers/anatomy/` were deleted on the user's word.
+
 ## Known content-audit items
 
 - `tokenize` maps unknown chars to 0 = 'a' silently (`src/engine/model.ts:29`, `charToId[c] ?? 0`).
@@ -71,7 +75,8 @@ messages: short, one plain-language point at a time, recommendation first.
    `wte` values. User: "les trois sont refusés. c'est slop et mensonger. mauvaise vulgarisation."
    On Anatomy: "ce n'est pas ce que j'ai demandé. tu as importé un skill, j'avais demandé de
    l'adapter." Downloading the upstream kit is NOT the deliverable: the skill has to be adapted to
-   this project (meaning still to be confirmed with the user, see the session memo's open question).
+   this project. **Meaning confirmed by the user:** port it to the Anthropic Agent Skills format (done,
+   user-level skill, see above).
    **2026-10-20, fourth round — proposals made with the user-level `anatomy` skill** (one-to-one
    mapping checked against `src/engine/model.ts`; numbers from the engine, seed 42):
    (A) Propagation — summing mixer: 16 centre-zero input faders = `x` (rmsnorm output), 16 centre-detent
@@ -83,6 +88,8 @@ messages: short, one plain-language point at a time, recommendation first.
    3.2169 vs ln 27 = 3.2958; mean of last 50 after 1 000 steps: 2.2429) and the 16 thumbwheels of one
    `wte` row turned by the Adam update (model.ts:291-299; step 1: each used weight moves exactly ±0.01,
    unused letters' rows do not move — "a" row unchanged on "tinsley").
+   **Presented to the user in plain words on 2026-10-20 (recommendation: B first). No answer yet;
+   nothing is drawn before the user picks A, B, C or all three.**
 2. Remaining territory: visual identity (palette, typography), UX (tablet nav, transitions), stack
    (benchmark tree-shaken bundle before choosing; pin latest stables).
 3. Then: written design → builder-check subagent → user approval → writing-plans.
